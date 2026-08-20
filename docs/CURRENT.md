@@ -1,7 +1,7 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r5`
+> Engine model: `ordinary-js-r6`
 > Recipe schema: `3`
 > Fixture manifest: `1`
 
@@ -18,17 +18,17 @@ The first extraction deliberately keeps the accepted ordinary-ink formulas:
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
 Those authored constants now live in the immutable active
-`ordinary-green-r4` recipe. `ordinary-green-r1` through `ordinary-green-r3`
+`ordinary-green-r5` recipe. `ordinary-green-r1` through `ordinary-green-r4`
 remain registered and structurally readable as archival `ordinary-js-r2`
-through `ordinary-js-r4` checkpoints, but they are not calculation-compatible
-with the active r5 model. Nib, flow, absorption,
+through `ordinary-js-r5` checkpoints, but they are not calculation-compatible
+with the active r6 model. Nib, flow, absorption,
 layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
 from a historical engine model, while calculation entry points additionally
 require the active engine model/schema and a canonical registered definition
 for built-in identities such as `ordinary-green@1` through
-`ordinary-green@4`.
+`ordinary-green@5`.
 
 Fixture-manifest v1 records dispatch by their recorded recipe schema: original
 schema-1 recipes remain immutable archival JSON, while schema-2 and schema-3
@@ -43,7 +43,8 @@ Sites worker, native code, product data model, font, or reference image.
 
 The Canvas2D keyboard renderer now exposes the existing contact mask,
 accumulated density variation and sample count, optional Surface coverage
-candidate, and optical composite as a frozen four-stage diagnostic record.
+candidate, nullable solver-grid density transport, and optical composite as a
+frozen four-stage diagnostic record.
 This adds observation names and tests without changing material arithmetic;
 the former top-level return fields remain same-reference aliases.
 
@@ -76,6 +77,17 @@ normalization exactly. A nearby still-wet footprint may continue to interact
 locally through the water/pigment solver, which is physical interaction rather
 than page-global normalization.
 
+Keyboard Surface now transports raw glyph Density through that same one-pass
+wet solver instead of assigning the mean density to every spread-only pixel.
+Contact contributes a separately area-resampled signed numerator and positive
+mask weight. Deposit, diffusion, and fixing move the numerator with actual
+positive pigment mass; the final grid exposes numerator and positive optical
+carrier separately. Optical composition bilinear-samples both planes and only
+then divides. Existing Contact pixels always keep their exact current Density;
+only Surface-visible pixels without a Contact sample use transported variation.
+Flow, mean density, color, and nib shaping do not enter transport, and nib
+shaping still occurs exactly once in Optical.
+
 ## Current limits
 
 - Font selection, text wrapping, authored layout, input, and IME remain in the
@@ -85,12 +97,15 @@ than page-global normalization.
   writing pad uses physical pointer contact and flow-dependent liquid deposit
   loads, and is explicitly outside E-005 rather than silently reinterpreted.
 - The ordinary RGB/alpha optical curve is the only extracted composite.
-- E-006/A2 removes the page-global strongest-alpha Surface divisor. The Surface
-  solver still operates on the current union mask, so nearby wet footprints may
-  interact through diffusion and fixing. Strict append-after-drying semantics
-  would require incremental state and is not claimed here. Surface-only spread
-  pixels also have no glyph Contact sample and currently fall back to mean
-  density; transported glyph density remains a separate future hypothesis.
+- The Surface solver still operates on the current union mask, so nearby wet
+  footprints may interact through diffusion, fixing, and signed-density mixing.
+  Strict append-after-drying semantics would require incremental state and is
+  not claimed here. A zero transported carrier intentionally has no ratio and
+  retains the mean-density fallback.
+- The maximum 320×240 transport solve adds 921,600 bytes of lazy solver state,
+  614,400 bytes of transient resampled input, and a 614,400-byte returned grid.
+  No full-page Float32 transport output is retained. Browser frame budgets are
+  not yet fixed; the E-007 Node benchmark is a comparison, not a device claim.
 - Stage diagnostics do not yet claim a normalized concentration field or final
   mixed-coverage field, and they do not by themselves complete layer ownership
   extraction.
