@@ -7,6 +7,7 @@ import {
   createKeyboardSurfaceState,
   createMaterialCoverage,
   getDirectDepositLoads,
+  resolveKeyboardSurfaceCoverage,
 } from "../src/surface/index.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
 import {
@@ -31,6 +32,108 @@ function makeDeposit(width, height) {
   }
   return { width, height, data };
 }
+
+test("Surface owns the accepted Contact/candidate coverage resolution", () => {
+  const contactMask = {
+    width: 3,
+    height: 1,
+    data: new Uint8ClampedArray([
+      255, 255, 255, 255,
+      255, 255, 255, 128,
+      0, 0, 0, 0,
+    ]),
+  };
+  const materialCoverageCandidate = {
+    width: 3,
+    height: 1,
+    data: new Uint8ClampedArray([
+      255, 255, 255, 0,
+      255, 255, 255, 64,
+      255, 255, 255, 192,
+    ]),
+  };
+  const result = resolveKeyboardSurfaceCoverage({
+    width: 3,
+    height: 1,
+    contactMask,
+    materialCoverageCandidate,
+    absorption: 42,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  });
+  const mix = Math.pow(
+    0.42,
+    ORDINARY_GREEN_RECIPE_R6.surface.keyboard.coverageMixExponent,
+  );
+  const expected = [
+    Math.max(
+      1 - mix,
+      ORDINARY_GREEN_RECIPE_R6.surface.keyboard.minimumContactRetention,
+    ),
+    Math.max(
+      (128 / 255) * (1 - mix) + (64 / 255) * mix,
+      (128 / 255)
+        * ORDINARY_GREEN_RECIPE_R6.surface.keyboard.minimumContactRetention,
+    ),
+    (192 / 255) * mix,
+  ];
+  assert.ok(result.data instanceof Float32Array);
+  assert.deepEqual(Array.from(result.data), expected.map(Math.fround));
+  assert.equal(result.materialMix, mix);
+  assert.deepEqual(contactMask.data, new Uint8ClampedArray([
+    255, 255, 255, 255,
+    255, 255, 255, 128,
+    0, 0, 0, 0,
+  ]));
+});
+
+test("resolved Surface coverage fails closed before allocating an invalid plane", () => {
+  const mask = makeDeposit(2, 2);
+  for (const absorption of [Number.NaN, -1, 101]) {
+    assert.throws(() => resolveKeyboardSurfaceCoverage({
+      width: 2,
+      height: 2,
+      contactMask: mask,
+      absorption,
+      recipe: ORDINARY_GREEN_RECIPE_R6,
+    }), /absorption must be a finite number/);
+  }
+  assert.throws(() => resolveKeyboardSurfaceCoverage({
+    width: 2,
+    height: 2,
+    contactMask: { data: new Uint8ClampedArray(4) },
+    absorption: 42,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  }), /RGBA length must match/);
+  assert.throws(() => resolveKeyboardSurfaceCoverage({
+    width: 2,
+    height: 2,
+    contactMask: mask,
+    materialCoverageCandidate: { data: new Float32Array(16) },
+    absorption: 42,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  }), /Uint8ClampedArray/);
+
+  let getterReads = 0;
+  const accessorOptions = {
+    width: 2,
+    height: 2,
+    contactMask: mask,
+    absorption: 42,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  };
+  Object.defineProperty(accessorOptions, "contactMask", {
+    enumerable: true,
+    get() {
+      getterReads += 1;
+      return mask;
+    },
+  });
+  assert.throws(
+    () => resolveKeyboardSurfaceCoverage(accessorOptions),
+    /contactMask must be an enumerable own data property/,
+  );
+  assert.equal(getterReads, 0);
+});
 
 function makeLocalityDeposit(includeFarSuffix) {
   const width = 80;

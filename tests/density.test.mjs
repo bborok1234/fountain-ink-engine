@@ -4,11 +4,11 @@ import {
   compositeOrdinaryInk,
   createDensityField,
   getEffectiveFlow,
-  getMaterialMix,
   getMeanDensity,
   sampleGlyphDensityVariation,
 } from "../src/density/index.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
+import { resolveKeyboardSurfaceCoverage } from "../src/surface/index.js";
 
 function makeRgbaMask(width, height, supportedPixels) {
   const data = new Uint8ClampedArray(width * height * 4);
@@ -20,6 +20,17 @@ function makeRgbaMask(width, height, supportedPixels) {
     data[offset + 3] = alpha;
   }
   return { width, height, data };
+}
+
+function resolveCoverage(mask, materialCoverageCandidate, absorption, width = 1, height = 1) {
+  return resolveKeyboardSurfaceCoverage({
+    width,
+    height,
+    contactMask: mask,
+    materialCoverageCandidate,
+    absorption,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  });
 }
 
 function makeContact({
@@ -121,10 +132,11 @@ test("public flow and absorption inputs fail closed outside percent units", () =
       () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R6),
       /absorption must be a finite number/,
     );
-    assert.throws(
-      () => getMaterialMix(absorption, ORDINARY_GREEN_RECIPE_R6),
-      /absorption must be a finite number/,
-    );
+    assert.throws(() => resolveCoverage(
+      new Uint8ClampedArray(4),
+      null,
+      absorption,
+    ), /absorption must be a finite number/);
   }
 });
 
@@ -608,7 +620,7 @@ test("ordinary composite stays inside calibrated direct-stroke endpoints", () =>
     pixelWidth: 1,
     pixelHeight: 1,
     mask,
-    materialCoverage: mask,
+    resolvedCoverage: resolveCoverage(mask, mask, 42),
     densityField: new Float32Array([0]),
     densitySamples: new Uint16Array([1]),
     nibId: "M",
@@ -626,7 +638,6 @@ test("high absorption retains a legible Contact core without changing the defaul
     pixelWidth: 1,
     pixelHeight: 1,
     mask,
-    materialCoverage: emptySurface,
     densityField: new Float32Array([0]),
     densitySamples: new Uint16Array([1]),
     nibId: "M",
@@ -636,6 +647,7 @@ test("high absorption retains a legible Contact core without changing the defaul
   const maximumAbsorption = compositeOrdinaryInk({
     ...common,
     absorption: 100,
+    resolvedCoverage: resolveCoverage(mask, emptySurface, 100),
   });
   const preCoverageAlpha = ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha
     + (ORDINARY_GREEN_RECIPE_R6.optical.maximumAlpha
@@ -653,6 +665,7 @@ test("high absorption retains a legible Contact core without changing the defaul
   const smoothSurface = compositeOrdinaryInk({
     ...common,
     absorption: 0,
+    resolvedCoverage: resolveCoverage(mask, emptySurface, 0),
   });
   assert.ok(
     maximumAbsorption.data[3] < smoothSurface.data[3],
@@ -662,9 +675,13 @@ test("high absorption retains a legible Contact core without changing the defaul
   const defaultAbsorption = compositeOrdinaryInk({
     ...common,
     absorption: 42,
+    resolvedCoverage: resolveCoverage(mask, emptySurface, 42),
   });
-  const legacyDefaultCoverage = 1
-    - getMaterialMix(42, ORDINARY_GREEN_RECIPE_R6);
+  const legacyDefaultCoverage = resolveCoverage(
+    mask,
+    emptySurface,
+    42,
+  ).data[0];
   assert.ok(
     legacyDefaultCoverage
       > ORDINARY_GREEN_RECIPE_R6.surface.keyboard.minimumContactRetention,
@@ -692,7 +709,7 @@ test("Contact density wins while Surface-only pigment uses transported raw varia
     pixelWidth: 2,
     pixelHeight: 1,
     mask,
-    materialCoverage,
+    resolvedCoverage: resolveCoverage(mask, materialCoverage, 100, 2, 1),
     densityField: new Float32Array([1, 0]),
     densitySamples: new Uint16Array([1, 0]),
     nibId: "M",
@@ -737,6 +754,7 @@ test("transparent coverage produces no optical ink", () => {
     pixelWidth: 1,
     pixelHeight: 1,
     mask: new Uint8ClampedArray(4),
+    resolvedCoverage: resolveCoverage(new Uint8ClampedArray(4), null, 0),
     densityField: new Float32Array(1),
     densitySamples: new Uint16Array(1),
     nibId: "M",
@@ -749,10 +767,23 @@ test("transparent coverage produces no optical ink", () => {
     pixelWidth: 1,
     pixelHeight: 1,
     mask: new Uint8ClampedArray(4),
+    resolvedCoverage: resolveCoverage(new Uint8ClampedArray(4), null, 0),
     densityField: new Float32Array(1),
     densitySamples: new Uint16Array(1),
     nibId: "M",
     flow: 58,
     absorption: 0,
   }), /recipe/);
+  assert.throws(() => compositeOrdinaryInk({
+    pixelWidth: 1,
+    pixelHeight: 1,
+    mask: new Uint8ClampedArray(4),
+    resolvedCoverage: { width: 1, height: 1, data: new Float32Array([NaN]) },
+    densityField: new Float32Array(1),
+    densitySamples: new Uint16Array(1),
+    nibId: "M",
+    flow: 58,
+    absorption: 0,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  }), /resolvedCoverage data must be finite/);
 });

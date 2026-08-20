@@ -5,6 +5,11 @@ import {
   compositeOrdinaryInk,
   getMeanDensity,
 } from "fountain-ink-engine/density";
+import {
+  getNibDensityRange,
+  shapeNibDensityVariation,
+} from "fountain-ink-engine/contact";
+import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "fountain-ink-engine/recipes";
 
 function makeImageData(width, height, data) {
@@ -178,6 +183,69 @@ function assertRgbaShape(image, width, height) {
   assert.ok(image.data.every((value) => Number.isInteger(value)));
 }
 
+function legacyCompositeBytes(result, options) {
+  const { stages } = result;
+  const output = new Uint8ClampedArray(options.pixelWidth * options.pixelHeight * 4);
+  const mix = Math.pow(
+    options.absorption / 100,
+    options.recipe.surface.keyboard.coverageMixExponent,
+  );
+  const mean = getMeanDensity(
+    options.nibId,
+    options.flow,
+    options.absorption,
+    options.recipe,
+  );
+  const range = getNibDensityRange(
+    options.nibId,
+    options.absorption / 100,
+    options.recipe,
+  );
+  for (let index = 0; index < options.pixelWidth * options.pixelHeight; index += 1) {
+    const offset = index * 4;
+    const contactAlpha = stages.contact.rgbaMask.data[offset + 3] / 255;
+    const surfaceAlpha = stages.surface.materialCoverageCandidate?.data[offset + 3] / 255 || 0;
+    const coverage = Math.max(
+      contactAlpha * (1 - mix) + surfaceAlpha * mix,
+      contactAlpha * options.recipe.surface.keyboard.minimumContactRetention,
+    );
+    if (coverage <= 0.001) continue;
+    let variation = 0;
+    if (stages.density.sampleCount[index] > 0) {
+      variation = stages.density.accumulatedVariation[index]
+        / stages.density.sampleCount[index];
+    } else if (stages.surface.densityTransport !== null) {
+      variation = sampleSurfaceDensityVariation(
+        stages.surface.densityTransport,
+        index % options.pixelWidth,
+        Math.floor(index / options.pixelWidth),
+        options.pixelWidth,
+        options.pixelHeight,
+      ) ?? 0;
+    }
+    const concentration = Math.max(0, Math.min(
+      1,
+      mean + shapeNibDensityVariation(options.nibId, variation) * range,
+    ));
+    const alpha = (options.recipe.optical.minimumAlpha
+      + (options.recipe.optical.maximumAlpha - options.recipe.optical.minimumAlpha)
+        * concentration) * coverage;
+    output[offset] = options.recipe.optical.rgb.red;
+    output[offset + 1] = options.recipe.optical.rgb.green;
+    output[offset + 2] = options.recipe.optical.rgb.blue;
+    output[offset + 3] = Math.round(alpha * 255);
+  }
+  return output;
+}
+
+test("Surface ownership extraction preserves the prior final RGBA equation", () => {
+  for (const absorption of [0, 42, 100]) {
+    const { options } = makeOptions(absorption);
+    const result = renderOrdinaryInkMaterial(options);
+    assert.deepEqual(result.imageData.data, legacyCompositeBytes(result, options));
+  }
+});
+
 function cropRgba(image, minimumX, maximumX) {
   const cropped = [];
   for (let y = 0; y < image.height; y += 1) {
@@ -217,6 +285,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   ]);
   assert.deepEqual(Object.keys(stages.surface), [
     "materialCoverageCandidate",
+    "resolvedCoverage",
     "densityTransport",
     "applied",
   ]);
@@ -234,6 +303,10 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.equal(stages.density.sampleCount.length, 18 * 14);
   assert.equal(stages.surface.applied, true);
   assertRgbaShape(stages.surface.materialCoverageCandidate, 18, 14);
+  assert.equal(stages.surface.resolvedCoverage.width, 18);
+  assert.equal(stages.surface.resolvedCoverage.height, 14);
+  assert.ok(stages.surface.resolvedCoverage.data instanceof Float32Array);
+  assert.equal(stages.surface.resolvedCoverage.data.length, 18 * 14);
   assert.ok(stages.surface.densityTransport.signedNumerator instanceof Float32Array);
   assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
   assertRgbaShape(stages.optical.compositeRgba, 18, 14);
@@ -245,6 +318,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
     result.materialCoverage,
     stages.surface.materialCoverageCandidate,
   );
+  assert.equal(result.resolvedCoverage, stages.surface.resolvedCoverage);
   assert.equal(
     result.surfaceDensityTransport,
     stages.surface.densityTransport,
@@ -257,6 +331,7 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
 
   assert.equal(result.stages.surface.applied, false);
   assert.equal(result.stages.surface.materialCoverageCandidate, null);
+  assert.ok(result.stages.surface.resolvedCoverage.data.some((value) => value > 0));
   assert.equal(result.stages.surface.densityTransport, null);
   assert.equal(result.surfaceDensityTransport, null);
   assert.equal(result.materialCoverage, null);
@@ -314,7 +389,7 @@ test("density transport never changes Contact-owned Optical pixels", () => {
     pixelWidth: options.pixelWidth,
     pixelHeight: options.pixelHeight,
     mask: result.stages.contact.rgbaMask,
-    materialCoverage: result.stages.surface.materialCoverageCandidate,
+    resolvedCoverage: result.stages.surface.resolvedCoverage,
     densityField: result.stages.density.accumulatedVariation,
     densitySamples: result.stages.density.sampleCount,
     nibId: options.nibId,

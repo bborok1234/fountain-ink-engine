@@ -172,6 +172,21 @@ finite `minimumContactRetention` in `0...1` to a custom schema-4 recipe and give
 that behavior a new model/revision identity. Schema-3 recipes remain archival;
 they are not silently rendered by r7.
 
+## Surface-resolved coverage
+
+Package `0.8.0-experimental.1` moves final keyboard coverage policy out of the
+Density/Optical loop. `resolveKeyboardSurfaceCoverage` combines the Contact
+mask and optional physical Surface candidate with the recipe-authored absorption
+mix and Contact-retention floor, returning a full-resolution Float32 plane.
+`renderOrdinaryInkMaterial` exposes that plane at
+`stages.surface.resolvedCoverage`; Optical consumes it directly.
+
+This is an ownership/API extraction, not a material retune. Engine model r7,
+`ordinary-green@6`, schema 4, solver state, density transport, RGB/alpha and the
+direct-writing path are unchanged. Consumers calling `compositeOrdinaryInk`
+directly must now pass `resolvedCoverage` instead of asking Density to interpret
+`materialCoverage`.
+
 ## Development
 
 ```bash

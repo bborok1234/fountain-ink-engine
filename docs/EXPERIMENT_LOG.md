@@ -363,3 +363,38 @@ they are not automatically promoted to timeless pass/fail truth.
   distinct smooth/middle/absorbent recipes. Do not add blur, shifted glyphs, or
   font-size-dependent paper rules; revisit the `0.54` floor only as an A2 if a
   normal-size comparison demonstrates a concrete retention defect.
+
+## E-009-surface-coverage-ownership / A1
+
+- Parent: `E-008-high-absorption-contact-retention / A1`
+- Engine model: `ordinary-js-r7`
+- Recipe schema: `4`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: Contact/candidate mixing and minimum Contact retention are Surface
+  policy, not Density or Optical policy. Moving the accepted equation into one
+  Surface operator should preserve final ordinary RGBA while exposing the
+  candidate and resolved coverage as different diagnostic facts.
+- Explicit inputs and seed: immutable `ordinary-green-r6`; existing renderer
+  fixtures at absorption 0/42/100; explicit Surface seed `0x13579bdf`; HTML
+  diagnostics at the current bundled font and desktop/mobile viewports.
+- Expected at normal size: default, smooth, and maximum-absorption writing look
+  unchanged. Surface diagnostics show physical candidate separately from final
+  resolved coverage. Optical receives a ready Float32 coverage plane and no
+  longer reconstructs Surface mix or retention.
+- Observed: the Surface operator now returns a full-resolution Float32 coverage
+  plane and Optical receives it as a required input. A regression recomputes the
+  previous inline equation at absorption 0/42/100 and obtains byte-identical
+  final RGBA. Engine 80/80, package/build and the HTML harness gate pass. A fresh
+  diagnostics browser view showed physical candidate, resolved coverage, and
+  transported ratio separately; M/18px/absorption-100 remained readable with
+  no console warnings or errors.
+- Why it failed, if applicable: not applicable yet.
+- Discarded assumption: Density/Optical must know how an absorbent Surface
+  combines deposited Contact with its fibre-spread candidate.
+- Preserved evidence or code: r7 formula order and recipe values; no new visual
+  tuning, solver step, transport rule, RGB, alpha endpoint, or direct-pad change.
+- Next different method: keep the equation fixed and finish the remaining layer
+  boundaries: Density should expose normalized concentration, then Optical
+  should own only concentration-to-color/alpha. Measure the added full-page
+  Float32 plane in the P6 browser/DPR performance matrix before r1.
