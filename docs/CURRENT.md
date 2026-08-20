@@ -1,8 +1,8 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r7`
-> Recipe schema: `4`
+> Engine model: `ordinary-js-r8`
+> Recipe schema: `5`
 > Fixture manifest: `1`
 
 ## Now
@@ -17,25 +17,25 @@ The first extraction deliberately keeps the accepted ordinary-ink formulas:
 - signed glyph-local density variation bounded by calibrated alpha endpoints;
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
-Those authored constants now live in the immutable active
-`ordinary-green-r6` recipe. `ordinary-green-r1` through `ordinary-green-r5`
+Those authored material constants now live in the immutable active
+`ordinary-green-r7` control recipe and the blue-black, burgundy, and teal
+ordinary recipes. `ordinary-green-r1` through `ordinary-green-r6`
 remain registered and structurally readable as archival `ordinary-js-r2`
-through `ordinary-js-r6` checkpoints, but they are not calculation-compatible
-with the active r7 model. Nib, flow, absorption,
+through `ordinary-js-r7` checkpoints, but they are not calculation-compatible
+with the active r8 model. Nib, flow, absorption,
 layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
 from a historical engine model, while calculation entry points additionally
 require the active engine model/schema and a canonical registered definition
-for built-in identities such as `ordinary-green@1` through
-`ordinary-green@6`.
+for built-in identities.
 
 Fixture-manifest v1 records dispatch by their recorded recipe schema: original
-schema-1 recipes remain immutable archival JSON, while schema-2 through schema-4
+schema-1 recipes remain immutable archival JSON, while schema-2 through schema-5
 records receive strict recipe and identity validation. Only compatible
-schema-4 recipes can enter the current material calculation. Historical
+schema-5 recipes can enter the current material calculation. Historical
 schema-1 record seeds retain their original non-negative-integer rule; all live
-schema-2/schema-3/schema-4 and material seed domains are unsigned 32-bit. No historical
+schema-2/schema-3/schema-4/schema-5 and material seed domains are unsigned 32-bit. No historical
 record is implicitly migrated.
 
 The engine contains no React component, text control, Vite configuration,
@@ -107,14 +107,21 @@ final RGBA equation at absorption 0/42/100. It adds one transient/returned
 part of P6 hardening rather than a claim of zero cost.
 
 Density now returns a separate full-resolution Float32 normalized concentration
-plane. Optical consumes only that plane, Surface-resolved coverage, and recipe
-RGB/alpha endpoints. It no longer receives Contact masks, glyph fields, flow,
+plane. Optical consumes only that plane, Surface-resolved coverage, and the
+recipe's Density-to-RGB curve plus alpha endpoints. It no longer receives Contact masks, glyph fields, flow,
 absorption, or transported Surface density. The existing high-level composite
 name remains a compatibility wrapper around the two explicit operators.
 
 Absorption-dependent density-range preservation now comes from Surface through
 `getSurfaceDensityRange`. Contact retains only nib geometry and its authored
 shading multiplier; the final range and all ordinary pixels remain unchanged.
+
+Ordinary Optical now samples a recipe-authored three-to-five-point
+Density-to-RGB curve. The green r8 control authors the same `[29,55,40]` at low,
+middle and high Density and therefore preserves the prior fixed-RGB output
+exactly. Blue-black, burgundy and teal share the control's Contact, Density,
+Surface and alpha fields while changing only their optical color curve and the
+matching direct-pad color projection.
 
 ## Current limits
 
@@ -124,7 +131,7 @@ shading multiplier; the final range and all ordinary pixels remain unchanged.
 - The Contact-axis extraction covers keyboard/font glyphs only. The direct
   writing pad uses physical pointer contact and flow-dependent liquid deposit
   loads, and is explicitly outside E-005 rather than silently reinterpreted.
-- The ordinary RGB/alpha optical curve is the only extracted composite.
+- Ordinary Density-to-RGB/alpha is the only extracted composite family.
 - The Surface solver still operates on the current union mask, so nearby wet
   footprints may interact through diffusion, fixing, and signed-density mixing.
   Strict append-after-drying semantics would require incremental state and is
@@ -134,13 +141,13 @@ shading multiplier; the final range and all ordinary pixels remain unchanged.
   614,400 bytes of transient resampled input, and a 614,400-byte returned grid.
   No full-page Float32 transport output is retained. Browser frame budgets are
   not yet fixed; the E-007 Node benchmark is a comparison, not a device claim.
-- Stage diagnostics do not yet claim a normalized concentration field or final
-  mixed-coverage field, and they do not by themselves complete layer ownership
-  extraction.
+- Stage diagnostics expose normalized concentration and final resolved
+  coverage as observation buffers; callers still must not reinterpret them as
+  a second calculation path.
 - Browser visual equivalence is checked during the migration, but no single
   permanent pixel image is treated as the final artistic truth.
-- Specialty color, edge ink, sheen, shimmer, pigment, and oxidation remain
-  future versioned experiments.
+- Edge-separated color, sheen, shimmer, pigment, and oxidation remain future
+  versioned experiments.
 - Serialized keyboard Surface recipes are fail-closed above the bounded
   64-step synchronous calculation budget.
 

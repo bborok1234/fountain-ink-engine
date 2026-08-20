@@ -1,4 +1,4 @@
-export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3, 4]);
+export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3, 4, 5]);
 export const MAX_KEYBOARD_SURFACE_STEPS = 64;
 
 const KEYBOARD_SURFACE_KEYS_BY_SCHEMA = Object.freeze({
@@ -22,6 +22,17 @@ const KEYBOARD_SURFACE_KEYS_BY_SCHEMA = Object.freeze({
     "coverageMixExponent",
   ]),
   4: Object.freeze([
+    "waterLoad",
+    "pigmentLoad",
+    "stepBase",
+    "stepAbsorptionGain",
+    "stepMilliseconds",
+    "normalizationScale",
+    "normalizationReferenceAlpha",
+    "coverageMixExponent",
+    "minimumContactRetention",
+  ]),
+  5: Object.freeze([
     "waterLoad",
     "pigmentLoad",
     "stepBase",
@@ -100,7 +111,7 @@ function canonicalValue(value) {
 }
 
 /**
- * Validate the recipe shapes used by recipe schemas v2 through v4.
+ * Validate the recipe shapes used by recipe schemas v2 through v5.
  * Runtime nib, flow, absorption, layout, and seeds intentionally live outside.
  *
  * @param {Record<string, unknown>} recipe
@@ -236,15 +247,20 @@ export function validateInkRecipe(recipe) {
   assertNumber(directOptical.maximumAlpha, "recipe.surface.direct.optical.maximumAlpha", 0, 1);
 
   assertRecord(recipe.optical, "recipe.optical");
-  assertExactKeys(
-    recipe.optical,
-    ["rgb", "minimumAlpha", "maximumAlpha"],
-    "recipe.optical",
-  );
-  assertRecord(recipe.optical.rgb, "recipe.optical.rgb");
-  assertExactKeys(recipe.optical.rgb, ["red", "green", "blue"], "recipe.optical.rgb");
-  for (const channel of ["red", "green", "blue"]) {
-    assertInteger(recipe.optical.rgb[channel], `recipe.optical.rgb.${channel}`, 0, 255);
+  if (recipe.recipeSchemaVersion < 5) {
+    assertExactKeys(
+      recipe.optical,
+      ["rgb", "minimumAlpha", "maximumAlpha"],
+      "recipe.optical",
+    );
+    assertRgb(recipe.optical.rgb, "recipe.optical.rgb");
+  } else {
+    assertExactKeys(
+      recipe.optical,
+      ["densityColorCurve", "minimumAlpha", "maximumAlpha"],
+      "recipe.optical",
+    );
+    assertDensityColorCurve(recipe.optical.densityColorCurve);
   }
   assertNumber(recipe.optical.minimumAlpha, "recipe.optical.minimumAlpha", 0, 1);
   assertNumber(recipe.optical.maximumAlpha, "recipe.optical.maximumAlpha", 0, 1);
@@ -252,6 +268,53 @@ export function validateInkRecipe(recipe) {
     throw new TypeError("recipe.optical alpha bounds are reversed.");
   }
   return true;
+}
+
+function assertRgb(value, path) {
+  assertRecord(value, path);
+  assertExactKeys(value, ["red", "green", "blue"], path);
+  for (const channel of ["red", "green", "blue"]) {
+    assertInteger(value[channel], `${path}.${channel}`, 0, 255);
+  }
+}
+
+function assertDensityColorCurve(value) {
+  const path = "recipe.optical.densityColorCurve";
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype) {
+    throw new TypeError(`${path} must be a plain array.`);
+  }
+  if (value.length < 3 || value.length > 5) {
+    throw new TypeError(`${path} must contain 3...5 points.`);
+  }
+  const expectedKeys = new Set([
+    ...Array.from({ length: value.length }, (_, index) => String(index)),
+    "length",
+  ]);
+  const actualKeys = Reflect.ownKeys(value);
+  if (
+    actualKeys.length !== expectedKeys.size
+    || actualKeys.some((key) => typeof key !== "string" || !expectedKeys.has(key))
+  ) {
+    throw new TypeError(`${path} must be a dense array without extra keys.`);
+  }
+  let previousDensity = -Infinity;
+  value.forEach((point, index) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    if (!descriptor?.enumerable || !("value" in descriptor)) {
+      throw new TypeError(`${path}[${index}] must be an enumerable data property.`);
+    }
+    assertRecord(point, `${path}[${index}]`);
+    assertExactKeys(point, ["density", "rgb"], `${path}[${index}]`);
+    assertNumber(point.density, `${path}[${index}].density`, 0, 1);
+    if (point.density <= previousDensity) {
+      throw new TypeError(`${path} density points must be strictly increasing.`);
+    }
+    previousDensity = point.density;
+    assertRgb(point.rgb, `${path}[${index}].rgb`);
+  });
+  if (value[0].density !== 0 || value[value.length - 1].density !== 1) {
+    throw new TypeError(`${path} must begin at 0 and end at 1.`);
+  }
 }
 
 /** @param {Record<string, unknown>} recipe */

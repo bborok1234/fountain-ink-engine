@@ -10,8 +10,8 @@ they are not automatically promoted to timeless pass/fail truth.
 ### E-000-short-name / A1
 
 - Parent: none
-- Engine model: ordinary-js-r7
-- Recipe schema: 4
+- Engine model: ordinary-js-r8
+- Recipe schema: 5
 - Fixture manifest: 1
 - Status: running | passed | learned | abandoned
 - Hypothesis:
@@ -477,3 +477,45 @@ they are not automatically promoted to timeless pass/fail truth.
   were added.
 - Next different method: ordinary color recipes may now begin; punctuation and
   DPR1/3 extend this Contact matrix during P4/P6 hardening.
+
+## E-013-ordinary-density-color-curves / A1
+
+- Parent: `E-012-glyph-contact-mask-contract / A2`
+- Engine model: `ordinary-js-r8`
+- Recipe schema: `5`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: ordinary dye inks can share one Contact, Density, Surface and
+  alpha calculation while an authored low/middle/high Density-to-RGB curve
+  gives each ink a recognisable color character. This should read as dilute
+  versus concentrated dye, not as a flat hue rotation or a specialty effect.
+- Explicit inputs and seed: `ordinary-green@7` control plus
+  `ordinary-blue-black@1`, `ordinary-burgundy@1`, and `ordinary-teal@1`; the
+  existing deterministic glyph and Surface seeds; Korean reference sentence;
+  M/28px/flow-58/absorption-42, M/18px/absorption-100, and
+  EB/52px/absorption-0 in the bundled-font HTML harness.
+- Expected at normal size: green stays byte-identical to the accepted fixed-RGB
+  control. Blue-black moves slate-blue to navy-black, burgundy dusty mauve to
+  plum-wine, and teal sea-glass to dark teal as Density rises. Geometry,
+  normalized concentration, Surface coverage and alpha remain identical for
+  the same material input.
+- Observed: all four recipes retain identical Contact, signed Density,
+  normalized concentration, Surface candidate/resolved coverage and Optical
+  alpha. Their final RGB differs, with exact authored colors at concentration
+  0/0.5/1 and linear channel interpolation between points. Green r8 output is
+  byte-identical to the prior r7 fixed-RGB equation. Normal M/28 and broad
+  EB/52 made the intended within-stroke color change visible; all three new
+  inks remained readable at 18px/maximum absorption. The HTML selector exposes
+  a text name and non-color description, and the direct-input pad uses matching
+  ordinary color coefficients without changing water/mobile/fixed state or
+  alpha. Browser console warnings/errors were zero.
+- Why it failed, if applicable: not applicable in A1.
+- Discarded assumption: an ordinary ink recipe needs one fixed RGB triplet, or
+  that additional ink colors should be made by rotating every pixel's hue.
+- Preserved evidence or code: all green r1-r6 canonical pins, all Contact,
+  Density and Surface equations, green direct-state hashes, alpha endpoints,
+  glyph seeds, layout, IME ownership, and specialty-ink exclusions.
+- Next different method: author independent smooth/middle/absorbent Surface
+  recipes. Color curves remain an Optical axis; future dual shading, sheen and
+  shimmer require separate material component state rather than more curve
+  points.

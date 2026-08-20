@@ -8,7 +8,7 @@ import {
   sampleGlyphDensityVariation,
 } from "../src/density/index.js";
 import { compositeOrdinaryInk } from "../src/optical/index.js";
-import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R7 } from "../src/recipes/index.js";
 import { resolveKeyboardSurfaceCoverage } from "../src/surface/index.js";
 
 function makeRgbaMask(width, height, supportedPixels) {
@@ -30,7 +30,7 @@ function resolveCoverage(mask, materialCoverageCandidate, absorption, width = 1,
     contactMask: mask,
     materialCoverageCandidate,
     absorption,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   });
 }
 
@@ -102,7 +102,7 @@ test("preserves the accepted flow and mean-density equations", () => {
   assert.equal(getEffectiveFlow("UEF", 0), 0);
   assert.equal(getEffectiveFlow("EB", 100), 1);
   assert.ok(
-    Math.abs(getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R6) - 0.5524)
+    Math.abs(getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R7) - 0.5524)
       < 1e-12,
   );
   const acceptedMeanAtFlow58Absorption42 = {
@@ -118,7 +118,7 @@ test("preserves the accepted flow and mean-density equations", () => {
     acceptedMeanAtFlow58Absorption42,
   )) {
     assert.equal(
-      getMeanDensity(nibId, 58, 42, ORDINARY_GREEN_RECIPE_R6),
+      getMeanDensity(nibId, 58, 42, ORDINARY_GREEN_RECIPE_R7),
       expected,
     );
   }
@@ -130,7 +130,7 @@ test("public flow and absorption inputs fail closed outside percent units", () =
   }
   for (const absorption of [Number.NaN, Number.NEGATIVE_INFINITY, -1, 101]) {
     assert.throws(
-      () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R6),
+      () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R7),
       /absorption must be a finite number/,
     );
     assert.throws(() => resolveCoverage(
@@ -627,7 +627,7 @@ test("ordinary composite stays inside calibrated direct-stroke endpoints", () =>
     nibId: "M",
     flow: 58,
     absorption: 42,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   });
   assert.deepEqual(Array.from(result.data), [29, 55, 40, 213]);
 });
@@ -647,7 +647,7 @@ test("Density exposes normalized concentration without optical color or alpha", 
     nibId: "M",
     flow: 58,
     absorption: 42,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   });
   assert.ok(result.data instanceof Float32Array);
   assert.ok(result.data[0] > 0 && result.data[0] <= 1);
@@ -667,22 +667,22 @@ test("high absorption retains a legible Contact core without changing the defaul
     densitySamples: new Uint16Array([1]),
     nibId: "M",
     flow: 58,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   };
   const maximumAbsorption = compositeOrdinaryInk({
     ...common,
     absorption: 100,
     resolvedCoverage: resolveCoverage(mask, emptySurface, 100),
   });
-  const preCoverageAlpha = ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha
-    + (ORDINARY_GREEN_RECIPE_R6.optical.maximumAlpha
-      - ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha)
-      * getMeanDensity("M", 58, 100, ORDINARY_GREEN_RECIPE_R6);
+  const preCoverageAlpha = ORDINARY_GREEN_RECIPE_R7.optical.minimumAlpha
+    + (ORDINARY_GREEN_RECIPE_R7.optical.maximumAlpha
+      - ORDINARY_GREEN_RECIPE_R7.optical.minimumAlpha)
+      * getMeanDensity("M", 58, 100, ORDINARY_GREEN_RECIPE_R7);
   assert.equal(
     maximumAbsorption.data[3],
     Math.round(
       preCoverageAlpha
-        * ORDINARY_GREEN_RECIPE_R6.surface.keyboard.minimumContactRetention
+        * ORDINARY_GREEN_RECIPE_R7.surface.keyboard.minimumContactRetention
         * 255,
     ),
   );
@@ -709,12 +709,12 @@ test("high absorption retains a legible Contact core without changing the defaul
   ).data[0];
   assert.ok(
     legacyDefaultCoverage
-      > ORDINARY_GREEN_RECIPE_R6.surface.keyboard.minimumContactRetention,
+      > ORDINARY_GREEN_RECIPE_R7.surface.keyboard.minimumContactRetention,
   );
-  const defaultPreCoverageAlpha = ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha
-    + (ORDINARY_GREEN_RECIPE_R6.optical.maximumAlpha
-      - ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha)
-      * getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R6);
+  const defaultPreCoverageAlpha = ORDINARY_GREEN_RECIPE_R7.optical.minimumAlpha
+    + (ORDINARY_GREEN_RECIPE_R7.optical.maximumAlpha
+      - ORDINARY_GREEN_RECIPE_R7.optical.minimumAlpha)
+      * getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R7);
   assert.equal(
     defaultAbsorption.data[3],
     Math.round(defaultPreCoverageAlpha * legacyDefaultCoverage * 255),
@@ -740,7 +740,7 @@ test("Contact density wins while Surface-only pigment uses transported raw varia
     nibId: "M",
     flow: 58,
     absorption: 100,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   };
   const meanFallback = compositeOrdinaryInk(common);
   const transported = compositeOrdinaryInk({
@@ -785,7 +785,7 @@ test("transparent coverage produces no optical ink", () => {
     nibId: "M",
     flow: 58,
     absorption: 0,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   });
   assert.deepEqual(Array.from(result.data), [0, 0, 0, 0]);
   assert.throws(() => compositeOrdinaryInk({
@@ -809,6 +809,6 @@ test("transparent coverage produces no optical ink", () => {
     nibId: "M",
     flow: 58,
     absorption: 0,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   }), /resolvedCoverage data must be finite/);
 });

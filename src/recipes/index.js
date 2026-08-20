@@ -12,6 +12,10 @@ export { ORDINARY_GREEN_RECIPE_R3 } from "./ordinary-green-r3.js";
 export { ORDINARY_GREEN_RECIPE_R4 } from "./ordinary-green-r4.js";
 export { ORDINARY_GREEN_RECIPE_R5 } from "./ordinary-green-r5.js";
 export { ORDINARY_GREEN_RECIPE_R6 } from "./ordinary-green-r6.js";
+export { ORDINARY_GREEN_RECIPE_R7 } from "./ordinary-green-r7.js";
+export { ORDINARY_BLUE_BLACK_RECIPE_R1 } from "./ordinary-blue-black-r1.js";
+export { ORDINARY_BURGUNDY_RECIPE_R1 } from "./ordinary-burgundy-r1.js";
+export { ORDINARY_TEAL_RECIPE_R1 } from "./ordinary-teal-r1.js";
 export {
   assertInkRecipeCompatible,
   assertRegisteredInkRecipeIdentity,

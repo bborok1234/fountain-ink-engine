@@ -21,7 +21,7 @@ or mobile integration.
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R6,
+  ORDINARY_GREEN_RECIPE_R7,
   WetInkSimulation,
   createDensityField,
   getGlyphContactGeometry,
@@ -38,6 +38,7 @@ Focused entry points are also available:
 - `fountain-ink-engine/contact`
 - `fountain-ink-engine/density`
 - `fountain-ink-engine/surface`
+- `fountain-ink-engine/optical`
 - `fountain-ink-engine/canvas2d`
 
 All material inputs and seeds must be explicit; seeds use the unsigned 32-bit
@@ -47,24 +48,25 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r6` is the active immutable, serializable r7/schema-4 recipe.
-`ordinary-green-r1` through `ordinary-green-r5` remain exported as archival
-r2/r3/r4/r5/r6 checkpoints:
+`ordinary-green-r7` is the active immutable, serializable r8/schema-5 control.
+Blue-black, burgundy and teal are active ordinary-color peers.
+`ordinary-green-r1` through `ordinary-green-r6` remain exported as archival
+r2 through r7 checkpoints:
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R6,
+  ORDINARY_GREEN_RECIPE_R7,
   parseInkRecipe,
   serializeInkRecipe,
 } from "fountain-ink-engine/recipes";
 
-const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R6);
+const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R7);
 const restoredRecipe = parseInkRecipe(checkpoint);
 ```
 
 Structural recipe APIs preserve supported historical model records for archival
 round trips. Material calculation additionally requires the active engine
-model/schema. The reserved `ordinary-green@1` through `ordinary-green@6`
+model/schema. Reserved built-in identities
 identities must match their registered canonical definitions;
 changed parameters require a new revision or custom id.
 
@@ -212,6 +214,35 @@ distance field, counts connected components and enclosed counters, and reports
 counter areas. The HTML harness applies it to the bundled Korean font at
 18/28/52px; small-size raster ties are allowed, width reversals and lost
 counters are not.
+
+## Ordinary Density-to-color curves
+
+Package `0.12.0-experimental.1` adds schema-5 ordinary optical recipes. Their
+`optical.densityColorCurve` contains three to five strictly increasing points
+from Density `0` to `1`; RGB channels interpolate linearly while the calibrated
+alpha endpoints remain independent.
+
+The active catalog exports:
+
+```js
+import {
+  ORDINARY_BLUE_BLACK_RECIPE_R1,
+  ORDINARY_BURGUNDY_RECIPE_R1,
+  ORDINARY_GREEN_RECIPE_R7,
+  ORDINARY_TEAL_RECIPE_R1,
+} from "fountain-ink-engine/recipes";
+```
+
+All four share the same Contact, Density and keyboard Surface coefficients.
+For identical inputs they therefore produce identical geometry, concentration,
+coverage and alpha; only Optical RGB differs. The green control repeats
+`[29,55,40]` at every curve point and is byte-identical to the previous fixed
+green projection. These are ordinary dyes, not dual shading, sheen, shimmer or
+edge-outline recipes.
+
+Migration from `0.11.x`: select a schema-5 recipe explicitly. Historical
+schema-2 through schema-4 recipes still parse and round-trip but do not enter
+the r8 calculation without a new authored revision.
 
 ## Development
 

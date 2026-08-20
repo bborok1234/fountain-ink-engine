@@ -12,6 +12,10 @@ import { ORDINARY_GREEN_RECIPE_R3 } from "./ordinary-green-r3.js";
 import { ORDINARY_GREEN_RECIPE_R4 } from "./ordinary-green-r4.js";
 import { ORDINARY_GREEN_RECIPE_R5 } from "./ordinary-green-r5.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "./ordinary-green-r6.js";
+import { ORDINARY_GREEN_RECIPE_R7 } from "./ordinary-green-r7.js";
+import { ORDINARY_BLUE_BLACK_RECIPE_R1 } from "./ordinary-blue-black-r1.js";
+import { ORDINARY_BURGUNDY_RECIPE_R1 } from "./ordinary-burgundy-r1.js";
+import { ORDINARY_TEAL_RECIPE_R1 } from "./ordinary-teal-r1.js";
 import { REGISTERED_BUILT_IN_RECIPE_SERIALIZATIONS } from "./registered-built-ins.js";
 
 const recipeKey = (recipe) => `${recipe.id}@${recipe.revision}`;
@@ -23,6 +27,10 @@ const AUTHORED_BUILT_IN_RECIPES = new Map([
   [recipeKey(ORDINARY_GREEN_RECIPE_R4), ORDINARY_GREEN_RECIPE_R4],
   [recipeKey(ORDINARY_GREEN_RECIPE_R5), ORDINARY_GREEN_RECIPE_R5],
   [recipeKey(ORDINARY_GREEN_RECIPE_R6), ORDINARY_GREEN_RECIPE_R6],
+  [recipeKey(ORDINARY_GREEN_RECIPE_R7), ORDINARY_GREEN_RECIPE_R7],
+  [recipeKey(ORDINARY_BLUE_BLACK_RECIPE_R1), ORDINARY_BLUE_BLACK_RECIPE_R1],
+  [recipeKey(ORDINARY_BURGUNDY_RECIPE_R1), ORDINARY_BURGUNDY_RECIPE_R1],
+  [recipeKey(ORDINARY_TEAL_RECIPE_R1), ORDINARY_TEAL_RECIPE_R1],
 ]);
 
 const RESERVED_RECIPE_IDS = new Set(
