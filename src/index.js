@@ -1,5 +1,6 @@
 export * from "./contracts/index.js";
 export * from "./recipes/index.js";
+export * from "./surface-recipes/index.js";
 export * from "./deterministic/index.js";
 export * from "./contact/index.js";
 export * from "./density/index.js";

@@ -1,4 +1,4 @@
-export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3, 4, 5]);
+export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3, 4, 5, 6]);
 export const MAX_KEYBOARD_SURFACE_STEPS = 64;
 
 const KEYBOARD_SURFACE_KEYS_BY_SCHEMA = Object.freeze({
@@ -111,24 +111,34 @@ function canonicalValue(value) {
 }
 
 /**
- * Validate the recipe shapes used by recipe schemas v2 through v5.
- * Runtime nib, flow, absorption, layout, and seeds intentionally live outside.
+ * Validate the recipe shapes used by ink recipe schemas v2 through v6.
+ * Runtime nib, flow, Surface recipe, layout, and seeds intentionally live outside.
  *
  * @param {Record<string, unknown>} recipe
  * @returns {true}
  */
 export function validateInkRecipe(recipe) {
   assertRecord(recipe, "recipe");
-  assertExactKeys(recipe, [
-    "id",
-    "revision",
-    "engineModelVersion",
+  const schemaDescriptor = Object.getOwnPropertyDescriptor(
+    recipe,
     "recipeSchemaVersion",
-    "contact",
-    "density",
-    "surface",
-    "optical",
-  ], "recipe");
+  );
+  if (!schemaDescriptor?.enumerable || !("value" in schemaDescriptor)) {
+    throw new TypeError(
+      "recipe.recipeSchemaVersion must be an enumerable own data property.",
+    );
+  }
+  const schema = schemaDescriptor.value;
+  const rootKeys = schema >= 6
+    ? [
+      "id", "revision", "engineModelVersion", "recipeSchemaVersion",
+      "contact", "density", "keyboardDeposit", "direct", "optical",
+    ]
+    : [
+      "id", "revision", "engineModelVersion", "recipeSchemaVersion",
+      "contact", "density", "surface", "optical",
+    ];
+  assertExactKeys(recipe, rootKeys, "recipe");
   assertNonEmptyString(recipe.id, "recipe.id");
   assertInteger(recipe.revision, "recipe.revision", 1, Number.MAX_SAFE_INTEGER);
   assertNonEmptyString(
@@ -151,16 +161,16 @@ export function validateInkRecipe(recipe) {
   }
 
   assertRecord(recipe.density, "recipe.density");
-  assertExactKeys(recipe.density, [
-    "meanMinimum",
-    "meanMaximum",
-    "meanBase",
-    "flowGain",
-    "absorptionLoss",
-    "rangeMinimum",
-    "rangeSmoothGain",
-    "rangeMaximum",
-  ], "recipe.density");
+  assertExactKeys(
+    recipe.density,
+    recipe.recipeSchemaVersion >= 6
+      ? ["meanMinimum", "meanMaximum", "meanBase", "flowGain", "rangeMaximum"]
+      : [
+        "meanMinimum", "meanMaximum", "meanBase", "flowGain",
+        "absorptionLoss", "rangeMinimum", "rangeSmoothGain", "rangeMaximum",
+      ],
+    "recipe.density",
+  );
   assertNumber(recipe.density.meanMinimum, "recipe.density.meanMinimum", 0, 1);
   assertNumber(recipe.density.meanMaximum, "recipe.density.meanMaximum", 0, 1);
   if (recipe.density.meanMinimum > recipe.density.meanMaximum) {
@@ -168,68 +178,87 @@ export function validateInkRecipe(recipe) {
   }
   assertNumber(recipe.density.meanBase, "recipe.density.meanBase", 0, 1);
   assertNumber(recipe.density.flowGain, "recipe.density.flowGain", 0, 2);
-  assertNumber(recipe.density.absorptionLoss, "recipe.density.absorptionLoss", 0, 1);
-  assertNumber(recipe.density.rangeMinimum, "recipe.density.rangeMinimum", 0, 2);
-  assertNumber(recipe.density.rangeSmoothGain, "recipe.density.rangeSmoothGain", 0, 2);
+  if (recipe.recipeSchemaVersion < 6) {
+    assertNumber(recipe.density.absorptionLoss, "recipe.density.absorptionLoss", 0, 1);
+    assertNumber(recipe.density.rangeMinimum, "recipe.density.rangeMinimum", 0, 2);
+    assertNumber(recipe.density.rangeSmoothGain, "recipe.density.rangeSmoothGain", 0, 2);
+  }
   assertNumber(recipe.density.rangeMaximum, "recipe.density.rangeMaximum", 0, 2);
-  if (recipe.density.rangeMinimum > recipe.density.rangeMaximum) {
+  if (
+    recipe.recipeSchemaVersion < 6
+    && recipe.density.rangeMinimum > recipe.density.rangeMaximum
+  ) {
     throw new TypeError("recipe.density range bounds are reversed.");
   }
 
-  assertRecord(recipe.surface, "recipe.surface");
-  assertExactKeys(recipe.surface, ["keyboard", "direct"], "recipe.surface");
-  assertRecord(recipe.surface.keyboard, "recipe.surface.keyboard");
-  assertExactKeys(
-    recipe.surface.keyboard,
-    KEYBOARD_SURFACE_KEYS_BY_SCHEMA[recipe.recipeSchemaVersion],
-    "recipe.surface.keyboard",
-  );
-  assertNumber(recipe.surface.keyboard.waterLoad, "recipe.surface.keyboard.waterLoad", 0, 2);
-  assertNumber(recipe.surface.keyboard.pigmentLoad, "recipe.surface.keyboard.pigmentLoad", 0, 2);
-  assertInteger(recipe.surface.keyboard.stepBase, "recipe.surface.keyboard.stepBase", 0, 1000);
-  assertNumber(recipe.surface.keyboard.stepAbsorptionGain, "recipe.surface.keyboard.stepAbsorptionGain", 0, 1000);
-  assertNumber(recipe.surface.keyboard.stepMilliseconds, "recipe.surface.keyboard.stepMilliseconds", 0.001, 1000);
-  assertNumber(recipe.surface.keyboard.normalizationScale, "recipe.surface.keyboard.normalizationScale", 0.001, 10);
-  if (recipe.recipeSchemaVersion >= 3) {
-    assertInteger(
-      recipe.surface.keyboard.normalizationReferenceAlpha,
-      "recipe.surface.keyboard.normalizationReferenceAlpha",
-      1,
-      255,
+  let direct;
+  if (recipe.recipeSchemaVersion < 6) {
+    assertRecord(recipe.surface, "recipe.surface");
+    assertExactKeys(recipe.surface, ["keyboard", "direct"], "recipe.surface");
+    assertRecord(recipe.surface.keyboard, "recipe.surface.keyboard");
+    assertExactKeys(
+      recipe.surface.keyboard,
+      KEYBOARD_SURFACE_KEYS_BY_SCHEMA[recipe.recipeSchemaVersion],
+      "recipe.surface.keyboard",
     );
-  }
-  assertNumber(recipe.surface.keyboard.coverageMixExponent, "recipe.surface.keyboard.coverageMixExponent", 0.001, 10);
-  if (recipe.recipeSchemaVersion >= 4) {
-    assertNumber(
-      recipe.surface.keyboard.minimumContactRetention,
-      "recipe.surface.keyboard.minimumContactRetention",
-      0,
-      1,
+    assertNumber(recipe.surface.keyboard.waterLoad, "recipe.surface.keyboard.waterLoad", 0, 2);
+    assertNumber(recipe.surface.keyboard.pigmentLoad, "recipe.surface.keyboard.pigmentLoad", 0, 2);
+    assertInteger(recipe.surface.keyboard.stepBase, "recipe.surface.keyboard.stepBase", 0, 1000);
+    assertNumber(recipe.surface.keyboard.stepAbsorptionGain, "recipe.surface.keyboard.stepAbsorptionGain", 0, 1000);
+    assertNumber(recipe.surface.keyboard.stepMilliseconds, "recipe.surface.keyboard.stepMilliseconds", 0.001, 1000);
+    assertNumber(recipe.surface.keyboard.normalizationScale, "recipe.surface.keyboard.normalizationScale", 0.001, 10);
+    if (recipe.recipeSchemaVersion >= 3) {
+      assertInteger(
+        recipe.surface.keyboard.normalizationReferenceAlpha,
+        "recipe.surface.keyboard.normalizationReferenceAlpha",
+        1,
+        255,
+      );
+    }
+    assertNumber(recipe.surface.keyboard.coverageMixExponent, "recipe.surface.keyboard.coverageMixExponent", 0.001, 10);
+    if (recipe.recipeSchemaVersion >= 4) {
+      assertNumber(
+        recipe.surface.keyboard.minimumContactRetention,
+        "recipe.surface.keyboard.minimumContactRetention",
+        0,
+        1,
+      );
+    }
+    if (
+      recipe.surface.keyboard.stepBase
+        + recipe.surface.keyboard.stepAbsorptionGain
+      > MAX_KEYBOARD_SURFACE_STEPS
+    ) {
+      throw new TypeError(
+        `recipe.surface.keyboard step budget exceeds ${MAX_KEYBOARD_SURFACE_STEPS}.`,
+      );
+    }
+    direct = recipe.surface.direct;
+  } else {
+    assertRecord(recipe.keyboardDeposit, "recipe.keyboardDeposit");
+    assertExactKeys(
+      recipe.keyboardDeposit,
+      ["waterLoad", "pigmentLoad"],
+      "recipe.keyboardDeposit",
     );
-  }
-  if (
-    recipe.surface.keyboard.stepBase
-      + recipe.surface.keyboard.stepAbsorptionGain
-    > MAX_KEYBOARD_SURFACE_STEPS
-  ) {
-    throw new TypeError(
-      `recipe.surface.keyboard step budget exceeds ${MAX_KEYBOARD_SURFACE_STEPS}.`,
-    );
+    assertNumber(recipe.keyboardDeposit.waterLoad, "recipe.keyboardDeposit.waterLoad", 0, 2);
+    assertNumber(recipe.keyboardDeposit.pigmentLoad, "recipe.keyboardDeposit.pigmentLoad", 0, 2);
+    direct = recipe.direct;
   }
 
-  assertRecord(recipe.surface.direct, "recipe.surface.direct");
-  assertExactKeys(recipe.surface.direct, [
+  assertRecord(direct, "recipe.direct");
+  assertExactKeys(direct, [
     "waterBase",
     "waterFlowGain",
     "pigmentBase",
     "pigmentFlowGain",
     "optical",
-  ], "recipe.surface.direct");
+  ], "recipe.direct");
   for (const name of ["waterBase", "waterFlowGain", "pigmentBase", "pigmentFlowGain"]) {
-    assertNumber(recipe.surface.direct[name], `recipe.surface.direct.${name}`, 0, 2);
+    assertNumber(direct[name], `recipe.direct.${name}`, 0, 2);
   }
-  assertRecord(recipe.surface.direct.optical, "recipe.surface.direct.optical");
-  const directOptical = recipe.surface.direct.optical;
+  assertRecord(direct.optical, "recipe.direct.optical");
+  const directOptical = direct.optical;
   const directOpticalKeys = [
     "fixedWeight", "mobileWeight", "pigmentMaximum", "densityExponent",
     "wetLift", "redBase", "redWetGain", "greenBase", "greenWetGain",
@@ -239,12 +268,12 @@ export function validateInkRecipe(recipe) {
   assertExactKeys(
     directOptical,
     directOpticalKeys,
-    "recipe.surface.direct.optical",
+    "recipe.direct.optical",
   );
   for (const name of directOpticalKeys) {
-    assertNumber(directOptical[name], `recipe.surface.direct.optical.${name}`, 0, 255);
+    assertNumber(directOptical[name], `recipe.direct.optical.${name}`, 0, 255);
   }
-  assertNumber(directOptical.maximumAlpha, "recipe.surface.direct.optical.maximumAlpha", 0, 1);
+  assertNumber(directOptical.maximumAlpha, "recipe.direct.optical.maximumAlpha", 0, 1);
 
   assertRecord(recipe.optical, "recipe.optical");
   if (recipe.recipeSchemaVersion < 5) {

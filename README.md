@@ -48,14 +48,14 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r7` is the active immutable, serializable r8/schema-5 control.
-Blue-black, burgundy and teal are active ordinary-color peers.
-`ordinary-green-r1` through `ordinary-green-r6` remain exported as archival
-r2 through r7 checkpoints:
+`ordinary-green-r8` is the active immutable, serializable r9/schema-6 control.
+Blue-black, burgundy and teal r2 are active ordinary-color peers. Paper behavior
+is selected independently from `./surface-recipes`: smooth, balanced, or
+absorbent. Earlier ink revisions remain exported as archival checkpoints:
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R7,
+  ORDINARY_GREEN_RECIPE_R8,
   parseInkRecipe,
   serializeInkRecipe,
 } from "fountain-ink-engine/recipes";
@@ -226,10 +226,10 @@ The active catalog exports:
 
 ```js
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R1,
-  ORDINARY_BURGUNDY_RECIPE_R1,
-  ORDINARY_GREEN_RECIPE_R7,
-  ORDINARY_TEAL_RECIPE_R1,
+  ORDINARY_BLUE_BLACK_RECIPE_R2,
+  ORDINARY_BURGUNDY_RECIPE_R2,
+  ORDINARY_GREEN_RECIPE_R8,
+  ORDINARY_TEAL_RECIPE_R2,
 } from "fountain-ink-engine/recipes";
 ```
 
@@ -243,6 +243,15 @@ edge-outline recipes.
 Migration from `0.11.x`: select a schema-5 recipe explicitly. Historical
 schema-2 through schema-4 recipes still parse and round-trip but do not enter
 the r8 calculation without a new authored revision.
+
+## Independent paper Surface recipes
+
+Package `0.13.0-experimental.1` removes paper policy from active ink recipes.
+Callers pass ink and Surface recipes separately. Smooth paper keeps crisp
+Contact and broad shading; balanced paper preserves the accepted absorption-42
+calculation exactly; absorbent paper increases vertical uptake while keeping
+lateral mobility bounded. This prevents “more absorption” from being
+synonymous with “more blur.” Fixture manifest v2 records both identities.
 
 ## Development
 

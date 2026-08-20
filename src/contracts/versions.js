@@ -1,11 +1,11 @@
 /** Calculation identity. Bump when numeric behavior or interpretation changes. */
-export const engineModelVersion = "ordinary-js-r8";
+export const engineModelVersion = "ordinary-js-r9";
 
 /** Serialized material recipe shape. */
-export const recipeSchemaVersion = 5;
+export const recipeSchemaVersion = 6;
 
 /** Experiment/checkpoint metadata shape. */
-export const fixtureManifestVersion = 1;
+export const fixtureManifestVersion = 2;
 
 export const ENGINE_VERSIONS = Object.freeze({
   engineModelVersion,

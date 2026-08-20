@@ -10,9 +10,9 @@ export function getDirectDepositLoads(recipe, normalizedFlow) {
   assertInkRecipeCompatible(recipe);
   const flow = assertFiniteRange(normalizedFlow, "normalizedFlow", 0, 1);
   return Object.freeze({
-    waterLoad: recipe.surface.direct.waterBase
-      + flow * recipe.surface.direct.waterFlowGain,
-    pigmentLoad: recipe.surface.direct.pigmentBase
-      + flow * recipe.surface.direct.pigmentFlowGain,
+    waterLoad: recipe.direct.waterBase
+      + flow * recipe.direct.waterFlowGain,
+    pigmentLoad: recipe.direct.pigmentBase
+      + flow * recipe.direct.pigmentFlowGain,
   });
 }

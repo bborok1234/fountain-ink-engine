@@ -1,8 +1,11 @@
 import { WetInkSimulation } from "./wet-ink-simulation.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
-import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
-import { MAX_KEYBOARD_SURFACE_STEPS } from "../recipes/ink-recipe.js";
+import { assertUint32 } from "../contracts/numeric.js";
 import { assertSurfaceDensityTransportGrid } from "./density-transport.js";
+import {
+  MAX_PAPER_SURFACE_STEPS,
+  assertSurfaceRecipeCompatible,
+} from "../surface-recipes/index.js";
 
 export const DEFAULT_SURFACE_SEED = 0x13579bdf;
 
@@ -13,7 +16,7 @@ export const DEFAULT_SURFACE_SEED = 0x13579bdf;
  * transport remains a compact Float32 solver grid.
  *
  * @param {{width:number,height:number,data:Uint8ClampedArray}} deposit
- * @param {number} absorption normalized 0...1
+ * @param {Record<string, unknown>} surfaceRecipe
  * @param {number} surfaceSeed
  * @param {Record<string, unknown>} recipe
  * @param {{width:number,height:number,signedNumerator:Float32Array,
@@ -21,13 +24,13 @@ export const DEFAULT_SURFACE_SEED = 0x13579bdf;
  */
 export function createKeyboardSurfaceState(
   deposit,
-  absorption,
+  surfaceRecipe,
   surfaceSeed,
-  recipe,
+  inkRecipe,
   densityTransport = null,
 ) {
-  assertInkRecipeCompatible(recipe);
-  assertFiniteRange(absorption, "absorption", 0, 1);
+  assertInkRecipeCompatible(inkRecipe);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   assertUint32(surfaceSeed, "surfaceSeed");
   const validatedDensityTransport = densityTransport === null
     ? null
@@ -49,24 +52,25 @@ export function createKeyboardSurfaceState(
     surfaceSeed,
   );
   simulation.depositMask(deposit, {
-    waterLoad: recipe.surface.keyboard.waterLoad,
-    pigmentLoad: recipe.surface.keyboard.pigmentLoad,
+    waterLoad: inkRecipe.keyboardDeposit.waterLoad,
+    pigmentLoad: inkRecipe.keyboardDeposit.pigmentLoad,
     seed: (surfaceSeed ^ 0x85ebca6b) >>> 0,
     ...(validatedDensityTransport === null
       ? {}
       : { densityTransport: validatedDensityTransport }),
   });
   const steps = Math.round(
-    recipe.surface.keyboard.stepBase
-      + absorption * recipe.surface.keyboard.stepAbsorptionGain,
+    surfaceRecipe.keyboard.stepBase
+      + surfaceRecipe.axes.verticalUptake
+        * surfaceRecipe.keyboard.stepUptakeGain,
   );
-  if (steps < 0 || steps > MAX_KEYBOARD_SURFACE_STEPS) {
+  if (steps < 0 || steps > MAX_PAPER_SURFACE_STEPS) {
     throw new RangeError(
-      `calculated keyboard Surface steps must be in 0...${MAX_KEYBOARD_SURFACE_STEPS}.`,
+      `calculated keyboard Surface steps must be in 0...${MAX_PAPER_SURFACE_STEPS}.`,
     );
   }
   for (let index = 0; index < steps; index += 1) {
-    simulation.step(recipe.surface.keyboard.stepMilliseconds, absorption);
+    simulation.stepSurface(surfaceRecipe.keyboard.stepMilliseconds, surfaceRecipe);
   }
 
   const material = {
@@ -74,14 +78,14 @@ export function createKeyboardSurfaceState(
     height: deposit.height,
     data: new Uint8ClampedArray(deposit.width * deposit.height * 4),
   };
-  simulation.render(material, recipe);
+  simulation.render(material, inkRecipe);
   for (let index = 0; index < material.data.length; index += 4) {
     const normalized = Math.min(
       1,
       material.data[index + 3]
         / (
-          recipe.surface.keyboard.normalizationReferenceAlpha
-          * recipe.surface.keyboard.normalizationScale
+          surfaceRecipe.keyboard.normalizationReferenceAlpha
+          * surfaceRecipe.keyboard.normalizationScale
         ),
     );
     material.data[index] = 255;
@@ -91,7 +95,7 @@ export function createKeyboardSurfaceState(
   }
   return Object.freeze({
     coverage: material,
-    densityTransport: simulation.createDensityTransport(recipe),
+    densityTransport: simulation.createDensityTransport(inkRecipe),
   });
 }
 
@@ -101,14 +105,14 @@ export function createKeyboardSurfaceState(
  */
 export function createMaterialCoverage(
   deposit,
-  absorption,
+  surfaceRecipe,
   surfaceSeed,
-  recipe,
+  inkRecipe,
 ) {
   return createKeyboardSurfaceState(
     deposit,
-    absorption,
+    surfaceRecipe,
     surfaceSeed,
-    recipe,
+    inkRecipe,
   ).coverage;
 }

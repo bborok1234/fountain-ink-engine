@@ -1,19 +1,50 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
+import { renderOrdinaryInkMaterial as renderOrdinaryInkMaterialForSurface } from "fountain-ink-engine/canvas2d";
 import {
-  getMeanDensity,
-  getNibDensityRange,
+  getMeanDensity as getMeanDensityForSurface,
+  getNibDensityRange as getNibDensityRangeForSurface,
 } from "fountain-ink-engine/density";
-import { compositeOrdinaryInk } from "fountain-ink-engine/optical";
+import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain-ink-engine/optical";
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R1,
-  ORDINARY_BURGUNDY_RECIPE_R1,
-  ORDINARY_GREEN_RECIPE_R7,
-  ORDINARY_TEAL_RECIPE_R1,
+  ORDINARY_BLUE_BLACK_RECIPE_R2,
+  ORDINARY_BURGUNDY_RECIPE_R2,
+  ORDINARY_GREEN_RECIPE_R8,
+  ORDINARY_TEAL_RECIPE_R2,
 } from "fountain-ink-engine/recipes";
+import { legacySurfaceAt } from "./helpers/material-fixtures.mjs";
+import {
+  PAPER_SURFACE_ABSORBENT_R1,
+  PAPER_SURFACE_BALANCED_R1,
+  PAPER_SURFACE_SMOOTH_R1,
+} from "fountain-ink-engine/surface-recipes";
+
+const renderOrdinaryInkMaterial = (options) =>
+  renderOrdinaryInkMaterialForSurface({
+    ...options,
+    surfaceRecipe: options.surfaceRecipe
+      ?? legacySurfaceAt((options.absorption ?? 42) / 100),
+  });
+const getMeanDensity = (nibId, flow, absorption, recipe) =>
+  getMeanDensityForSurface(
+    nibId,
+    flow,
+    legacySurfaceAt(absorption / 100),
+    recipe,
+  );
+const getNibDensityRange = (nibId, normalizedAbsorption, recipe) =>
+  getNibDensityRangeForSurface(
+    nibId,
+    legacySurfaceAt(normalizedAbsorption),
+    recipe,
+  );
+const compositeOrdinaryInk = (options) => compositeOrdinaryInkForSurface({
+  ...options,
+  surfaceRecipe: options.surfaceRecipe
+    ?? legacySurfaceAt((options.absorption ?? 42) / 100),
+});
 
 function makeImageData(width, height, data) {
   return {
@@ -170,7 +201,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R7,
+      recipe: ORDINARY_GREEN_RECIPE_R8,
       createLayer: makeCanvas,
     },
     mask,
@@ -191,7 +222,7 @@ function legacyCompositeBytes(result, options) {
   const output = new Uint8ClampedArray(options.pixelWidth * options.pixelHeight * 4);
   const mix = Math.pow(
     options.absorption / 100,
-    options.recipe.surface.keyboard.coverageMixExponent,
+    legacySurfaceAt(options.absorption / 100).keyboard.coverageMixExponent,
   );
   const mean = getMeanDensity(
     options.nibId,
@@ -210,7 +241,8 @@ function legacyCompositeBytes(result, options) {
     const surfaceAlpha = stages.surface.materialCoverageCandidate?.data[offset + 3] / 255 || 0;
     const coverage = Math.max(
       contactAlpha * (1 - mix) + surfaceAlpha * mix,
-      contactAlpha * options.recipe.surface.keyboard.minimumContactRetention,
+      contactAlpha
+        * legacySurfaceAt(options.absorption / 100).keyboard.contactRetentionFloor,
     );
     if (coverage <= 0.001) continue;
     let variation = 0;
@@ -336,6 +368,47 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   );
 });
 
+test("paper recipes change Surface response without changing Contact or Density accident", () => {
+  const { options } = makeOptions(42);
+  const render = (surfaceRecipe) => renderOrdinaryInkMaterial({
+    ...options,
+    surfaceRecipe,
+  });
+  const smooth = render(PAPER_SURFACE_SMOOTH_R1);
+  const balanced = render(PAPER_SURFACE_BALANCED_R1);
+  const absorbent = render(PAPER_SURFACE_ABSORBENT_R1);
+  for (const result of [balanced, absorbent]) {
+    assert.deepEqual(
+      result.stages.contact.rgbaMask.data,
+      smooth.stages.contact.rgbaMask.data,
+    );
+    assert.deepEqual(
+      result.stages.density.accumulatedVariation,
+      smooth.stages.density.accumulatedVariation,
+    );
+    assert.deepEqual(
+      result.stages.density.sampleCount,
+      smooth.stages.density.sampleCount,
+    );
+  }
+  assert.notDeepEqual(
+    absorbent.stages.surface.materialCoverageCandidate.data,
+    balanced.stages.surface.materialCoverageCandidate.data,
+  );
+  assert.ok(
+    smooth.normalizedConcentration.densityRange
+      > balanced.normalizedConcentration.densityRange,
+  );
+  assert.ok(
+    balanced.normalizedConcentration.densityRange
+      > absorbent.normalizedConcentration.densityRange,
+  );
+  assert.ok(
+    smooth.normalizedConcentration.meanDensity
+      > absorbent.normalizedConcentration.meanDensity,
+  );
+});
+
 test("zero absorption records an explicit unapplied Surface stage", () => {
   const { options } = makeOptions(0);
   const result = renderOrdinaryInkMaterial(options);
@@ -356,10 +429,10 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
 
 test("ordinary color recipes change only Optical RGB for the same material solve", () => {
   const recipes = [
-    ORDINARY_GREEN_RECIPE_R7,
-    ORDINARY_BLUE_BLACK_RECIPE_R1,
-    ORDINARY_BURGUNDY_RECIPE_R1,
-    ORDINARY_TEAL_RECIPE_R1,
+    ORDINARY_GREEN_RECIPE_R8,
+    ORDINARY_BLUE_BLACK_RECIPE_R2,
+    ORDINARY_BURGUNDY_RECIPE_R2,
+    ORDINARY_TEAL_RECIPE_R2,
   ];
   const results = recipes.map((recipe) => {
     const { options } = makeOptions(42);
@@ -483,7 +556,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R7,
+    recipe: ORDINARY_GREEN_RECIPE_R8,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -579,7 +652,7 @@ test("a far suffix preserves the complete existing material crop at absorption 4
     flow: 58,
     scale: 1,
     fontSize: 12,
-    recipe: ORDINARY_GREEN_RECIPE_R7,
+    recipe: ORDINARY_GREEN_RECIPE_R8,
     createLayer: makeCanvas,
   };
   const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
@@ -717,7 +790,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R7,
+    recipe: ORDINARY_GREEN_RECIPE_R8,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);
