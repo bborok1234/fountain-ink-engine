@@ -21,3 +21,4 @@ export {
   GLYPH_CONTACT_VARIATION_CALIBRATION,
   getGlyphContactGeometry,
 } from "./glyph-contact.js";
+export { analyzeContactAlpha } from "./mask-metrics.js";

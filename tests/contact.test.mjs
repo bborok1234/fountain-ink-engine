@@ -4,6 +4,7 @@ import {
   M_STROKE_EM,
   NIB_IDS,
   ROUND_NIB_RATIOS,
+  analyzeContactAlpha,
   geometryExpansion,
   getGlyphContactGeometry,
   getNibGeometry,
@@ -143,4 +144,45 @@ test("broad nibs increase signed density range within the recipe cap", () => {
       /normalizedAbsorption must be a finite number in 0\.\.\.1/,
     );
   }
+});
+
+test("final Contact masks expose measurable width, components, and counters", () => {
+  const ring = new Uint8ClampedArray(11 * 11);
+  for (let y = 2; y <= 8; y += 1) {
+    for (let x = 2; x <= 8; x += 1) {
+      if (x <= 3 || x >= 7 || y <= 3 || y >= 7) ring[y * 11 + x] = 255;
+    }
+  }
+  const metrics = analyzeContactAlpha(ring, 11, 11);
+  assert.equal(metrics.connectedComponents, 1);
+  assert.equal(metrics.counterCount, 1);
+  assert.deepEqual(metrics.counterAreas, [9]);
+  assert.ok(metrics.medianStrokeWidth > 0);
+  assert.ok(metrics.medianHorizontalRun > 0);
+  assert.ok(metrics.medianVerticalRun > 0);
+});
+
+test("synthetic final-mask ladder is monotonic and SU remains anisotropic", () => {
+  const width = 41;
+  const height = 41;
+  const base = new Uint8ClampedArray(width * height);
+  for (let y = 8; y < 33; y += 1) {
+    for (let x = 19; x < 22; x += 1) base[y * width + x] = 255;
+  }
+  const roundWidths = [0, 1, 2, 3].map((radius) => analyzeContactAlpha(
+    morphAlpha(base, width, height, radius, radius, "dilate"),
+    width,
+    height,
+  ).medianStrokeWidth);
+  assert.ok(roundWidths.every((value, index) => index === 0 || value > roundWidths[index - 1]));
+  const su = analyzeContactAlpha(
+    morphAlpha(base, width, height, 4, 1, "dilate"),
+    width,
+    height,
+  );
+  const baseMetrics = analyzeContactAlpha(base, width, height);
+  assert.ok(
+    su.medianHorizontalRun - baseMetrics.medianHorizontalRun
+      > su.medianVerticalRun - baseMetrics.medianVerticalRun,
+  );
 });

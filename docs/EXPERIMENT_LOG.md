@@ -451,3 +451,29 @@ they are not automatically promoted to timeless pass/fail truth.
   transport, normalized concentration, Optical RGBA, and direct writing.
 - Next different method: finish GlyphContact mask-ratio and counter-aperture
   contracts, then start ordinary color recipes.
+
+## E-012-glyph-contact-mask-contract / A1-A2
+
+- Parent: `E-011-surface-density-preservation-ownership / A1`
+- Engine model: `ordinary-js-r7`
+- Recipe schema: `4`
+- Fixture manifest: `1`
+- Status: passed after learned A1
+- Hypothesis: final raster masks can prove nib-width order, counter survival and
+  SU anisotropy without freezing a pixel golden.
+- A1 observed: row/column run length confused long stroke length with stroke
+  thickness, and alpha-greater-than-zero treated antialiasing tails as ink.
+- Discarded assumption: a contiguous run is a stroke-width measurement.
+- A2 method: alpha threshold 128, chamfer distance transform and centerline
+  maxima for thickness; four-connected enclosed transparent regions for
+  counters. The HTML harness rasterized `미음용품뿌리` with the bundled Nanum
+  Pen Script at 18/28/52px and DPR2 using explicit glyph seeds.
+- A2 observed: UEF→EB median widths were nondecreasing at all sizes, all round
+  nibs retained at least nine reference counters, and SU had greater horizontal
+  expansion without excess vertical growth. The smallest 18px EB counter was
+  one device pixel, so it passes but remains an explicit safety edge.
+- Preserved evidence or code: no glyph geometry, font, recipe, Surface, Density,
+  Optical or final pixels changed. Only measurement and fail-closed contracts
+  were added.
+- Next different method: ordinary color recipes may now begin; punctuation and
+  DPR1/3 extend this Contact matrix during P4/P6 hardening.

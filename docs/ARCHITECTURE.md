@@ -139,6 +139,12 @@ Surface also owns absorption-dependent Density preservation through
 multiplier; Density combines the two and applies the existing maximum cap.
 Contact no longer accepts absorption or a recipe to decide paper behavior.
 
+Final Contact masks can be checked with `analyzeContactAlpha`. The analyzer
+uses an explicit alpha threshold, a two-pass chamfer distance field for median
+centerline thickness, four-connected components, and enclosed transparent
+regions for counters. It has no font or Canvas dependency; the HTML harness
+supplies actual bundled-font masks.
+
 ### Optical components
 
 Owns concentration-to-color/alpha conversion only. The ordinary operator
