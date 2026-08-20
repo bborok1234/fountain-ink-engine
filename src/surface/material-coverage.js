@@ -6,7 +6,7 @@ import { MAX_KEYBOARD_SURFACE_STEPS } from "../recipes/ink-recipe.js";
 export const DEFAULT_SURFACE_SEED = 0x13579bdf;
 
 /**
- * Run the exact accepted deposit/step/alpha-normalization material calculation
+ * Run the exact accepted deposit/step/fixed-reference material calculation
  * on an already-resampled mask. Canvas allocation and resizing stay with the
  * caller; the returned object is ImageData-compatible structural RGBA.
  *
@@ -53,15 +53,14 @@ export function createMaterialCoverage(
     data: new Uint8ClampedArray(deposit.width * deposit.height * 4),
   };
   simulation.render(material, recipe);
-  let strongest = 1;
-  for (let index = 3; index < material.data.length; index += 4) {
-    strongest = Math.max(strongest, material.data[index]);
-  }
   for (let index = 0; index < material.data.length; index += 4) {
     const normalized = Math.min(
       1,
       material.data[index + 3]
-        / (strongest * recipe.surface.keyboard.normalizationScale),
+        / (
+          recipe.surface.keyboard.normalizationReferenceAlpha
+          * recipe.surface.keyboard.normalizationScale
+        ),
     );
     material.data[index] = 255;
     material.data[index + 1] = 255;

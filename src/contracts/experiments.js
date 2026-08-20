@@ -36,7 +36,7 @@ const EXPERIMENT_RECORD_KEYS = Object.freeze([
   "recordedAt",
 ]);
 
-const SUPPORTED_EXPERIMENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2]);
+const SUPPORTED_EXPERIMENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3]);
 const SUPPORTED_FIXTURE_MANIFEST_VERSIONS = Object.freeze([1]);
 
 function isRecord(value) {
@@ -217,7 +217,9 @@ export function createExperimentRecord(input) {
     }
     assertJsonValue(input.recipe, "record.recipe");
     recipe = deepFreeze(input.recipe);
-  } else if (requestedRecipeSchemaVersion === recipeSchemaVersion) {
+  } else if (SUPPORTED_EXPERIMENT_RECIPE_SCHEMA_VERSIONS.includes(
+    requestedRecipeSchemaVersion,
+  )) {
     recipe = freezeInkRecipe(input.recipe);
   } else {
     throw new TypeError(

@@ -22,15 +22,17 @@ Contact ──▶ Density ──▶ Surface ──▶ Optical components
 
 Owns model/schema/manifest versions and serializable experiment records. It
 does not invent timestamps or seeds. Fixture-manifest v1 preserves both its
-historical schema-1 plain-JSON recipes and current schema-2 strict recipes by
-explicit dispatch; archival acceptance never implies render compatibility.
+historical schema-1 plain-JSON recipes and schema-2/schema-3 strict recipes by
+explicit dispatch; archival acceptance never implies render compatibility or
+implicit migration.
 
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r3` contains the active density bounds, keyboard Surface load,
-direct-input load curve, and optical coefficients. It preserves r1/r2's numeric
-material fields while selecting the r4 calculation model. Runtime nib, flow,
+`ordinary-green-r4` contains the active density bounds, keyboard Surface load,
+fixed normalization reference, direct-input load curve, and optical
+coefficients. It preserves r3's existing material coefficients while selecting
+the r5 calculation model and schema 3. Runtime nib, flow,
 absorption, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
@@ -87,6 +89,15 @@ Owns `WetInkSimulation`: water, mobile pigment, fixed pigment, deterministic
 paper fibre direction, deposit, diffusion, fixing, and the currently accepted
 ordinary optical projection. Its image arguments are structural objects with
 `width`, `height`, and RGBA `data`; the class does not create browser objects.
+
+Keyboard coverage runs the wet solver once on the union Contact mask, then maps
+each raw alpha byte pointwise with the schema-3 recipe fields
+`normalizationReferenceAlpha` and `normalizationScale`. The divisor does not
+depend on an observed page maximum. Non-interacting content therefore cannot
+change an existing coverage crop through normalization, while genuinely nearby
+wet footprints may still interact through diffusion and fixing. The direct
+writing pad continues to use the same direct load and optical coefficients; it
+does not use this keyboard normalization field.
 
 ## Keyboard renderer diagnostics
 

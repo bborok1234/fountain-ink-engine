@@ -21,7 +21,7 @@ or mobile integration.
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R3,
+  ORDINARY_GREEN_RECIPE_R4,
   WetInkSimulation,
   createDensityField,
   getGlyphContactGeometry,
@@ -47,25 +47,25 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r3` is the active immutable, serializable r4 recipe.
-`ordinary-green-r1` and `ordinary-green-r2` remain exported as archival r2/r3
-checkpoints:
+`ordinary-green-r4` is the active immutable, serializable r5/schema-3 recipe.
+`ordinary-green-r1` through `ordinary-green-r3` remain exported as archival
+r2/r3/r4 checkpoints:
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R3,
+  ORDINARY_GREEN_RECIPE_R4,
   parseInkRecipe,
   serializeInkRecipe,
 } from "fountain-ink-engine/recipes";
 
-const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R3);
+const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R4);
 const restoredRecipe = parseInkRecipe(checkpoint);
 ```
 
 Structural recipe APIs preserve supported historical model records for archival
 round trips. Material calculation additionally requires the active engine
-model/schema. The reserved `ordinary-green@1`, `ordinary-green@2`, and
-`ordinary-green@3` identities must match their registered canonical definitions;
+model/schema. The reserved `ordinary-green@1` through `ordinary-green@4`
+identities must match their registered canonical definitions;
 changed parameters require a new revision or custom id.
 
 ## Glyph-local Density input
@@ -106,6 +106,22 @@ Migration from `0.3.x`: `createDensityField` and
 glyph mask and pass `glyphContacts` with the exact same rounded placement used
 to draw the page mask. The Canvas2D package remains a presentation adapter; text
 shaping, font selection, wrapping, and placement stay with the client.
+
+## Surface normalization
+
+As of package `0.5.0-experimental.1`, keyboard Surface coverage uses the
+schema-3 recipe field `surface.keyboard.normalizationReferenceAlpha` instead of
+the strongest alpha observed on the current page. The active ordinary recipe
+authors raw byte `107`, calibrated from the previous default
+M/28px/flow-58/absorption-42 result. This keeps that baseline while preventing a
+far stronger suffix from rescaling an existing coverage crop. Nearby wet
+footprints may still interact through diffusion and fixing.
+
+Migration from `0.4.x`: use `ORDINARY_GREEN_RECIPE_R4`, or add an explicit
+integer `normalizationReferenceAlpha` in `1...255` to a custom schema-3 recipe
+and give that calculation a new recipe revision/model identity. Schema-2
+recipes and experiment records remain parseable as history; they are not
+silently upgraded or rendered by r5.
 
 ## Development
 

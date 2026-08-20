@@ -10,8 +10,12 @@ const ORDINARY_GREEN_R2_CANONICAL_SERIALIZATION =
 const ORDINARY_GREEN_R3_CANONICAL_SERIALIZATION =
   '{"contact":{"catalogId":"standard-nib-ladder-r1"},"density":{"absorptionLoss":0.08,"flowGain":0.7,"meanBase":0.18,"meanMaximum":0.9,"meanMinimum":0.08,"rangeMaximum":1.04,"rangeMinimum":0.045,"rangeSmoothGain":0.635},"engineModelVersion":"ordinary-js-r4","id":"ordinary-green","optical":{"maximumAlpha":0.96,"minimumAlpha":0.68,"rgb":{"blue":40,"green":55,"red":29}},"recipeSchemaVersion":2,"revision":3,"surface":{"direct":{"optical":{"alphaGain":1.08,"blueBase":52,"blueDensityLoss":16,"blueWetGain":52,"densityExponent":1.72,"fixedWeight":0.92,"greenBase":74,"greenDensityLoss":18,"greenWetGain":64,"maximumAlpha":0.96,"mobileWeight":0.68,"pigmentMaximum":1.35,"redBase":18,"redWetGain":48,"wetLift":0.07},"pigmentBase":0.055,"pigmentFlowGain":0.17,"waterBase":0.085,"waterFlowGain":0.24},"keyboard":{"coverageMixExponent":0.92,"normalizationScale":0.9,"pigmentLoad":0.291,"stepAbsorptionGain":12,"stepBase":6,"stepMilliseconds":16.667,"waterLoad":0.377}}}';
 
+const ORDINARY_GREEN_R4_CANONICAL_SERIALIZATION =
+  '{"contact":{"catalogId":"standard-nib-ladder-r1"},"density":{"absorptionLoss":0.08,"flowGain":0.7,"meanBase":0.18,"meanMaximum":0.9,"meanMinimum":0.08,"rangeMaximum":1.04,"rangeMinimum":0.045,"rangeSmoothGain":0.635},"engineModelVersion":"ordinary-js-r5","id":"ordinary-green","optical":{"maximumAlpha":0.96,"minimumAlpha":0.68,"rgb":{"blue":40,"green":55,"red":29}},"recipeSchemaVersion":3,"revision":4,"surface":{"direct":{"optical":{"alphaGain":1.08,"blueBase":52,"blueDensityLoss":16,"blueWetGain":52,"densityExponent":1.72,"fixedWeight":0.92,"greenBase":74,"greenDensityLoss":18,"greenWetGain":64,"maximumAlpha":0.96,"mobileWeight":0.68,"pigmentMaximum":1.35,"redBase":18,"redWetGain":48,"wetLift":0.07},"pigmentBase":0.055,"pigmentFlowGain":0.17,"waterBase":0.085,"waterFlowGain":0.24},"keyboard":{"coverageMixExponent":0.92,"normalizationReferenceAlpha":107,"normalizationScale":0.9,"pigmentLoad":0.291,"stepAbsorptionGain":12,"stepBase":6,"stepMilliseconds":16.667,"waterLoad":0.377}}}';
+
 export const REGISTERED_BUILT_IN_RECIPE_SERIALIZATIONS = Object.freeze({
   "ordinary-green@1": ORDINARY_GREEN_R1_CANONICAL_SERIALIZATION,
   "ordinary-green@2": ORDINARY_GREEN_R2_CANONICAL_SERIALIZATION,
   "ordinary-green@3": ORDINARY_GREEN_R3_CANONICAL_SERIALIZATION,
+  "ordinary-green@4": ORDINARY_GREEN_R4_CANONICAL_SERIALIZATION,
 });
