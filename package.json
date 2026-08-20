@@ -1,0 +1,57 @@
+{
+  "name": "fountain-ink-engine",
+  "version": "0.1.0-experimental.1",
+  "description": "Deterministic, framework-free material engine for digital fountain-pen ink experiments.",
+  "keywords": [
+    "fountain-pen",
+    "ink",
+    "rendering",
+    "simulation",
+    "canvas"
+  ],
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bborok1234/fountain-ink-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bborok1234/fountain-ink-engine/issues"
+  },
+  "homepage": "https://github.com/bborok1234/fountain-ink-engine#readme",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.js",
+    "./contracts": "./src/contracts/index.js",
+    "./deterministic": "./src/deterministic/index.js",
+    "./contact": "./src/contact/index.js",
+    "./density": "./src/density/index.js",
+    "./surface": "./src/surface/index.js",
+    "./canvas2d": "./src/canvas2d/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "docs",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "LICENSE",
+    "NOTICE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "npm run build && npm test",
+    "prepack": "npm run verify"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
