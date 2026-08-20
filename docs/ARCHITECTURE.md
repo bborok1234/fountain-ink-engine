@@ -134,6 +134,11 @@ remains above the `0.54` floor, while maximum absorption retains at least that
 fraction of the original Contact alpha. Optical consumes this resolved plane;
 it no longer knows the Surface mix exponent or Contact-retention policy.
 
+Surface also owns absorption-dependent Density preservation through
+`getSurfaceDensityRange`. Contact supplies only the selected nib's shading
+multiplier; Density combines the two and applies the existing maximum cap.
+Contact no longer accepts absorption or a recipe to decide paper behavior.
+
 ### Optical components
 
 Owns concentration-to-color/alpha conversion only. The ordinary operator

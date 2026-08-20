@@ -4,7 +4,6 @@ export {
   NIB_IDS,
   NIB_PROFILES,
   ROUND_NIB_RATIOS,
-  getNibDensityRange,
   getNibGeometry,
   getNibProfile,
   getPhysicalNibGeometry,

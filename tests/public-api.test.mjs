@@ -23,6 +23,12 @@ test("self-referenced package barrels expose the stable API", () => {
     engine.createOrdinaryConcentrationField,
     density.createOrdinaryConcentrationField,
   );
+  assert.equal(engine.getNibDensityRange, density.getNibDensityRange);
+  assert.equal(contact.getNibDensityRange, undefined);
+  assert.equal(
+    engine.getSurfaceDensityRange,
+    surface.getSurfaceDensityRange,
+  );
   assert.equal(
     engine.compositeOrdinaryOptical,
     optical.compositeOrdinaryOptical,

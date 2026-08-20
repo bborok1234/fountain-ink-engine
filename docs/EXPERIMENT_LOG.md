@@ -430,3 +430,24 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: remove the remaining absorption-owned density-range
   response from Contact so Surface owns density preservation completely. Then
   finish GlyphContact aperture/ratio contracts before introducing new colors.
+
+## E-011-surface-density-preservation-ownership / A1
+
+- Parent: `E-010-density-optical-ownership / A1`
+- Engine model: `ordinary-js-r7`
+- Recipe schema: `4`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: absorption-dependent density preservation is Surface policy;
+  Contact should provide only nib shading multiplier and geometry.
+- Expected at normal size: no visual change and exact existing nib/Surface
+  density ranges.
+- Observed: `getSurfaceDensityRange` owns the absorption curve; Density combines
+  it with Contact's multiplier and existing cap. Engine 84/84 and the complete
+  HTML harness gate pass, including the prior RGBA equation regression.
+- Discarded assumption: Contact needs a recipe and paper absorption to describe
+  a nib.
+- Preserved evidence or code: all r7 values, recipes, Surface coverage and
+  transport, normalized concentration, Optical RGBA, and direct writing.
+- Next different method: finish GlyphContact mask-ratio and counter-aperture
+  contracts, then start ordinary color recipes.

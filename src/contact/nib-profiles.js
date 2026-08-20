@@ -1,6 +1,3 @@
-import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
-import { assertFiniteRange } from "../contracts/numeric.js";
-
 const clamp = (value, minimum, maximum) =>
   Math.min(maximum, Math.max(minimum, value));
 
@@ -101,26 +98,6 @@ export function getNibProfile(nibId) {
  * @param {number} normalizedAbsorption
  * @param {Record<string, unknown>} recipe
  */
-export function getNibDensityRange(
-  nibId,
-  normalizedAbsorption,
-  recipe,
-) {
-  assertInkRecipeCompatible(recipe);
-  const absorption = assertFiniteRange(
-    normalizedAbsorption,
-    "normalizedAbsorption",
-    0,
-    1,
-  );
-  const surfaceRange = recipe.density.rangeMinimum
-    + (1 - absorption) * recipe.density.rangeSmoothGain;
-  return Math.min(
-    recipe.density.rangeMaximum,
-    surfaceRange * getNibProfile(nibId).shadingMultiplier,
-  );
-}
-
 /** @param {string} nibId @param {number} value */
 export function shapeNibDensityVariation(nibId, value) {
   const variation = clamp(Number(value) || 0, -1, 1);
