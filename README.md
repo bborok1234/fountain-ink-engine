@@ -206,6 +206,13 @@ preservation to `getSurfaceDensityRange` in `./surface`. The final
 `getNibDensityRange` helper now belongs to `./density`; it combines the Surface
 base range with Contact's nib multiplier without changing the accepted values.
 
+Package `0.11.0-experimental.1` adds `analyzeContactAlpha` for final-mask
+contracts. It thresholds antialiasing, measures stroke width from a chamfer
+distance field, counts connected components and enclosed counters, and reports
+counter areas. The HTML harness applies it to the bundled Korean font at
+18/28/52px; small-size raster ties are allowed, width reversals and lost
+counters are not.
+
 ## Development
 
 ```bash

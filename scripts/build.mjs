@@ -77,6 +77,7 @@ const requiredExports = [
   "splitGraphemes",
   "getNibGeometry",
   "getGlyphContactGeometry",
+  "analyzeContactAlpha",
   "morphologyPass",
   "createDensityField",
   "createOrdinaryConcentrationField",
