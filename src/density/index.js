@@ -1,4 +1,5 @@
 export {
+  MAX_GLYPH_CONTACTS,
   compositeOrdinaryInk,
   createDensityField,
   getEffectiveFlow,

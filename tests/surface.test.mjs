@@ -6,7 +6,7 @@ import {
   createMaterialCoverage,
   getDirectDepositLoads,
 } from "../src/surface/index.js";
-import { ORDINARY_GREEN_RECIPE_R2 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R3 } from "../src/recipes/index.js";
 
 function makeDeposit(width, height) {
   const data = new Uint8ClampedArray(width * height * 4);
@@ -19,21 +19,21 @@ function makeDeposit(width, height) {
 }
 
 test("direct flow loads come from the authored recipe", () => {
-  const loads = getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R2, 0.58);
+  const loads = getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R3, 0.58);
   assert.ok(Math.abs(loads.waterLoad - 0.2242) < 1e-12);
   assert.ok(Math.abs(loads.pigmentLoad - 0.1536) < 1e-12);
-  assert.ok(Object.isFrozen(getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R2, 0)));
+  assert.ok(Object.isFrozen(getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R3, 0)));
   assert.throws(() => getDirectDepositLoads(undefined, 0.58), /recipe/);
   for (const flow of [Number.NaN, Number.POSITIVE_INFINITY, -0.01, 1.01]) {
     assert.throws(
-      () => getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R2, flow),
+      () => getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R3, flow),
       /normalizedFlow must be a finite number in 0\.\.\.1/,
     );
   }
 });
 
 test("excessive keyboard Surface work fails before touching a deposit", () => {
-  const excessive = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R2));
+  const excessive = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R3));
   excessive.id = "custom-excessive-steps";
   excessive.surface.keyboard.stepBase = 64;
   excessive.surface.keyboard.stepAbsorptionGain = 1;
@@ -60,7 +60,7 @@ test("invalid normalized absorption fails before touching a deposit", () => {
         untouchedDeposit,
         absorption,
         7,
-        ORDINARY_GREEN_RECIPE_R2,
+        ORDINARY_GREEN_RECIPE_R3,
       ),
       /absorption must be a finite number in 0\.\.\.1/,
     );
@@ -77,7 +77,7 @@ test("WetInkSimulation repeats typed-array state for the same input", () => {
     });
     for (let index = 0; index < 9; index += 1) simulation.step(16.667, 0.42);
     const image = { data: new Uint8ClampedArray(24 * 18 * 4) };
-    simulation.render(image, ORDINARY_GREEN_RECIPE_R2);
+    simulation.render(image, ORDINARY_GREEN_RECIPE_R3);
     return {
       water: simulation.water,
       mobile: simulation.mobile,
@@ -119,19 +119,19 @@ test("normalized material coverage is deterministic and structural ImageData", (
     deposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R2,
+    ORDINARY_GREEN_RECIPE_R3,
   );
   const second = createMaterialCoverage(
     deposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R2,
+    ORDINARY_GREEN_RECIPE_R3,
   );
   const differentSeed = createMaterialCoverage(
     deposit,
     0.42,
     (DEFAULT_SURFACE_SEED ^ 0x9e3779b9) >>> 0,
-    ORDINARY_GREEN_RECIPE_R2,
+    ORDINARY_GREEN_RECIPE_R3,
   );
   assert.deepEqual(first, second);
   assert.notDeepEqual(first.data, differentSeed.data);
@@ -172,7 +172,7 @@ test("surface calculations reject an implicit seed", () => {
       makeDeposit(12, 12),
       0.42,
       undefined,
-      ORDINARY_GREEN_RECIPE_R2,
+      ORDINARY_GREEN_RECIPE_R3,
     ),
     /explicit unsigned 32-bit integer/,
   );
