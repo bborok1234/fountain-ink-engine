@@ -2,7 +2,7 @@
 export const engineModelVersion = "ordinary-js-r2";
 
 /** Serialized material recipe shape. */
-export const recipeSchemaVersion = 1;
+export const recipeSchemaVersion = 2;
 
 /** Experiment/checkpoint metadata shape. */
 export const fixtureManifestVersion = 1;

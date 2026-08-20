@@ -3,14 +3,12 @@ import {
   getNibProfile,
   shapeNibDensityVariation,
 } from "../contact/nib-profiles.js";
-
-export const ORDINARY_INK_RGB = Object.freeze({ red: 29, green: 55, blue: 40 });
-export const MINIMUM_INK_ALPHA = 0.68;
-export const MAXIMUM_INK_ALPHA = 0.96;
+import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
+import { assertPercent, assertUint32 } from "../contracts/numeric.js";
 
 /** @param {string} nibId @param {number} flow percent 0...100 */
 export function getEffectiveFlow(nibId, flow) {
-  const normalizedFlow = flow / 100;
+  const normalizedFlow = assertPercent(flow, "flow") / 100;
   return Math.max(
     0,
     Math.min(1, normalizedFlow + getNibProfile(nibId).flowOffset),
@@ -23,18 +21,28 @@ export function getEffectiveFlow(nibId, flow) {
  * @param {number} flow percent 0...100
  * @param {number} absorption percent 0...100
  */
-export function getMeanDensity(nibId, flow, absorption) {
+export function getMeanDensity(nibId, flow, absorption, recipe) {
+  assertInkRecipeCompatible(recipe);
   const effectiveFlow = getEffectiveFlow(nibId, flow);
-  const normalizedAbsorption = absorption / 100;
+  const normalizedAbsorption = assertPercent(absorption, "absorption") / 100;
   return Math.max(
-    0.08,
-    Math.min(0.9, 0.18 + effectiveFlow * 0.7 - normalizedAbsorption * 0.08),
+    recipe.density.meanMinimum,
+    Math.min(
+      recipe.density.meanMaximum,
+      recipe.density.meanBase
+        + effectiveFlow * recipe.density.flowGain
+        - normalizedAbsorption * recipe.density.absorptionLoss,
+    ),
   );
 }
 
 /** @param {number} absorption percent 0...100 */
-export function getMaterialMix(absorption) {
-  return Math.pow(absorption / 100, 0.92);
+export function getMaterialMix(absorption, recipe) {
+  assertInkRecipeCompatible(recipe);
+  return Math.pow(
+    assertPercent(absorption, "absorption") / 100,
+    recipe.surface.keyboard.coverageMixExponent,
+  );
 }
 
 /**
@@ -46,6 +54,7 @@ export function getMaterialMix(absorption) {
  * @param {number} seed
  */
 export function sampleGlyphDensityVariation(localX, localY, fontSize, seed) {
+  assertUint32(seed, "seed");
   const phaseA = (seed & 0xffff) / 65535 * Math.PI * 2;
   const phaseB = ((seed >>> 8) & 0xffff) / 65535 * Math.PI * 2;
   const phaseC = ((seed >>> 16) & 0xffff) / 65535 * Math.PI * 2;
@@ -90,8 +99,9 @@ export function createDensityField({
   lineLayouts.forEach((layout) => {
     layout.glyphs.forEach((glyph) => {
       if (glyph.character.trim() === "") return;
-      const seed = glyph.cadence?.seed
-        ?? Math.imul(glyph.sourceIndex + 1, 2654435761);
+      const seed = glyph.cadence?.seed === undefined
+        ? Math.imul(glyph.sourceIndex + 1, 2654435761) >>> 0
+        : assertUint32(glyph.cadence.seed, "glyph.cadence.seed");
       const phaseA = (seed & 0xffff) / 65535 * Math.PI * 2;
       const phaseB = ((seed >>> 8) & 0xffff) / 65535 * Math.PI * 2;
       const phaseC = ((seed >>> 16) & 0xffff) / 65535 * Math.PI * 2;
@@ -147,6 +157,7 @@ const rgbaData = (value) => value?.data ?? value;
  *   nibId:string,
  *   flow:number,
  *   absorption:number,
+ *   recipe:Record<string, unknown>,
  *   output?:{width:number,height:number,data:Uint8ClampedArray}
  * }} options
  */
@@ -160,17 +171,25 @@ export function compositeOrdinaryInk({
   nibId,
   flow,
   absorption,
+  recipe,
   output,
 }) {
+  assertInkRecipeCompatible(recipe);
+  assertPercent(flow, "flow");
+  assertPercent(absorption, "absorption");
   const result = output ?? {
     width: pixelWidth,
     height: pixelHeight,
     data: new Uint8ClampedArray(pixelWidth * pixelHeight * 4),
   };
   const normalizedAbsorption = absorption / 100;
-  const materialMix = Math.pow(normalizedAbsorption, 0.92);
-  const meanDensity = getMeanDensity(nibId, flow, absorption);
-  const densityRange = getNibDensityRange(nibId, normalizedAbsorption);
+  const materialMix = getMaterialMix(absorption, recipe);
+  const meanDensity = getMeanDensity(nibId, flow, absorption, recipe);
+  const densityRange = getNibDensityRange(
+    nibId,
+    normalizedAbsorption,
+    recipe,
+  );
   const pixels = result.data;
   const maskData = rgbaData(mask);
   const materialData = materialCoverage ? rgbaData(materialCoverage) : null;
@@ -191,11 +210,12 @@ export function compositeOrdinaryInk({
         0,
         Math.min(1, meanDensity + shapedVariation * densityRange),
       );
-      const alpha = (MINIMUM_INK_ALPHA
-        + (MAXIMUM_INK_ALPHA - MINIMUM_INK_ALPHA) * concentration) * coverage;
-      pixels[offset] = ORDINARY_INK_RGB.red;
-      pixels[offset + 1] = ORDINARY_INK_RGB.green;
-      pixels[offset + 2] = ORDINARY_INK_RGB.blue;
+      const alpha = (recipe.optical.minimumAlpha
+        + (recipe.optical.maximumAlpha - recipe.optical.minimumAlpha)
+          * concentration) * coverage;
+      pixels[offset] = recipe.optical.rgb.red;
+      pixels[offset + 1] = recipe.optical.rgb.green;
+      pixels[offset + 2] = recipe.optical.rgb.blue;
       pixels[offset + 3] = Math.round(alpha * 255);
     }
   }

@@ -21,7 +21,21 @@ Contact ──▶ Density ──▶ Surface ──▶ Optical components
 ### Contracts
 
 Owns model/schema/manifest versions and serializable experiment records. It
-does not invent timestamps or seeds.
+does not invent timestamps or seeds. Fixture-manifest v1 preserves both its
+historical schema-1 plain-JSON recipes and current schema-2 strict recipes by
+explicit dispatch; archival acceptance never implies render compatibility.
+
+### Recipes
+
+Owns immutable authored material parameters and canonical JSON serialization.
+`ordinary-green-r1` contains the current density bounds, keyboard Surface load,
+direct-input load curve, and optical coefficients. Runtime nib, flow,
+absorption, layout, text, and seeds are not recipe fields.
+
+Structural validation and archival round-trip are separate from calculation
+compatibility. A supported historical model recipe can be parsed without being
+silently run by the current model. Built-in `(id, revision)` pairs are registered
+canonical identities; different parameters use a new revision or custom id.
 
 ### Deterministic
 
@@ -35,8 +49,8 @@ expansion. It has no font or Canvas dependency.
 
 ### Density
 
-Owns ordinary-ink flow normalization, glyph-local signed density fields, the
-calibrated direct-stroke alpha endpoints, and their deterministic composite.
+Owns ordinary-ink flow normalization, glyph-local signed density fields, and
+the deterministic composite that applies recipe-owned optical alpha endpoints.
 It accepts typed arrays and layout facts supplied by a client.
 
 ### Surface
@@ -45,6 +59,26 @@ Owns `WetInkSimulation`: water, mobile pigment, fixed pigment, deterministic
 paper fibre direction, deposit, diffusion, fixing, and the currently accepted
 ordinary optical projection. Its image arguments are structural objects with
 `width`, `height`, and RGBA `data`; the class does not create browser objects.
+
+## Keyboard renderer diagnostics
+
+The public Canvas2D keyboard renderer returns a frozen `stages` record that
+observes the buffers already used by the accepted render path:
+
+- `contact.rgbaMask`: the full-resolution RGBA glyph mask;
+- `density.accumulatedVariation` and `density.sampleCount`: the unnormalized
+  signed sum and count planes;
+- `surface.materialCoverageCandidate` and `surface.applied`: the resampled
+  physical coverage candidate, or `null` with `applied: false` when the Surface
+  branch is skipped;
+- `optical.compositeRgba`: the final ordinary RGBA composite.
+
+The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
+return fields remain same-reference aliases. Stage containers are immutable;
+their typed-array/ImageData-compatible buffers are not copied or frozen. These
+are observation outputs, not proof that all calculation ownership has already
+moved into four independent operators. In particular, no normalized
+concentration plane or final mixed-coverage plane is claimed yet.
 
 ## Source distribution
 
@@ -57,6 +91,10 @@ importable and that the source has no forbidden application dependency.
 - `engineModelVersion`: changes when a calculation or its interpretation changes.
 - `recipeSchemaVersion`: changes when serialized material inputs change shape.
 - `fixtureManifestVersion`: changes when experiment/checkpoint metadata changes.
+
+An authored recipe additionally has an `id` and `revision`. Changing its result
+requires a new revision; changing the serialized field shape requires a new
+`recipeSchemaVersion`.
 
 Package SemVer describes library/API compatibility. It does not replace any of
 these replay and experiment contracts.

@@ -1,3 +1,5 @@
+import { assertUint32 } from "../contracts/numeric.js";
+
 /**
  * Return the reference engine's deterministic Mulberry32-like PRNG closure.
  *
@@ -5,7 +7,7 @@
  * @returns {() => number}
  */
 export function randomFrom(seed) {
-  let value = seed ?? 1;
+  let value = assertUint32(seed, "seed");
   return () => {
     value += 0x6d2b79f5;
     let next = value;
@@ -23,10 +25,17 @@ export function randomFrom(seed) {
  * @param {number} seed
  * @returns {number}
  */
-export function coordinateNoise(x, y, seed) {
+export function coordinateNoiseUnchecked(x, y, seed) {
   let value = Math.imul(x + 1, 374761393)
     ^ Math.imul(y + 1, 668265263)
     ^ seed;
   value = Math.imul(value ^ (value >>> 13), 1274126177);
   return ((value ^ (value >>> 16)) >>> 0) / 4294967295;
+}
+
+export function coordinateNoise(x, y, seed) {
+  if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y)) {
+    throw new TypeError("x and y must be safe integers.");
+  }
+  return coordinateNoiseUnchecked(x, y, assertUint32(seed, "seed"));
 }

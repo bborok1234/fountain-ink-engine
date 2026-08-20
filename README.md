@@ -21,6 +21,7 @@ or mobile integration.
 
 ```js
 import {
+  ORDINARY_GREEN_RECIPE_R1,
   WetInkSimulation,
   createDensityField,
   getNibGeometry,
@@ -31,17 +32,37 @@ import {
 Focused entry points are also available:
 
 - `fountain-ink-engine/contracts`
+- `fountain-ink-engine/recipes`
 - `fountain-ink-engine/deterministic`
 - `fountain-ink-engine/contact`
 - `fountain-ink-engine/density`
 - `fountain-ink-engine/surface`
 - `fountain-ink-engine/canvas2d`
 
-All material inputs and seeds must be explicit. The same engine version, recipe,
-dimensions, inputs, and seed are expected to produce the same typed-array state.
+All material inputs and seeds must be explicit; seeds use the unsigned 32-bit
+domain. The same engine version, recipe, dimensions, inputs, and seed are
+expected to produce the same typed-array state.
 Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
+
+`ordinary-green-r1` is available as an immutable, serializable recipe:
+
+```js
+import {
+  ORDINARY_GREEN_RECIPE_R1,
+  parseInkRecipe,
+  serializeInkRecipe,
+} from "fountain-ink-engine/recipes";
+
+const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R1);
+const restoredRecipe = parseInkRecipe(checkpoint);
+```
+
+Structural recipe APIs preserve supported historical model records for archival
+round trips. Material calculation additionally requires the active engine
+model/schema. The reserved `ordinary-green@1` identity must match its registered
+canonical definition; changed parameters require a new revision or custom id.
 
 ## Development
 

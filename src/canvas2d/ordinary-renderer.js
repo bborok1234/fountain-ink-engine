@@ -1,11 +1,33 @@
 import { createDensityField, compositeOrdinaryInk } from "../density/index.js";
+import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { createMaterialCoverage } from "../surface/index.js";
+import {
+  assertFiniteRange,
+  assertPercent,
+  assertUint32,
+} from "../contracts/numeric.js";
 import { makeLayer } from "./glyph-mask.js";
 
 function assertSurfaceSeed(surfaceSeed) {
-  if (!Number.isInteger(surfaceSeed) || surfaceSeed < 0) {
-    throw new TypeError("surfaceSeed must be an explicit non-negative integer.");
-  }
+  return assertUint32(surfaceSeed, "surfaceSeed");
+}
+
+function makeDiagnosticStages({
+  rgbaMask,
+  accumulatedVariation,
+  sampleCount,
+  materialCoverageCandidate,
+  compositeRgba,
+}) {
+  return Object.freeze({
+    contact: Object.freeze({ rgbaMask }),
+    density: Object.freeze({ accumulatedVariation, sampleCount }),
+    surface: Object.freeze({
+      materialCoverageCandidate,
+      applied: materialCoverageCandidate !== null,
+    }),
+    optical: Object.freeze({ compositeRgba }),
+  });
 }
 
 /**
@@ -19,8 +41,11 @@ export function makeMaterialCoverage({
   height,
   absorption,
   surfaceSeed,
+  recipe,
   createLayer = makeLayer,
 }) {
+  assertInkRecipeCompatible(recipe);
+  assertFiniteRange(absorption, "absorption", 0, 1);
   assertSurfaceSeed(surfaceSeed);
   const gridWidth = Math.max(160, Math.min(320, Math.round(width * 0.56)));
   const gridHeight = Math.max(130, Math.min(240, Math.round(height * 0.56)));
@@ -35,6 +60,7 @@ export function makeMaterialCoverage({
     deposit,
     absorption,
     surfaceSeed,
+    recipe,
   );
   const material = depositContext.createImageData(gridWidth, gridHeight);
   material.data.set(materialState.data);
@@ -51,6 +77,9 @@ export function makeMaterialCoverage({
 /**
  * Calculate density, Surface coverage, and ordinary optical RGBA from a mask.
  * Layout and glyph-mask placement remain caller responsibilities.
+ * The returned `stages` record names the existing intermediate buffers without
+ * adding a second calculation path. Legacy top-level fields remain same-reference
+ * aliases for compatibility.
  */
 export function renderOrdinaryInkMaterial({
   outputContext,
@@ -66,8 +95,12 @@ export function renderOrdinaryInkMaterial({
   scale,
   fontSize,
   lineLayouts,
+  recipe,
   createLayer = makeLayer,
 }) {
+  assertInkRecipeCompatible(recipe);
+  assertPercent(flow, "flow");
+  assertPercent(absorption, "absorption");
   assertSurfaceSeed(surfaceSeed);
   const normalizedAbsorption = absorption / 100;
   const maskPixels = mask.getContext("2d").getImageData(
@@ -85,6 +118,7 @@ export function renderOrdinaryInkMaterial({
       height,
       absorption: normalizedAbsorption,
       surfaceSeed,
+      recipe,
       createLayer,
     })
     : null;
@@ -106,12 +140,21 @@ export function renderOrdinaryInkMaterial({
     nibId,
     flow,
     absorption,
+    recipe,
     output: result,
   });
+  const stages = makeDiagnosticStages({
+    rgbaMask: maskPixels,
+    accumulatedVariation: densityField,
+    sampleCount: densitySamples,
+    materialCoverageCandidate: materialCoverage,
+    compositeRgba: result,
+  });
   return {
-    imageData: result,
-    densityField,
-    densitySamples,
-    materialCoverage,
+    stages,
+    imageData: stages.optical.compositeRgba,
+    densityField: stages.density.accumulatedVariation,
+    densitySamples: stages.density.sampleCount,
+    materialCoverage: stages.surface.materialCoverageCandidate,
   };
 }
