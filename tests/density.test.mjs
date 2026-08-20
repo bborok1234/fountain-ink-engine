@@ -8,7 +8,7 @@ import {
   getMeanDensity,
   sampleGlyphDensityVariation,
 } from "../src/density/index.js";
-import { ORDINARY_GREEN_RECIPE_R5 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
 
 function makeRgbaMask(width, height, supportedPixels) {
   const data = new Uint8ClampedArray(width * height * 4);
@@ -90,7 +90,7 @@ test("preserves the accepted flow and mean-density equations", () => {
   assert.equal(getEffectiveFlow("UEF", 0), 0);
   assert.equal(getEffectiveFlow("EB", 100), 1);
   assert.ok(
-    Math.abs(getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R5) - 0.5524)
+    Math.abs(getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R6) - 0.5524)
       < 1e-12,
   );
   const acceptedMeanAtFlow58Absorption42 = {
@@ -106,7 +106,7 @@ test("preserves the accepted flow and mean-density equations", () => {
     acceptedMeanAtFlow58Absorption42,
   )) {
     assert.equal(
-      getMeanDensity(nibId, 58, 42, ORDINARY_GREEN_RECIPE_R5),
+      getMeanDensity(nibId, 58, 42, ORDINARY_GREEN_RECIPE_R6),
       expected,
     );
   }
@@ -118,11 +118,11 @@ test("public flow and absorption inputs fail closed outside percent units", () =
   }
   for (const absorption of [Number.NaN, Number.NEGATIVE_INFINITY, -1, 101]) {
     assert.throws(
-      () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R5),
+      () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R6),
       /absorption must be a finite number/,
     );
     assert.throws(
-      () => getMaterialMix(absorption, ORDINARY_GREEN_RECIPE_R5),
+      () => getMaterialMix(absorption, ORDINARY_GREEN_RECIPE_R6),
       /absorption must be a finite number/,
     );
   }
@@ -614,9 +614,69 @@ test("ordinary composite stays inside calibrated direct-stroke endpoints", () =>
     nibId: "M",
     flow: 58,
     absorption: 42,
-    recipe: ORDINARY_GREEN_RECIPE_R5,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
   });
   assert.deepEqual(Array.from(result.data), [29, 55, 40, 213]);
+});
+
+test("high absorption retains a legible Contact core without changing the default mix", () => {
+  const mask = new Uint8ClampedArray([255, 255, 255, 255]);
+  const emptySurface = new Uint8ClampedArray(4);
+  const common = {
+    pixelWidth: 1,
+    pixelHeight: 1,
+    mask,
+    materialCoverage: emptySurface,
+    densityField: new Float32Array([0]),
+    densitySamples: new Uint16Array([1]),
+    nibId: "M",
+    flow: 58,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  };
+  const maximumAbsorption = compositeOrdinaryInk({
+    ...common,
+    absorption: 100,
+  });
+  const preCoverageAlpha = ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha
+    + (ORDINARY_GREEN_RECIPE_R6.optical.maximumAlpha
+      - ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha)
+      * getMeanDensity("M", 58, 100, ORDINARY_GREEN_RECIPE_R6);
+  assert.equal(
+    maximumAbsorption.data[3],
+    Math.round(
+      preCoverageAlpha
+        * ORDINARY_GREEN_RECIPE_R6.surface.keyboard.minimumContactRetention
+        * 255,
+    ),
+  );
+  assert.ok(maximumAbsorption.data[3] > 0);
+  const smoothSurface = compositeOrdinaryInk({
+    ...common,
+    absorption: 0,
+  });
+  assert.ok(
+    maximumAbsorption.data[3] < smoothSurface.data[3],
+    "retained Contact must not make absorbent paper darker than smooth paper",
+  );
+
+  const defaultAbsorption = compositeOrdinaryInk({
+    ...common,
+    absorption: 42,
+  });
+  const legacyDefaultCoverage = 1
+    - getMaterialMix(42, ORDINARY_GREEN_RECIPE_R6);
+  assert.ok(
+    legacyDefaultCoverage
+      > ORDINARY_GREEN_RECIPE_R6.surface.keyboard.minimumContactRetention,
+  );
+  const defaultPreCoverageAlpha = ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha
+    + (ORDINARY_GREEN_RECIPE_R6.optical.maximumAlpha
+      - ORDINARY_GREEN_RECIPE_R6.optical.minimumAlpha)
+      * getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R6);
+  assert.equal(
+    defaultAbsorption.data[3],
+    Math.round(defaultPreCoverageAlpha * legacyDefaultCoverage * 255),
+  );
 });
 
 test("Contact density wins while Surface-only pigment uses transported raw variation", () => {
@@ -638,7 +698,7 @@ test("Contact density wins while Surface-only pigment uses transported raw varia
     nibId: "M",
     flow: 58,
     absorption: 100,
-    recipe: ORDINARY_GREEN_RECIPE_R5,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
   };
   const meanFallback = compositeOrdinaryInk(common);
   const transported = compositeOrdinaryInk({
@@ -682,7 +742,7 @@ test("transparent coverage produces no optical ink", () => {
     nibId: "M",
     flow: 58,
     absorption: 0,
-    recipe: ORDINARY_GREEN_RECIPE_R5,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
   });
   assert.deepEqual(Array.from(result.data), [0, 0, 0, 0]);
   assert.throws(() => compositeOrdinaryInk({

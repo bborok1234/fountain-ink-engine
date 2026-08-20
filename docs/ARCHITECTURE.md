@@ -22,17 +22,17 @@ Contact ──▶ Density ──▶ Surface ──▶ Optical components
 
 Owns model/schema/manifest versions and serializable experiment records. It
 does not invent timestamps or seeds. Fixture-manifest v1 preserves both its
-historical schema-1 plain-JSON recipes and schema-2/schema-3 strict recipes by
+historical schema-1 plain-JSON recipes and schema-2/schema-3/schema-4 strict recipes by
 explicit dispatch; archival acceptance never implies render compatibility or
 implicit migration.
 
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r5` contains the active density bounds, keyboard Surface load,
-fixed normalization reference, direct-input load curve, and optical
-coefficients. It preserves r4's material coefficients exactly while selecting
-the r6 calculation model and schema 3. Runtime nib, flow,
+`ordinary-green-r6` contains the active density bounds, keyboard Surface load,
+fixed normalization reference, minimum Contact retention, direct-input load
+curve, and optical coefficients. It preserves r5's existing material
+coefficients while selecting the r7 calculation model and schema 4. Runtime nib, flow,
 absorption, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
@@ -117,6 +117,14 @@ planes). The input resample is another transient 614,400 bytes, so the maximum
 transport-specific typed-array peak while producing the returned grid is
 2,150,400 bytes. Only the 614,400-byte returned grid survives for renderer or
 diagnostic use; no full-page Float32 transport output is retained.
+
+The r7 Optical coverage resolve keeps the existing linear Contact/Surface mix
+when it is stronger, then applies the recipe-authored Contact-retention floor.
+This prevents high absorption from turning a small glyph into only a coarse
+grid blur while preserving the outward Surface halo. It does not add a shifted
+mask, shadow, duplicate pass, or font-size-dependent paper rule. Absorption 42
+remains above the `0.54` floor, while maximum absorption retains at least that
+fraction of the original Contact alpha.
 
 ## Keyboard renderer diagnostics
 

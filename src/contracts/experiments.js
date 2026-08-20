@@ -36,7 +36,7 @@ const EXPERIMENT_RECORD_KEYS = Object.freeze([
   "recordedAt",
 ]);
 
-const SUPPORTED_EXPERIMENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3]);
+const SUPPORTED_EXPERIMENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3, 4]);
 const SUPPORTED_FIXTURE_MANIFEST_VERSIONS = Object.freeze([1]);
 
 function isRecord(value) {

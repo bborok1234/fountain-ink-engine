@@ -1,8 +1,8 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r6`
-> Recipe schema: `3`
+> Engine model: `ordinary-js-r7`
+> Recipe schema: `4`
 > Fixture manifest: `1`
 
 ## Now
@@ -18,24 +18,24 @@ The first extraction deliberately keeps the accepted ordinary-ink formulas:
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
 Those authored constants now live in the immutable active
-`ordinary-green-r5` recipe. `ordinary-green-r1` through `ordinary-green-r4`
+`ordinary-green-r6` recipe. `ordinary-green-r1` through `ordinary-green-r5`
 remain registered and structurally readable as archival `ordinary-js-r2`
-through `ordinary-js-r5` checkpoints, but they are not calculation-compatible
-with the active r6 model. Nib, flow, absorption,
+through `ordinary-js-r6` checkpoints, but they are not calculation-compatible
+with the active r7 model. Nib, flow, absorption,
 layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
 from a historical engine model, while calculation entry points additionally
 require the active engine model/schema and a canonical registered definition
 for built-in identities such as `ordinary-green@1` through
-`ordinary-green@5`.
+`ordinary-green@6`.
 
 Fixture-manifest v1 records dispatch by their recorded recipe schema: original
-schema-1 recipes remain immutable archival JSON, while schema-2 and schema-3
+schema-1 recipes remain immutable archival JSON, while schema-2 through schema-4
 records receive strict recipe and identity validation. Only compatible
-schema-3 recipes can enter the current material calculation. Historical
+schema-4 recipes can enter the current material calculation. Historical
 schema-1 record seeds retain their original non-negative-integer rule; all live
-schema-2/schema-3 and material seed domains are unsigned 32-bit. No historical
+schema-2/schema-3/schema-4 and material seed domains are unsigned 32-bit. No historical
 record is implicitly migrated.
 
 The engine contains no React component, text control, Vite configuration,
@@ -87,6 +87,15 @@ then divides. Existing Contact pixels always keep their exact current Density;
 only Surface-visible pixels without a Contact sample use transported variation.
 Flow, mean density, color, and nib shaping do not enter transport, and nib
 shaping still occurs exactly once in Optical.
+
+At maximum keyboard absorption, Surface composition no longer replaces the
+complete Contact with only the downsampled wet-grid candidate. Schema 4 authors
+`minimumContactRetention = 0.54`: the previous Contact/Surface mixture remains
+unchanged whenever it is stronger, while missing or weak grid coverage cannot
+erase more than 46% of the original Contact. The absorption-42 reference keeps
+its prior `0.549816...` Contact share and therefore remains numerically above
+the new floor. The mean-density loss, narrowed shading range, outward fibre
+spread, and transported halo remain separate effects.
 
 ## Current limits
 

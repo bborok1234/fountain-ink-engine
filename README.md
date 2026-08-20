@@ -21,7 +21,7 @@ or mobile integration.
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R5,
+  ORDINARY_GREEN_RECIPE_R6,
   WetInkSimulation,
   createDensityField,
   getGlyphContactGeometry,
@@ -47,24 +47,24 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r5` is the active immutable, serializable r6/schema-3 recipe.
-`ordinary-green-r1` through `ordinary-green-r4` remain exported as archival
-r2/r3/r4/r5 checkpoints:
+`ordinary-green-r6` is the active immutable, serializable r7/schema-4 recipe.
+`ordinary-green-r1` through `ordinary-green-r5` remain exported as archival
+r2/r3/r4/r5/r6 checkpoints:
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R5,
+  ORDINARY_GREEN_RECIPE_R6,
   parseInkRecipe,
   serializeInkRecipe,
 } from "fountain-ink-engine/recipes";
 
-const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R5);
+const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R6);
 const restoredRecipe = parseInkRecipe(checkpoint);
 ```
 
 Structural recipe APIs preserve supported historical model records for archival
 round trips. Material calculation additionally requires the active engine
-model/schema. The reserved `ordinary-green@1` through `ordinary-green@5`
+model/schema. The reserved `ordinary-green@1` through `ordinary-green@6`
 identities must match their registered canonical definitions;
 changed parameters require a new revision or custom id.
 
@@ -151,6 +151,26 @@ Migration from `0.5.x`: use `ORDINARY_GREEN_RECIPE_R5` and read `coverage` from
 `createMaterialCoverage` coverage-only wrapper. No authored coefficient or
 recipe field was added, so schema 3 remains current. `ordinary-green-r4` stays
 parseable as an immutable r5 checkpoint but cannot be rendered by r6.
+
+## High-absorption Contact retention
+
+As of package `0.7.0-experimental.1`, maximum keyboard absorption no longer
+replaces the complete glyph Contact with the coarse Surface-grid result. The
+schema-4 field `surface.keyboard.minimumContactRetention` authors a lower bound
+for pigment that remains at the original Contact while the existing Surface
+coverage continues to spread outside it. The active recipe uses `0.54`.
+
+This is a coverage floor, not a duplicate glyph, shadow, or blur pass. The
+legacy mixed coverage remains authoritative whenever it is already stronger.
+In particular, the accepted absorption-42 baseline has a crisp Contact share of
+about `0.5498`, so it remains above the new floor and keeps the previous mix.
+Mean density loss, narrowed shading, fibre diffusion, density transport, and
+direct writing remain separate and unchanged.
+
+Migration from `0.6.x`: use `ORDINARY_GREEN_RECIPE_R6`, or add an explicit
+finite `minimumContactRetention` in `0...1` to a custom schema-4 recipe and give
+that behavior a new model/revision identity. Schema-3 recipes remain archival;
+they are not silently rendered by r7.
 
 ## Development
 
