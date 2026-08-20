@@ -8,16 +8,33 @@ import {
   getMeanDensity,
   sampleGlyphDensityVariation,
 } from "../src/density/index.js";
-import { ORDINARY_GREEN_RECIPE_R1 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R2 } from "../src/recipes/index.js";
 
 test("preserves the accepted flow and mean-density equations", () => {
   assert.equal(getEffectiveFlow("M", 58), 0.58);
   assert.equal(getEffectiveFlow("UEF", 0), 0);
   assert.equal(getEffectiveFlow("EB", 100), 1);
   assert.ok(
-    Math.abs(getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R1) - 0.5524)
+    Math.abs(getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R2) - 0.5524)
       < 1e-12,
   );
+  const acceptedMeanAtFlow58Absorption42 = {
+    UEF: 0.4753999999999999,
+    EF: 0.4893999999999999,
+    F: 0.5209,
+    M: 0.5524,
+    B: 0.6013999999999999,
+    EB: 0.6294,
+    SU: 0.5839,
+  };
+  for (const [nibId, expected] of Object.entries(
+    acceptedMeanAtFlow58Absorption42,
+  )) {
+    assert.equal(
+      getMeanDensity(nibId, 58, 42, ORDINARY_GREEN_RECIPE_R2),
+      expected,
+    );
+  }
 });
 
 test("public flow and absorption inputs fail closed outside percent units", () => {
@@ -26,11 +43,11 @@ test("public flow and absorption inputs fail closed outside percent units", () =
   }
   for (const absorption of [Number.NaN, Number.NEGATIVE_INFINITY, -1, 101]) {
     assert.throws(
-      () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R1),
+      () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R2),
       /absorption must be a finite number/,
     );
     assert.throws(
-      () => getMaterialMix(absorption, ORDINARY_GREEN_RECIPE_R1),
+      () => getMaterialMix(absorption, ORDINARY_GREEN_RECIPE_R2),
       /absorption must be a finite number/,
     );
   }
@@ -107,7 +124,7 @@ test("ordinary composite stays inside calibrated direct-stroke endpoints", () =>
     nibId: "M",
     flow: 58,
     absorption: 42,
-    recipe: ORDINARY_GREEN_RECIPE_R1,
+    recipe: ORDINARY_GREEN_RECIPE_R2,
   });
   assert.deepEqual(Array.from(result.data), [29, 55, 40, 213]);
 });
@@ -122,7 +139,7 @@ test("transparent coverage produces no optical ink", () => {
     nibId: "M",
     flow: 58,
     absorption: 0,
-    recipe: ORDINARY_GREEN_RECIPE_R1,
+    recipe: ORDINARY_GREEN_RECIPE_R2,
   });
   assert.deepEqual(Array.from(result.data), [0, 0, 0, 0]);
   assert.throws(() => compositeOrdinaryInk({

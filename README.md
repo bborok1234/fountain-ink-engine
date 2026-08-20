@@ -21,9 +21,10 @@ or mobile integration.
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R1,
+  ORDINARY_GREEN_RECIPE_R2,
   WetInkSimulation,
   createDensityField,
+  getGlyphContactGeometry,
   getNibGeometry,
   engineModelVersion,
 } from "fountain-ink-engine";
@@ -46,23 +47,25 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r1` is available as an immutable, serializable recipe:
+`ordinary-green-r2` is the active immutable, serializable r3 recipe.
+`ordinary-green-r1` remains exported as an archival r2 checkpoint:
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R1,
+  ORDINARY_GREEN_RECIPE_R2,
   parseInkRecipe,
   serializeInkRecipe,
 } from "fountain-ink-engine/recipes";
 
-const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R1);
+const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R2);
 const restoredRecipe = parseInkRecipe(checkpoint);
 ```
 
 Structural recipe APIs preserve supported historical model records for archival
 round trips. Material calculation additionally requires the active engine
-model/schema. The reserved `ordinary-green@1` identity must match its registered
-canonical definition; changed parameters require a new revision or custom id.
+model/schema. The reserved `ordinary-green@1` and `ordinary-green@2` identities
+must match their registered canonical definitions; changed parameters require a
+new revision or custom id.
 
 ## Development
 

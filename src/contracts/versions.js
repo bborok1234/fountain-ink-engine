@@ -1,5 +1,5 @@
 /** Calculation identity. Bump when numeric behavior or interpretation changes. */
-export const engineModelVersion = "ordinary-js-r2";
+export const engineModelVersion = "ordinary-js-r3";
 
 /** Serialized material recipe shape. */
 export const recipeSchemaVersion = 2;
