@@ -1,9 +1,10 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r8`
-> Recipe schema: `5`
-> Fixture manifest: `1`
+> Engine model: `ordinary-js-r9`
+> Ink recipe schema: `6`
+> Surface model/schema: `paper-surface-js-r1 / 1`
+> Fixture manifest: `2`
 
 ## Now
 
@@ -17,12 +18,13 @@ The first extraction deliberately keeps the accepted ordinary-ink formulas:
 - signed glyph-local density variation bounded by calibrated alpha endpoints;
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
-Those authored material constants now live in the immutable active
-`ordinary-green-r7` control recipe and the blue-black, burgundy, and teal
-ordinary recipes. `ordinary-green-r1` through `ordinary-green-r6`
+Ink constants now live in the immutable active `ordinary-green-r8` control
+recipe and the blue-black, burgundy, and teal r2 ordinary recipes. Paper
+behavior lives separately in `paper-smooth-r1`, `paper-balanced-r1`, and
+`paper-absorbent-r1`. `ordinary-green-r1` through `ordinary-green-r7`
 remain registered and structurally readable as archival `ordinary-js-r2`
 through `ordinary-js-r7` checkpoints, but they are not calculation-compatible
-with the active r8 model. Nib, flow, absorption,
+with the active r9 model. Nib, flow, Surface recipe,
 layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
@@ -30,13 +32,18 @@ from a historical engine model, while calculation entry points additionally
 require the active engine model/schema and a canonical registered definition
 for built-in identities.
 
-Fixture-manifest v1 records dispatch by their recorded recipe schema: original
-schema-1 recipes remain immutable archival JSON, while schema-2 through schema-5
-records receive strict recipe and identity validation. Only compatible
-schema-5 recipes can enter the current material calculation. Historical
-schema-1 record seeds retain their original non-negative-integer rule; all live
-schema-2/schema-3/schema-4/schema-5 and material seed domains are unsigned 32-bit. No historical
-record is implicitly migrated.
+Fixture-manifest v2 records ink and Surface identities independently. The v1
+reader and historical ink schemas remain archival and are never implicitly
+migrated; only compatible schema-6 ink plus schema-1 Surface recipes enter the
+current material calculation.
+
+Paper Surface is an explicit eight-axis recipe. Vertical uptake, lateral
+mobility, dye affinity, surface retention, film preservation and roughness feed
+the current solver independently. Particle catch and paper reflectance are
+versioned hooks for later specialty/optical work and are neutral today. The
+balanced paper reproduces the former absorption-42 coverage and direct solver
+state byte-for-byte; absorbent paper uses stronger vertical than lateral motion
+so its edge softens without becoming a generic blur.
 
 The engine contains no React component, text control, Vite configuration,
 Sites worker, native code, product data model, font, or reference image.

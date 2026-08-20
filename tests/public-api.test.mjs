@@ -9,6 +9,7 @@ import * as deterministic from "fountain-ink-engine/deterministic";
 import * as optical from "fountain-ink-engine/optical";
 import * as recipes from "fountain-ink-engine/recipes";
 import * as surface from "fountain-ink-engine/surface";
+import * as surfaceRecipes from "fountain-ink-engine/surface-recipes";
 
 test("self-referenced package barrels expose the stable API", () => {
   assert.equal(engine.getNibGeometry, contact.getNibGeometry);
@@ -66,20 +67,20 @@ test("self-referenced package barrels expose the stable API", () => {
     recipes.ORDINARY_GREEN_RECIPE_R6,
   );
   assert.equal(
-    engine.ORDINARY_GREEN_RECIPE_R7,
-    recipes.ORDINARY_GREEN_RECIPE_R7,
+    engine.ORDINARY_GREEN_RECIPE_R8,
+    recipes.ORDINARY_GREEN_RECIPE_R8,
   );
   assert.equal(
-    engine.ORDINARY_BLUE_BLACK_RECIPE_R1,
-    recipes.ORDINARY_BLUE_BLACK_RECIPE_R1,
+    engine.ORDINARY_BLUE_BLACK_RECIPE_R2,
+    recipes.ORDINARY_BLUE_BLACK_RECIPE_R2,
   );
   assert.equal(
-    engine.ORDINARY_BURGUNDY_RECIPE_R1,
-    recipes.ORDINARY_BURGUNDY_RECIPE_R1,
+    engine.ORDINARY_BURGUNDY_RECIPE_R2,
+    recipes.ORDINARY_BURGUNDY_RECIPE_R2,
   );
   assert.equal(
-    engine.ORDINARY_TEAL_RECIPE_R1,
-    recipes.ORDINARY_TEAL_RECIPE_R1,
+    engine.ORDINARY_TEAL_RECIPE_R2,
+    recipes.ORDINARY_TEAL_RECIPE_R2,
   );
   assert.equal(
     engine.createKeyboardSurfaceState,
@@ -88,6 +89,10 @@ test("self-referenced package barrels expose the stable API", () => {
   assert.equal(
     engine.resolveKeyboardSurfaceCoverage,
     surface.resolveKeyboardSurfaceCoverage,
+  );
+  assert.equal(
+    engine.PAPER_SURFACE_BALANCED_R1,
+    surfaceRecipes.PAPER_SURFACE_BALANCED_R1,
   );
   assert.equal(canvas2d.makeKeyboardSurfaceState, undefined);
   assert.equal(typeof canvas2d.renderOrdinaryInkMaterial, "function");
@@ -100,14 +105,12 @@ test("importing the Canvas adapter does not touch browser globals", () => {
 
 test("Canvas material adapters reject invalid units before browser allocation", () => {
   assert.throws(() => canvas2d.makeMaterialCoverage({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R7,
-    absorption: 2,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R8,
     surfaceSeed: 0,
-  }), /absorption must be a finite number in 0\.\.\.1/);
+  }), /surfaceRecipe/);
   assert.throws(() => canvas2d.renderOrdinaryInkMaterial({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R7,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R8,
     flow: 58,
-    absorption: 101,
     surfaceSeed: 0,
-  }), /absorption must be a finite number in 0\.\.\.100/);
+  }), /surfaceRecipe/);
 });

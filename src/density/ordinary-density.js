@@ -9,6 +9,7 @@ import {
   sampleSurfaceDensityVariation,
 } from "../surface/density-transport.js";
 import { getSurfaceDensityRange } from "../surface/density-preservation.js";
+import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 
 export const MAX_GLYPH_CONTACTS = 0xffff;
 const MINIMUM_NORMAL_NUMBER = 2 ** -1022;
@@ -239,28 +240,29 @@ export function getEffectiveFlow(nibId, flow) {
  * Reference ordinary mean concentration.
  * @param {string} nibId
  * @param {number} flow percent 0...100
- * @param {number} absorption percent 0...100
+ * @param {Record<string, unknown>} surfaceRecipe
  */
-export function getMeanDensity(nibId, flow, absorption, recipe) {
+export function getMeanDensity(nibId, flow, surfaceRecipe, recipe) {
   assertInkRecipeCompatible(recipe);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   const effectiveFlow = getEffectiveFlow(nibId, flow);
-  const normalizedAbsorption = assertPercent(absorption, "absorption") / 100;
   return Math.max(
     recipe.density.meanMinimum,
     Math.min(
       recipe.density.meanMaximum,
       recipe.density.meanBase
         + effectiveFlow * recipe.density.flowGain
-        - normalizedAbsorption * recipe.density.absorptionLoss,
+        - (1 - surfaceRecipe.axes.surfaceRetention) * 0.08,
     ),
   );
 }
 
-export function getNibDensityRange(nibId, normalizedAbsorption, recipe) {
+export function getNibDensityRange(nibId, surfaceRecipe, recipe) {
   assertInkRecipeCompatible(recipe);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   return Math.min(
     recipe.density.rangeMaximum,
-    getSurfaceDensityRange(normalizedAbsorption, recipe)
+    getSurfaceDensityRange(surfaceRecipe)
       * getNibProfile(nibId).shadingMultiplier,
   );
 }
@@ -474,7 +476,7 @@ export function createDensityField(options) {
  *   densitySamples:Uint16Array,
  *   nibId:string,
  *   flow:number,
- *   absorption:number,
+ *   surfaceRecipe:Record<string, unknown>,
  *   recipe:Record<string, unknown>,
  * }} options
  */
@@ -487,20 +489,19 @@ export function createOrdinaryConcentrationField({
   densitySamples,
   nibId,
   flow,
-  absorption,
+  surfaceRecipe,
   recipe,
 }) {
   assertInkRecipeCompatible(recipe);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   assertPercent(flow, "flow");
-  assertPercent(absorption, "absorption");
   const densityTransport = surfaceDensityTransport === null
     ? null
     : assertSurfaceDensityTransportGrid(surfaceDensityTransport);
-  const normalizedAbsorption = absorption / 100;
-  const meanDensity = getMeanDensity(nibId, flow, absorption, recipe);
+  const meanDensity = getMeanDensity(nibId, flow, surfaceRecipe, recipe);
   const densityRange = getNibDensityRange(
     nibId,
-    normalizedAbsorption,
+    surfaceRecipe,
     recipe,
   );
   if (

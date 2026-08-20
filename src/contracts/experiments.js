@@ -9,6 +9,11 @@ import {
 } from "../recipes/ink-recipe.js";
 import { assertRegisteredInkRecipeIdentity } from "../recipes/compatibility.js";
 import { assertUint32 } from "./numeric.js";
+import {
+  assertRegisteredSurfaceRecipeIdentity,
+  freezeSurfaceRecipe,
+  validateSurfaceRecipe,
+} from "../surface-recipes/index.js";
 
 export const EXPERIMENT_STATUSES = Object.freeze([
   "backlog",
@@ -36,8 +41,15 @@ const EXPERIMENT_RECORD_KEYS = Object.freeze([
   "recordedAt",
 ]);
 
-const SUPPORTED_EXPERIMENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3, 4, 5]);
-const SUPPORTED_FIXTURE_MANIFEST_VERSIONS = Object.freeze([1]);
+const EXPERIMENT_RECORD_V2_KEYS = Object.freeze([
+  ...EXPERIMENT_RECORD_KEYS,
+  "surfaceModelVersion",
+  "surfaceRecipeSchemaVersion",
+  "surfaceRecipe",
+]);
+
+const SUPPORTED_EXPERIMENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3, 4, 5, 6]);
+const SUPPORTED_FIXTURE_MANIFEST_VERSIONS = Object.freeze([1, 2]);
 
 function isRecord(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -47,19 +59,22 @@ function isRecord(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
-function assertExperimentRecordShape(record) {
-  const expected = new Set(EXPERIMENT_RECORD_KEYS);
+function assertExperimentRecordShape(record, manifestVersion) {
+  const keys = manifestVersion === 1
+    ? EXPERIMENT_RECORD_KEYS
+    : EXPERIMENT_RECORD_V2_KEYS;
+  const expected = new Set(keys);
   const actual = Reflect.ownKeys(record);
   const invalid = actual.filter((key) =>
     typeof key !== "string" || !expected.has(key));
-  const missing = EXPERIMENT_RECORD_KEYS.filter((key) =>
+  const missing = keys.filter((key) =>
     !Object.hasOwn(record, key));
   if (invalid.length > 0 || missing.length > 0) {
     throw new TypeError(
       `Experiment record has invalid keys; unexpected=${invalid.map(String).join(",") || "none"}; missing=${missing.join(",") || "none"}.`,
     );
   }
-  for (const key of EXPERIMENT_RECORD_KEYS) {
+  for (const key of keys) {
     const descriptor = Object.getOwnPropertyDescriptor(record, key);
     if (!descriptor?.enumerable || !("value" in descriptor)) {
       throw new TypeError(
@@ -135,7 +150,21 @@ function deepFreeze(value) {
  */
 export function validateExperimentRecord(record) {
   if (!isRecord(record)) throw new TypeError("Experiment record must be an object.");
-  assertExperimentRecordShape(record);
+  const manifestDescriptor = Object.getOwnPropertyDescriptor(
+    record,
+    "fixtureManifestVersion",
+  );
+  if (!manifestDescriptor?.enumerable || !("value" in manifestDescriptor)) {
+    throw new TypeError(
+      "Experiment record.fixtureManifestVersion must be an enumerable own data property.",
+    );
+  }
+  if (!SUPPORTED_FIXTURE_MANIFEST_VERSIONS.includes(manifestDescriptor.value)) {
+    throw new TypeError(
+      `Unsupported fixtureManifestVersion: ${manifestDescriptor.value}.`,
+    );
+  }
+  assertExperimentRecordShape(record, manifestDescriptor.value);
   if (typeof record.id !== "string" || record.id.trim() === "") {
     throw new TypeError("Experiment record requires a non-empty id.");
   }
@@ -195,6 +224,23 @@ export function validateExperimentRecord(record) {
       throw new TypeError("Experiment recipeSchemaVersion must match its recipe.");
     }
   }
+  if (record.fixtureManifestVersion === 2) {
+    validateSurfaceRecipe(record.surfaceRecipe);
+    assertRegisteredSurfaceRecipeIdentity(record.surfaceRecipe);
+    if (record.surfaceModelVersion !== record.surfaceRecipe.surfaceModelVersion) {
+      throw new TypeError(
+        "Experiment surfaceModelVersion must match its surfaceRecipe.",
+      );
+    }
+    if (
+      record.surfaceRecipeSchemaVersion
+      !== record.surfaceRecipe.surfaceRecipeSchemaVersion
+    ) {
+      throw new TypeError(
+        "Experiment surfaceRecipeSchemaVersion must match its surfaceRecipe.",
+      );
+    }
+  }
   assertJsonValue(record);
   return true;
 }
@@ -246,6 +292,14 @@ export function createExperimentRecord(input) {
     nextMethod: input.nextMethod ?? null,
     recordedAt: input.recordedAt ?? null,
   };
+  if (record.fixtureManifestVersion === 2) {
+    const surfaceRecipe = freezeSurfaceRecipe(input.surfaceRecipe);
+    record.surfaceModelVersion = input.surfaceModelVersion
+      ?? surfaceRecipe.surfaceModelVersion;
+    record.surfaceRecipeSchemaVersion = input.surfaceRecipeSchemaVersion
+      ?? surfaceRecipe.surfaceRecipeSchemaVersion;
+    record.surfaceRecipe = surfaceRecipe;
+  }
   validateExperimentRecord(record);
   return deepFreeze(record);
 }

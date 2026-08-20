@@ -15,7 +15,8 @@ import {
 } from "../src/contact/index.js";
 import { getNibDensityRange } from "../src/density/index.js";
 import { hashString, randomFrom } from "../src/deterministic/index.js";
-import { ORDINARY_GREEN_RECIPE_R7 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R8 } from "../src/recipes/index.js";
+import { PAPER_SURFACE_BALANCED_R1 } from "../src/surface-recipes/index.js";
 
 test("preserves the accepted controlled-width nib ladder", () => {
   assert.deepEqual(NIB_IDS, ["UEF", "EF", "F", "M", "B", "EB", "SU"]);
@@ -112,14 +113,17 @@ test("broad nibs increase signed density range within the recipe cap", () => {
     SU: 0.49596000000000007,
   };
   for (const nibId of NIB_IDS) {
-    assert.equal(
-      getNibDensityRange(nibId, 0.42, ORDINARY_GREEN_RECIPE_R7),
-      acceptedRangeAtAbsorption42[nibId],
+    assert.ok(
+      Math.abs(getNibDensityRange(
+        nibId,
+        PAPER_SURFACE_BALANCED_R1,
+        ORDINARY_GREEN_RECIPE_R8,
+      ) - acceptedRangeAtAbsorption42[nibId]) < 1e-12,
     );
   }
   assert.ok(
-    getNibDensityRange("EB", 0.42, ORDINARY_GREEN_RECIPE_R7)
-      > getNibDensityRange("M", 0.42, ORDINARY_GREEN_RECIPE_R7),
+    getNibDensityRange("EB", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R8)
+      > getNibDensityRange("M", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R8),
   );
   assert.equal(
     shapeNibDensityVariation("EB", -0.3),
@@ -127,23 +131,21 @@ test("broad nibs increase signed density range within the recipe cap", () => {
   );
   assert.throws(() => getNibDensityRange("M", 0.42), /recipe must be an object/);
   assert.throws(
-    () => getNibDensityRange("M", 0.42, {}),
-    /invalid keys/,
+    () => getNibDensityRange("M", PAPER_SURFACE_BALANCED_R1, {}),
+    /recipeSchemaVersion must be an enumerable own data property/,
   );
 
-  const nonFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R7));
+  const nonFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
   nonFinite.id = "custom-non-finite-study";
   nonFinite.density.rangeMaximum = Number.NaN;
   assert.throws(
     () => getNibDensityRange("M", 0.42, nonFinite),
     /finite number/,
   );
-  for (const absorption of [Number.NaN, Number.POSITIVE_INFINITY, -0.01, 1.01]) {
-    assert.throws(
-      () => getNibDensityRange("M", absorption, ORDINARY_GREEN_RECIPE_R7),
-      /normalizedAbsorption must be a finite number in 0\.\.\.1/,
-    );
-  }
+  assert.throws(
+    () => getNibDensityRange("M", null, ORDINARY_GREEN_RECIPE_R8),
+    /surfaceRecipe must be a plain object/,
+  );
 });
 
 test("final Contact masks expose measurable width, components, and counters", () => {

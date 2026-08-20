@@ -519,3 +519,39 @@ they are not automatically promoted to timeless pass/fail truth.
   recipes. Color curves remain an Optical axis; future dual shading, sheen and
   shimmer require separate material component state rather than more curve
   points.
+
+## E-014-independent-paper-surface-recipes / A1
+
+- Parent: `E-013-ordinary-density-color-curves / A1`
+- Engine model: `ordinary-js-r9`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r1 / 1`
+- Fixture manifest: `2`
+- Status: passed
+- Hypothesis: paper is not one blur-like absorption scalar. Independent
+  vertical uptake, lateral mobility, dye affinity, surface retention, film
+  preservation and roughness axes can produce smooth, balanced and absorbent
+  papers while ink color and nib geometry remain independent.
+- Research basis: Li et al. distinguish sizing, porosity, penetration depth and
+  surface optical density in uncoated paper
+  (<https://bioresources.cnr.ncsu.edu/resources/ink-penetration-of-uncoated-inkjet-paper-and-impact-on-printing-quality/>);
+  Daniel and Berg separate lateral spreading from penetration
+  (<https://pubmed.ncbi.nlm.nih.gov/16814240/>); Kim et al. show that written
+  line width couples motion with ink and paper properties
+  (<https://pubmed.ncbi.nlm.nih.gov/22243158/>).
+- Expected at normal size: smooth keeps crisp Contact and the widest shading;
+  balanced is byte-identical to the accepted absorption-42 result; absorbent
+  lowers mean density and shading while limiting lateral spread so 18px text
+  remains readable instead of becoming an isotropic blur.
+- Observed: balanced Surface coverage keeps the prior
+  `2bee8374...adc41` SHA and direct water/mobile/fixed state byte-exact. The
+  harness sends the same explicit Surface recipe to keyboard and direct-input
+  paths. Engine 98/98, harness, package and browser checks pass. Desktop M/28
+  and mobile M/18 absorbent text remained legible with no console warnings.
+- Preserved evidence or code: Contact geometry, glyph Density accidents,
+  Surface seed, ordinary RGB curves, alpha endpoints and all historical ink
+  recipe pins. Ink schema 6 removes paper policy; fixture manifest 2 records
+  ink and Surface identities independently while v1 remains archival.
+- Next different method: measure the three papers across nib/size/DPR and tune
+  only a new Surface revision if a concrete normal-size defect appears. Do not
+  restore a scalar absorption slider or add blur/shadow passes.

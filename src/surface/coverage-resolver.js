@@ -1,5 +1,4 @@
-import { assertPercent } from "../contracts/numeric.js";
-import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
+import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 
 function ownDataValue(object, key, path) {
   const descriptor = Object.getOwnPropertyDescriptor(object, key);
@@ -53,8 +52,7 @@ export function resolveKeyboardSurfaceCoverage(options) {
   const width = ownDataValue(options, "width", "options");
   const height = ownDataValue(options, "height", "options");
   const contactMask = ownDataValue(options, "contactMask", "options");
-  const absorption = ownDataValue(options, "absorption", "options");
-  const recipe = ownDataValue(options, "recipe", "options");
+  const surfaceRecipe = ownDataValue(options, "surfaceRecipe", "options");
   const candidateDescriptor = Object.getOwnPropertyDescriptor(
     options,
     "materialCoverageCandidate",
@@ -68,7 +66,7 @@ export function resolveKeyboardSurfaceCoverage(options) {
     );
   }
   const materialCoverageCandidate = candidateDescriptor?.value ?? null;
-  assertInkRecipeCompatible(recipe);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   const pixelCount = assertDimensions(width, height);
   const contactData = assertRgbaPlane(contactMask, pixelCount, "contactMask");
   const candidateData = materialCoverageCandidate === null
@@ -78,10 +76,9 @@ export function resolveKeyboardSurfaceCoverage(options) {
       pixelCount,
       "materialCoverageCandidate",
     );
-  const normalizedAbsorption = assertPercent(absorption, "absorption") / 100;
   const materialMix = Math.pow(
-    normalizedAbsorption,
-    recipe.surface.keyboard.coverageMixExponent,
+    surfaceRecipe.axes.verticalUptake,
+    surfaceRecipe.keyboard.coverageMixExponent,
   );
   const resolvedCoverage = new Float32Array(pixelCount);
 
@@ -92,7 +89,7 @@ export function resolveKeyboardSurfaceCoverage(options) {
     const mixedCoverage = contactAlpha * (1 - materialMix)
       + surfaceAlpha * materialMix;
     const retainedContact = contactAlpha
-      * recipe.surface.keyboard.minimumContactRetention;
+      * surfaceRecipe.keyboard.contactRetentionFloor;
     resolvedCoverage[index] = Math.max(mixedCoverage, retainedContact);
   }
 

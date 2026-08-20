@@ -4,17 +4,14 @@ import {
 } from "../density/index.js";
 import { compositeOrdinaryOptical } from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
+import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 import {
   createKeyboardSurfaceState,
   createMaterialCoverage,
   resolveKeyboardSurfaceCoverage,
 } from "../surface/index.js";
 import { resampleContactDensityToSurfaceGrid } from "../surface/density-transport.js";
-import {
-  assertFiniteRange,
-  assertPercent,
-  assertUint32,
-} from "../contracts/numeric.js";
+import { assertPercent, assertUint32 } from "../contracts/numeric.js";
 import { makeLayer } from "./glyph-mask.js";
 
 function assertSurfaceSeed(surfaceSeed) {
@@ -57,13 +54,13 @@ export function makeMaterialCoverage({
   pixelHeight,
   width,
   height,
-  absorption,
+  surfaceRecipe,
   surfaceSeed,
   recipe,
   createLayer = makeLayer,
 }) {
   assertInkRecipeCompatible(recipe);
-  assertFiniteRange(absorption, "absorption", 0, 1);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   assertSurfaceSeed(surfaceSeed);
   const gridWidth = Math.max(160, Math.min(320, Math.round(width * 0.56)));
   const gridHeight = Math.max(130, Math.min(240, Math.round(height * 0.56)));
@@ -76,7 +73,7 @@ export function makeMaterialCoverage({
 
   const materialState = createMaterialCoverage(
     deposit,
-    absorption,
+    surfaceRecipe,
     surfaceSeed,
     recipe,
   );
@@ -107,13 +104,13 @@ function makeKeyboardSurfaceState({
   pixelHeight,
   width,
   height,
-  absorption,
+  surfaceRecipe,
   surfaceSeed,
   recipe,
   createLayer = makeLayer,
 }) {
   assertInkRecipeCompatible(recipe);
-  assertFiniteRange(absorption, "absorption", 0, 1);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   assertSurfaceSeed(surfaceSeed);
   const gridWidth = Math.max(160, Math.min(320, Math.round(width * 0.56)));
   const gridHeight = Math.max(130, Math.min(240, Math.round(height * 0.56)));
@@ -134,7 +131,7 @@ function makeKeyboardSurfaceState({
   });
   const surfaceState = createKeyboardSurfaceState(
     deposit,
-    absorption,
+    surfaceRecipe,
     surfaceSeed,
     recipe,
     densityDeposit,
@@ -176,7 +173,7 @@ export function renderOrdinaryInkMaterial({
   pixelHeight,
   width,
   height,
-  absorption,
+  surfaceRecipe,
   surfaceSeed,
   nibId,
   flow,
@@ -187,10 +184,9 @@ export function renderOrdinaryInkMaterial({
   createLayer = makeLayer,
 }) {
   assertInkRecipeCompatible(recipe);
+  assertSurfaceRecipeCompatible(surfaceRecipe);
   assertPercent(flow, "flow");
-  assertPercent(absorption, "absorption");
   assertSurfaceSeed(surfaceSeed);
-  const normalizedAbsorption = absorption / 100;
   // Validate every glyph Contact before Canvas reads, Surface work, or output
   // allocation. createDensityField itself remains fail-closed for direct users.
   const { densityField, densitySamples } = createDensityField({
@@ -206,7 +202,7 @@ export function renderOrdinaryInkMaterial({
     pixelWidth,
     pixelHeight,
   );
-  const surfaceState = normalizedAbsorption > 0.002
+  const surfaceState = surfaceRecipe.axes.verticalUptake > 0.002
     ? makeKeyboardSurfaceState({
       mask,
       maskPixels,
@@ -216,7 +212,7 @@ export function renderOrdinaryInkMaterial({
       pixelHeight,
       width,
       height,
-      absorption: normalizedAbsorption,
+      surfaceRecipe,
       surfaceSeed,
       recipe,
       createLayer,
@@ -229,8 +225,7 @@ export function renderOrdinaryInkMaterial({
     height: pixelHeight,
     contactMask: maskPixels.data,
     materialCoverageCandidate: materialCoverage,
-    absorption,
-    recipe,
+    surfaceRecipe,
   });
   const result = outputContext.createImageData(pixelWidth, pixelHeight);
   const normalizedConcentration = createOrdinaryConcentrationField({
@@ -242,7 +237,7 @@ export function renderOrdinaryInkMaterial({
     densitySamples,
     nibId,
     flow,
-    absorption,
+    surfaceRecipe,
     recipe,
   });
   compositeOrdinaryOptical({

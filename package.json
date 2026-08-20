@@ -1,6 +1,6 @@
 {
   "name": "fountain-ink-engine",
-  "version": "0.12.0-experimental.1",
+  "version": "0.13.0-experimental.1",
   "description": "Deterministic, framework-free material engine for digital fountain-pen ink experiments.",
   "keywords": [
     "fountain-pen",
@@ -24,6 +24,7 @@
     ".": "./src/index.js",
     "./contracts": "./src/contracts/index.js",
     "./recipes": "./src/recipes/index.js",
+    "./surface-recipes": "./src/surface-recipes/index.js",
     "./deterministic": "./src/deterministic/index.js",
     "./contact": "./src/contact/index.js",
     "./density": "./src/density/index.js",

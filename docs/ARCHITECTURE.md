@@ -22,19 +22,20 @@ Contact ──▶ Density ──▶ Surface ──▶ Optical components
 
 Owns model/schema/manifest versions and serializable experiment records. It
 does not invent timestamps or seeds. Fixture-manifest v1 preserves both its
-historical schema-1 plain-JSON recipes and schema-2/schema-3/schema-4/schema-5 strict recipes by
+historical schema-1 plain-JSON recipes and schema-2 through schema-6 strict recipes by
 explicit dispatch; archival acceptance never implies render compatibility or
 implicit migration.
 
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r7` is the active control and the blue-black, burgundy and teal
+`ordinary-green-r8` is the active control and the blue-black, burgundy and teal
 recipes are its ordinary-color peers. They share density bounds, keyboard
 Surface load, fixed normalization reference, minimum Contact retention and
 alpha endpoints while owning separate Density-to-RGB curves and direct optical
-color coefficients. They select the r8 calculation model and schema 5. Runtime nib, flow,
-absorption, layout, text, and seeds are not recipe fields.
+color coefficients. They select the r9 calculation model and ink schema 6.
+Paper policy is a separate `paper-surface-js-r1` recipe with its own schema and
+canonical identity. Runtime nib, flow, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
 compatibility. A supported historical model recipe can be parsed without being

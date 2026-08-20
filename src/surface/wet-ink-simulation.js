@@ -2,6 +2,7 @@ import { coordinateNoiseUnchecked as coordinateNoise } from "../deterministic/ra
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
 import { assertSurfaceDensityTransportGrid } from "./density-transport.js";
+import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 
 const clamp = (value, minimum = 0, maximum = 1) =>
   Math.min(maximum, Math.max(minimum, value));
@@ -229,12 +230,35 @@ export class WetInkSimulation {
       Number.MAX_VALUE,
     );
     assertFiniteRange(absorption, "absorption", 0, 1);
+    return this.#stepWithSurface(deltaMilliseconds, {
+      verticalUptake: absorption,
+      lateralMobility: absorption,
+      dyeAffinity: absorption,
+      roughness: 1,
+    });
+  }
+
+  stepSurface(deltaMilliseconds, surfaceRecipe) {
+    assertSurfaceRecipeCompatible(surfaceRecipe);
+    return this.#stepWithSurface(deltaMilliseconds, surfaceRecipe.axes);
+  }
+
+  #stepWithSurface(deltaMilliseconds, axes) {
+    assertFiniteRange(
+      deltaMilliseconds,
+      "deltaMilliseconds",
+      0,
+      Number.MAX_VALUE,
+    );
     const frame = clamp(deltaMilliseconds / 16.667, 0.25, 2.5);
-    const surface = clamp(absorption);
-    const horizontalDiffusion = (0.038 + surface * 0.102) * frame;
-    const verticalDiffusion = (0.034 + surface * 0.088) * frame;
-    const pigmentMobility = (0.008 + surface * 0.032) * frame;
-    const evaporation = (0.0028 + surface * 0.0032) * frame;
+    const verticalUptake = clamp(axes.verticalUptake);
+    const lateralMobility = clamp(axes.lateralMobility);
+    const dyeAffinity = clamp(axes.dyeAffinity);
+    const roughness = clamp(axes.roughness);
+    const horizontalDiffusion = (0.038 + lateralMobility * 0.102) * frame;
+    const verticalDiffusion = (0.034 + verticalUptake * 0.088) * frame;
+    const pigmentMobility = (0.008 + lateralMobility * 0.032) * frame;
+    const evaporation = (0.0028 + verticalUptake * 0.0032) * frame;
     let activeWater = 0;
 
     for (let y = 1; y < this.height - 1; y += 1) {
@@ -246,8 +270,10 @@ export class WetInkSimulation {
         const below = index + this.width;
         const water = this.water[index];
         const mobile = this.mobile[index];
-        const fiberHorizontal = 0.72 + Math.abs(this.fiberX[index]) * 0.7;
-        const fiberVertical = 0.72 + Math.abs(this.fiberY[index]) * 0.7;
+        const fiberHorizontal = 1 - roughness * 0.28
+          + Math.abs(this.fiberX[index]) * 0.7 * roughness;
+        const fiberVertical = 1 - roughness * 0.28
+          + Math.abs(this.fiberY[index]) * 0.7 * roughness;
         const waterLaplacian =
           (this.water[left] + this.water[right] - water * 2)
             * horizontalDiffusion * fiberHorizontal
@@ -260,11 +286,12 @@ export class WetInkSimulation {
             + this.mobile[above] + this.mobile[below] - mobile * 4)
           * pigmentMobility * clamp(water * 1.35, 0, 1);
         const edgeDryness = clamp(1 - nextWater * 1.15, 0, 1);
-        const paperTooth = 0.72
-          + coordinateNoise(x, y, this.seed ^ 0xa511e9b3) * 0.56;
+        const paperTooth = 1 - roughness * 0.28
+          + coordinateNoise(x, y, this.seed ^ 0xa511e9b3)
+            * 0.56 * roughness;
         const fixing = Math.min(
           mobile + mobileLaplacian,
-          (0.0035 + edgeDryness * 0.026 + surface * 0.004)
+          (0.0035 + edgeDryness * 0.026 + dyeAffinity * 0.004)
             * paperTooth * frame,
         );
 
@@ -339,7 +366,7 @@ export class WetInkSimulation {
     if (this.mobileSignedMass === null) return null;
     const signedNumerator = new Float32Array(this.length);
     const pigmentWeight = new Float32Array(this.length);
-    const optical = recipe.surface.direct.optical;
+    const optical = recipe.direct.optical;
     for (let index = 0; index < this.length; index += 1) {
       const weight = Math.fround(
         this.fixed[index] * optical.fixedWeight
@@ -362,7 +389,7 @@ export class WetInkSimulation {
 
   render(imageData, recipe, opticalGain = 1) {
     assertInkRecipeCompatible(recipe);
-    const optical = recipe.surface.direct.optical;
+    const optical = recipe.direct.optical;
     const pixels = imageData.data;
     for (let index = 0; index < this.length; index += 1) {
       const fixed = this.fixed[index];
