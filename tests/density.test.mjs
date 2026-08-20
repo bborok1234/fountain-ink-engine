@@ -1,21 +1,39 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  MAXIMUM_INK_ALPHA,
-  MINIMUM_INK_ALPHA,
-  ORDINARY_INK_RGB,
   compositeOrdinaryInk,
   createDensityField,
   getEffectiveFlow,
+  getMaterialMix,
   getMeanDensity,
   sampleGlyphDensityVariation,
 } from "../src/density/index.js";
+import { ORDINARY_GREEN_RECIPE_R1 } from "../src/recipes/index.js";
 
 test("preserves the accepted flow and mean-density equations", () => {
   assert.equal(getEffectiveFlow("M", 58), 0.58);
   assert.equal(getEffectiveFlow("UEF", 0), 0);
   assert.equal(getEffectiveFlow("EB", 100), 1);
-  assert.ok(Math.abs(getMeanDensity("M", 58, 42) - 0.5524) < 1e-12);
+  assert.ok(
+    Math.abs(getMeanDensity("M", 58, 42, ORDINARY_GREEN_RECIPE_R1) - 0.5524)
+      < 1e-12,
+  );
+});
+
+test("public flow and absorption inputs fail closed outside percent units", () => {
+  for (const flow of [Number.NaN, Number.POSITIVE_INFINITY, -1, 101]) {
+    assert.throws(() => getEffectiveFlow("M", flow), /flow must be a finite number/);
+  }
+  for (const absorption of [Number.NaN, Number.NEGATIVE_INFINITY, -1, 101]) {
+    assert.throws(
+      () => getMeanDensity("M", 58, absorption, ORDINARY_GREEN_RECIPE_R1),
+      /absorption must be a finite number/,
+    );
+    assert.throws(
+      () => getMaterialMix(absorption, ORDINARY_GREEN_RECIPE_R1),
+      /absorption must be a finite number/,
+    );
+  }
 });
 
 test("glyph density sampling and planes repeat from explicit layout seeds", () => {
@@ -64,6 +82,17 @@ test("glyph density sampling and planes repeat from explicit layout seeds", () =
     }],
   });
   assert.notDeepEqual(zeroSeed.densityField, missingSeed.densityField);
+
+  assert.throws(() => createDensityField({
+    ...options,
+    lineLayouts: [{
+      ...options.lineLayouts[0],
+      glyphs: [{
+        ...options.lineLayouts[0].glyphs[0],
+        cadence: { seed: 0x1_0000_0000 },
+      }],
+    }],
+  }), /glyph\.cadence\.seed must be an explicit unsigned 32-bit integer/);
 });
 
 test("ordinary composite stays inside calibrated direct-stroke endpoints", () => {
@@ -78,14 +107,9 @@ test("ordinary composite stays inside calibrated direct-stroke endpoints", () =>
     nibId: "M",
     flow: 58,
     absorption: 42,
+    recipe: ORDINARY_GREEN_RECIPE_R1,
   });
-  assert.deepEqual(Array.from(result.data.slice(0, 3)), [
-    ORDINARY_INK_RGB.red,
-    ORDINARY_INK_RGB.green,
-    ORDINARY_INK_RGB.blue,
-  ]);
-  assert.ok(result.data[3] >= Math.floor(MINIMUM_INK_ALPHA * 255));
-  assert.ok(result.data[3] <= Math.ceil(MAXIMUM_INK_ALPHA * 255));
+  assert.deepEqual(Array.from(result.data), [29, 55, 40, 213]);
 });
 
 test("transparent coverage produces no optical ink", () => {
@@ -98,6 +122,17 @@ test("transparent coverage produces no optical ink", () => {
     nibId: "M",
     flow: 58,
     absorption: 0,
+    recipe: ORDINARY_GREEN_RECIPE_R1,
   });
   assert.deepEqual(Array.from(result.data), [0, 0, 0, 0]);
+  assert.throws(() => compositeOrdinaryInk({
+    pixelWidth: 1,
+    pixelHeight: 1,
+    mask: new Uint8ClampedArray(4),
+    densityField: new Float32Array(1),
+    densitySamples: new Uint8Array(1),
+    nibId: "M",
+    flow: 58,
+    absorption: 0,
+  }), /recipe/);
 });

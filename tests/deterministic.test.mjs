@@ -20,6 +20,8 @@ test("hash and PRNG repeat for literal text and explicit seed", () => {
     Array.from({ length: 8 }, randomFrom(0)),
     Array.from({ length: 8 }, randomFrom(1)),
   );
+  assert.throws(() => randomFrom(undefined), /unsigned 32-bit integer/);
+  assert.throws(() => randomFrom(0x1_0000_0000), /unsigned 32-bit integer/);
 });
 
 test("coordinate noise is page anchored and bounded", () => {
@@ -35,6 +37,10 @@ test("coordinate noise is page anchored and bounded", () => {
   ]);
   assert.ok(samples.every((sample) => sample >= 0 && sample <= 1));
   assert.notEqual(samples[1], samples[2]);
+  assert.throws(
+    () => coordinateNoise(10, 20, 0x1_0000_0000),
+    /unsigned 32-bit integer/,
+  );
 });
 
 test("grapheme segmentation preserves Korean composition clusters", () => {

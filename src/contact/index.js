@@ -1,5 +1,4 @@
 export {
-  MAX_DENSITY_RANGE,
   M_RADIUS,
   M_STROKE_EM,
   NIB_IDS,

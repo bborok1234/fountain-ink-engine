@@ -15,6 +15,7 @@
 ```text
 fountain-ink-engine
 fountain-ink-engine/contracts
+fountain-ink-engine/recipes
 fountain-ink-engine/deterministic
 fountain-ink-engine/contact
 fountain-ink-engine/density

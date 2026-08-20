@@ -1,3 +1,6 @@
+import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
+import { assertFiniteRange } from "../contracts/numeric.js";
+
 const clamp = (value, minimum, maximum) =>
   Math.min(maximum, Math.max(minimum, value));
 
@@ -5,9 +8,6 @@ export const M_RADIUS = 3.35;
 
 // Nanum Pen Script's median M-like core stroke at the 26–28px reference anchor.
 export const M_STROKE_EM = 0.09;
-
-// Internal signed-field excursion; final pigment concentration remains clamped.
-export const MAX_DENSITY_RANGE = 1.04;
 
 export const ROUND_NIB_RATIOS = Object.freeze({
   UEF: 0.54,
@@ -96,12 +96,27 @@ export function getNibProfile(nibId) {
   return NIB_PROFILES[nibId] ?? NIB_PROFILES.M;
 }
 
-/** @param {string} nibId @param {number} normalizedAbsorption */
-export function getNibDensityRange(nibId, normalizedAbsorption) {
-  const absorption = clamp(Number(normalizedAbsorption) || 0, 0, 1);
-  const surfaceRange = 0.045 + (1 - absorption) * 0.635;
+/**
+ * @param {string} nibId
+ * @param {number} normalizedAbsorption
+ * @param {Record<string, unknown>} recipe
+ */
+export function getNibDensityRange(
+  nibId,
+  normalizedAbsorption,
+  recipe,
+) {
+  assertInkRecipeCompatible(recipe);
+  const absorption = assertFiniteRange(
+    normalizedAbsorption,
+    "normalizedAbsorption",
+    0,
+    1,
+  );
+  const surfaceRange = recipe.density.rangeMinimum
+    + (1 - absorption) * recipe.density.rangeSmoothGain;
   return Math.min(
-    MAX_DENSITY_RANGE,
+    recipe.density.rangeMaximum,
     surfaceRange * getNibProfile(nibId).shadingMultiplier,
   );
 }

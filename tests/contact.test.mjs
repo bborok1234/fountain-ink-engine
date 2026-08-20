@@ -11,6 +11,7 @@ import {
   morphAlpha,
   shapeNibDensityVariation,
 } from "../src/contact/index.js";
+import { ORDINARY_GREEN_RECIPE_R1 } from "../src/recipes/index.js";
 
 test("preserves the accepted controlled-width nib ladder", () => {
   assert.deepEqual(NIB_IDS, ["UEF", "EF", "F", "M", "B", "EB", "SU"]);
@@ -53,10 +54,32 @@ test("morphology performs fractional dilation and erosion deterministically", ()
   ]);
 });
 
-test("broad nibs increase signed density range within the shared cap", () => {
-  assert.ok(getNibDensityRange("EB", 0.42) > getNibDensityRange("M", 0.42));
+test("broad nibs increase signed density range within the recipe cap", () => {
+  assert.ok(
+    getNibDensityRange("EB", 0.42, ORDINARY_GREEN_RECIPE_R1)
+      > getNibDensityRange("M", 0.42, ORDINARY_GREEN_RECIPE_R1),
+  );
   assert.equal(
     shapeNibDensityVariation("EB", -0.3),
     -shapeNibDensityVariation("EB", 0.3),
   );
+  assert.throws(() => getNibDensityRange("M", 0.42), /recipe must be an object/);
+  assert.throws(
+    () => getNibDensityRange("M", 0.42, {}),
+    /invalid keys/,
+  );
+
+  const nonFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R1));
+  nonFinite.id = "custom-non-finite-study";
+  nonFinite.density.rangeMaximum = Number.NaN;
+  assert.throws(
+    () => getNibDensityRange("M", 0.42, nonFinite),
+    /finite number/,
+  );
+  for (const absorption of [Number.NaN, Number.POSITIVE_INFINITY, -0.01, 1.01]) {
+    assert.throws(
+      () => getNibDensityRange("M", absorption, ORDINARY_GREEN_RECIPE_R1),
+      /normalizedAbsorption must be a finite number in 0\.\.\.1/,
+    );
+  }
 });

@@ -1,7 +1,13 @@
-import { coordinateNoise } from "../deterministic/random.js";
+import { coordinateNoiseUnchecked as coordinateNoise } from "../deterministic/random.js";
+import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
+import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
 
 const clamp = (value, minimum = 0, maximum = 1) =>
   Math.min(maximum, Math.max(minimum, value));
+
+function assertSeed(value, path) {
+  return assertUint32(value, path);
+}
 
 /**
  * Deterministic water/mobile-pigment/fixed-pigment grid from the accepted HTML
@@ -9,9 +15,7 @@ const clamp = (value, minimum = 0, maximum = 1) =>
  */
 export class WetInkSimulation {
   constructor(width, height, seed) {
-    if (!Number.isInteger(seed) || seed < 0) {
-      throw new TypeError("seed must be an explicit non-negative integer.");
-    }
+    assertSeed(seed, "seed");
     this.width = width;
     this.height = height;
     this.seed = seed;
@@ -54,6 +58,7 @@ export class WetInkSimulation {
   }
 
   depositMask(imageData, options) {
+    assertSeed(options?.seed, "options.seed");
     if (imageData.width !== this.width || imageData.height !== this.height) {
       throw new Error("Mask dimensions must match the simulation grid.");
     }
@@ -90,6 +95,7 @@ export class WetInkSimulation {
   }
 
   depositStroke(from, to, options) {
+    assertSeed(options?.strokeSeed, "options.strokeSeed");
     const distance = Math.hypot(to.x - from.x, to.y - from.y);
     const spacing = Math.max(0.55, options.radius * 0.22);
     const steps = Math.max(1, Math.ceil(distance / spacing));
@@ -104,6 +110,7 @@ export class WetInkSimulation {
   }
 
   depositDab(centerX, centerY, options) {
+    assertSeed(options?.strokeSeed, "options.strokeSeed");
     const nibAngle = -Math.PI * 0.22;
     const cosine = Math.cos(nibAngle);
     const sine = Math.sin(nibAngle);
@@ -140,6 +147,13 @@ export class WetInkSimulation {
   }
 
   step(deltaMilliseconds, absorption) {
+    assertFiniteRange(
+      deltaMilliseconds,
+      "deltaMilliseconds",
+      0,
+      Number.MAX_VALUE,
+    );
+    assertFiniteRange(absorption, "absorption", 0, 1);
     const frame = clamp(deltaMilliseconds / 16.667, 0.25, 2.5);
     const surface = clamp(absorption);
     const horizontalDiffusion = (0.038 + surface * 0.102) * frame;
@@ -193,21 +207,37 @@ export class WetInkSimulation {
     this.activity = activeWater / this.length;
   }
 
-  render(imageData, opticalGain = 1) {
+  render(imageData, recipe, opticalGain = 1) {
+    assertInkRecipeCompatible(recipe);
+    const optical = recipe.surface.direct.optical;
     const pixels = imageData.data;
     for (let index = 0; index < this.length; index += 1) {
       const fixed = this.fixed[index];
       const mobile = this.mobile[index];
       const water = this.water[index];
-      const pigment = clamp(fixed * 0.92 + mobile * 0.68, 0, 1.35);
-      const density = 1 - Math.exp(-pigment * 1.72);
-      const wetLift = clamp(water, 0, 1) * 0.07;
+      const pigment = clamp(
+        fixed * optical.fixedWeight + mobile * optical.mobileWeight,
+        0,
+        optical.pigmentMaximum,
+      );
+      const density = 1 - Math.exp(-pigment * optical.densityExponent);
+      const wetLift = clamp(water, 0, 1) * optical.wetLift;
       const offset = index * 4;
-      pixels[offset] = Math.round(18 + wetLift * 48);
-      pixels[offset + 1] = Math.round(74 + wetLift * 64 - density * 18);
-      pixels[offset + 2] = Math.round(52 + wetLift * 52 - density * 16);
+      pixels[offset] = Math.round(optical.redBase + wetLift * optical.redWetGain);
+      pixels[offset + 1] = Math.round(
+        optical.greenBase + wetLift * optical.greenWetGain
+          - density * optical.greenDensityLoss,
+      );
+      pixels[offset + 2] = Math.round(
+        optical.blueBase + wetLift * optical.blueWetGain
+          - density * optical.blueDensityLoss,
+      );
       pixels[offset + 3] = Math.round(
-        clamp(density * 1.08 * opticalGain, 0, 0.96) * 255,
+        clamp(
+          density * optical.alphaGain * opticalGain,
+          0,
+          optical.maximumAlpha,
+        ) * 255,
       );
     }
   }
