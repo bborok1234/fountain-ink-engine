@@ -10,7 +10,7 @@ they are not automatically promoted to timeless pass/fail truth.
 ### E-000-short-name / A1
 
 - Parent: none
-- Engine model: ordinary-js-r5
+- Engine model: ordinary-js-r6
 - Recipe schema: 3
 - Fixture manifest: 1
 - Status: running | passed | learned | abandoned
@@ -244,3 +244,68 @@ they are not automatically promoted to timeless pass/fail truth.
   explicit. Transporting glyph Density through wet paper, incremental drying,
   and strict append-after-dry state are separate future experiments; do not
   fold them into normalization tuning.
+
+## E-007-surface-density-transport / A1
+
+- Parent: `E-006-glyph-local-density-append-stability / A2`
+- Engine model: `ordinary-js-r6`
+- Recipe schema: `3`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: Surface-only pigment should carry the raw signed Density of the
+  Contact pigment that spread into it. Numerator must move only with positive
+  pigment mass; Contact pixels must keep their exact current Density, and the
+  direct/no-payload solver must remain byte-exact.
+- Explicit inputs and seed: immutable `ordinary-green-r5`, whose authored
+  coefficients exactly equal r4; Surface seed `0x13579bdf`; direct 24×18
+  deposit with seed `0x10203040`, deposit seed `0x55667788`, absorption `0.42`
+  and nine steps; A2 24×18 coverage fixture; signed ratios `-1`, `0`, `0.25`,
+  `0.5`, `0.75`, and `1`; 80×36 far/near append fixtures; M/flow 58/absorption
+  42 Canvas fixture. Performance comparison used Node's monotonic timer after
+  three warmups and nine samples, the existing maximum 320×240 solver grid,
+  absorption 42, and synthetic 1576×1216 DPR2 Contact pages with 18 and 80
+  glyph-like masks.
+- Expected at normal size: spread-only pixels continue the glyph's light/dark
+  character instead of jumping to the mean. Positive and negative variation
+  mix by pigment mass, not by averaging pre-divided ratios. Flow does not alter
+  transport. A remote suffix stays exact; adjacent wet footprints may mix only
+  in their shared physical halo.
+- Observed: Contact alpha/RGBA remain exact because Contact samples have
+  priority in Optical. Surface-only pixels use the bilinear-sampled numerator
+  divided by a separately sampled positive carrier, followed by the existing
+  single nib-shaping operation. Equal positive/negative mass resolves to zero;
+  same-sign mixtures stay convex; zero carrier has no ratio and keeps the mean
+  fallback. Mobile/fixed signed mass remains finite and bounded by its positive
+  carrier after deposit, diffusion, and fixing. Flow 0/58/100 leaves both grid
+  planes exact. The far suffix preserves Contact, Density, coverage, transport,
+  and Optical prefix crops; the near fixture changes only the shared halo.
+- Preserved evidence: direct-path SHA-256 remains
+  `rgba ffb679936a6bc7efb30ea6df56536219cfd6ac62640c5a12f234b0b026292b72`,
+  `water feaac4eec1eebf4f4d66dcb5befc904a0c614e4a5ccf4c8d318815634afe661b`,
+  `mobile 03d0ba7de6e2a2a8713a5856cb7aeddd989bfa8ee9f2ae3f68e36f66c6c15b91`,
+  and `fixed 971778c77a6b1291a33996c78fb37542318b83b9a51eb6aaaeebee964d614e5c`.
+  The A2 coverage SHA-256 remains
+  `2bee8374e17bb59d48e0b34ab2d74637ad83d1594ff0888303f3e67bb42adc41`.
+  Revisions 1–4 and their canonical pins remain immutable; schema 3 and fixture
+  manifest 1 are unchanged.
+- Performance and memory: median coverage-only solve was `6.32ms` for the
+  18-mask fixture and `6.37ms` for 80 masks. The transport solver was `9.81ms`
+  and `9.74ms`; separate DPR2 numerator/carrier resampling was `7.45ms` and
+  `7.78ms`. Thus measured incremental medians were `10.94ms` and `11.15ms` in
+  this synthetic Node comparison; these are not browser/device budgets. At the
+  maximum grid, three lazy solver planes add 921,600 bytes, the transient input
+  grid adds 614,400 bytes, and the returned transport adds 614,400 bytes, for a
+  2,150,400-byte transport-specific production peak. Only the returned 614,400
+  bytes survive for renderer/diagnostics; no full-page Float32 transport plane
+  is retained. The keyboard adapter invokes one union-mask solver, never one
+  solver per glyph.
+- Why it failed, if applicable: not applicable. The previous discontinuity was
+  an ownership gap: Surface coverage spread pigment but discarded its Density,
+  so gain tuning could not preserve the glyph's character outside Contact.
+- Discarded assumption: every Surface-only pixel should use the page's mean
+  density, or a signed ratio can be safely resized without its positive mass.
+- Next different method: browser and normal-size perceptual comparison may
+  select a future Surface recipe, but do not tune transport gains—A1 introduces
+  none. Strict append-after-dry immutability remains a separate incremental
+  state experiment rather than a per-glyph solver or a change to this mass
+  transport operator.

@@ -29,10 +29,10 @@ implicit migration.
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r4` contains the active density bounds, keyboard Surface load,
+`ordinary-green-r5` contains the active density bounds, keyboard Surface load,
 fixed normalization reference, direct-input load curve, and optical
-coefficients. It preserves r3's existing material coefficients while selecting
-the r5 calculation model and schema 3. Runtime nib, flow,
+coefficients. It preserves r4's material coefficients exactly while selecting
+the r6 calculation model and schema 3. Runtime nib, flow,
 absorption, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
@@ -99,6 +99,25 @@ wet footprints may still interact through diffusion and fixing. The direct
 writing pad continues to use the same direct load and optical coefficients; it
 does not use this keyboard normalization field.
 
+The r6 keyboard path also carries raw, unshaped signed Density as pigment mass.
+The full-page Contact field is area-resampled to two separate solver-grid
+planes: `maskAlpha * averageVariation` numerator and positive mask weight.
+Ratios are never resampled by themselves. `WetInkSimulation` allocates three
+additional Float32 state planes only when this validated payload is present:
+mobile signed mass, fixed signed mass, and next mobile signed mass. Deposit uses
+the actual positive mobile-mass delta after saturation. Diffusion uses the same
+mobile stencil, and fixing transfers the corresponding signed fraction. The
+direct/no-payload path allocates none of these planes and keeps its r5 bytes.
+
+`createKeyboardSurfaceState` returns the existing RGBA `coverage` plus a
+nullable grid-only `densityTransport` containing `signedNumerator` and
+`pigmentWeight`. At the maximum 320×240 grid the lazy solver state is 921,600
+bytes (three Float32 planes); the returned transport is 614,400 bytes (two
+planes). The input resample is another transient 614,400 bytes, so the maximum
+transport-specific typed-array peak while producing the returned grid is
+2,150,400 bytes. Only the 614,400-byte returned grid survives for renderer or
+diagnostic use; no full-page Float32 transport output is retained.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -110,10 +129,13 @@ observes the buffers already used by the accepted render path:
 - `surface.materialCoverageCandidate` and `surface.applied`: the resampled
   physical coverage candidate, or `null` with `applied: false` when the Surface
   branch is skipped;
+- `surface.densityTransport`: the nullable solver-grid signed numerator and
+  positive pigment carrier. It is `null` when Surface is skipped;
 - `optical.compositeRgba`: the final ordinary RGBA composite.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
-return fields remain same-reference aliases. Stage containers are immutable;
+return fields remain same-reference aliases; `surfaceDensityTransport` is the
+same-reference top-level alias for the new grid. Stage containers are immutable;
 their typed-array/ImageData-compatible buffers are not copied or frozen. These
 are observation outputs, not proof that all calculation ownership has already
 moved into four independent operators. In particular, no normalized

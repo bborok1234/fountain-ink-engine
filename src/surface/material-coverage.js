@@ -2,28 +2,47 @@ import { WetInkSimulation } from "./wet-ink-simulation.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
 import { MAX_KEYBOARD_SURFACE_STEPS } from "../recipes/ink-recipe.js";
+import { assertSurfaceDensityTransportGrid } from "./density-transport.js";
 
 export const DEFAULT_SURFACE_SEED = 0x13579bdf;
 
 /**
  * Run the exact accepted deposit/step/fixed-reference material calculation
  * on an already-resampled mask. Canvas allocation and resizing stay with the
- * caller; the returned object is ImageData-compatible structural RGBA.
+ * caller. Coverage is ImageData-compatible structural RGBA; optional density
+ * transport remains a compact Float32 solver grid.
  *
  * @param {{width:number,height:number,data:Uint8ClampedArray}} deposit
  * @param {number} absorption normalized 0...1
  * @param {number} surfaceSeed
  * @param {Record<string, unknown>} recipe
+ * @param {{width:number,height:number,signedNumerator:Float32Array,
+ *   pigmentWeight:Float32Array}|null} densityTransport
  */
-export function createMaterialCoverage(
+export function createKeyboardSurfaceState(
   deposit,
   absorption,
   surfaceSeed,
   recipe,
+  densityTransport = null,
 ) {
   assertInkRecipeCompatible(recipe);
   assertFiniteRange(absorption, "absorption", 0, 1);
   assertUint32(surfaceSeed, "surfaceSeed");
+  const validatedDensityTransport = densityTransport === null
+    ? null
+    : assertSurfaceDensityTransportGrid(densityTransport);
+  if (
+    validatedDensityTransport !== null
+    && (
+      validatedDensityTransport.width !== deposit.width
+      || validatedDensityTransport.height !== deposit.height
+    )
+  ) {
+    throw new TypeError(
+      "densityTransport dimensions must match the deposit grid.",
+    );
+  }
   const simulation = new WetInkSimulation(
     deposit.width,
     deposit.height,
@@ -33,6 +52,9 @@ export function createMaterialCoverage(
     waterLoad: recipe.surface.keyboard.waterLoad,
     pigmentLoad: recipe.surface.keyboard.pigmentLoad,
     seed: (surfaceSeed ^ 0x85ebca6b) >>> 0,
+    ...(validatedDensityTransport === null
+      ? {}
+      : { densityTransport: validatedDensityTransport }),
   });
   const steps = Math.round(
     recipe.surface.keyboard.stepBase
@@ -67,5 +89,26 @@ export function createMaterialCoverage(
     material.data[index + 2] = 255;
     material.data[index + 3] = Math.round(normalized * 255);
   }
-  return material;
+  return Object.freeze({
+    coverage: material,
+    densityTransport: simulation.createDensityTransport(recipe),
+  });
+}
+
+/**
+ * Backwards-compatible coverage-only entry point. It deliberately does not
+ * allocate keyboard density transport planes.
+ */
+export function createMaterialCoverage(
+  deposit,
+  absorption,
+  surfaceSeed,
+  recipe,
+) {
+  return createKeyboardSurfaceState(
+    deposit,
+    absorption,
+    surfaceSeed,
+    recipe,
+  ).coverage;
 }

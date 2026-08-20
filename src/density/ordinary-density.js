@@ -5,6 +5,10 @@ import {
 } from "../contact/nib-profiles.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertPercent, assertUint32 } from "../contracts/numeric.js";
+import {
+  assertSurfaceDensityTransportGrid,
+  sampleSurfaceDensityVariation,
+} from "../surface/density-transport.js";
 
 export const MAX_GLYPH_CONTACTS = 0xffff;
 const MINIMUM_NORMAL_NUMBER = 2 ** -1022;
@@ -463,6 +467,12 @@ const rgbaData = (value) => value?.data ?? value;
  *   pixelHeight:number,
  *   mask:{data:Uint8ClampedArray}|Uint8ClampedArray,
  *   materialCoverage?:{data:Uint8ClampedArray}|Uint8ClampedArray|null,
+ *   surfaceDensityTransport?:{
+ *     width:number,
+ *     height:number,
+ *     signedNumerator:Float32Array,
+ *     pigmentWeight:Float32Array
+ *   }|null,
  *   densityField:Float32Array,
  *   densitySamples:Uint16Array,
  *   nibId:string,
@@ -477,6 +487,7 @@ export function compositeOrdinaryInk({
   pixelHeight,
   mask,
   materialCoverage = null,
+  surfaceDensityTransport = null,
   densityField,
   densitySamples,
   nibId,
@@ -488,6 +499,9 @@ export function compositeOrdinaryInk({
   assertInkRecipeCompatible(recipe);
   assertPercent(flow, "flow");
   assertPercent(absorption, "absorption");
+  const densityTransport = surfaceDensityTransport === null
+    ? null
+    : assertSurfaceDensityTransportGrid(surfaceDensityTransport);
   const result = output ?? {
     width: pixelWidth,
     height: pixelHeight,
@@ -513,9 +527,21 @@ export function compositeOrdinaryInk({
       const coverage = maskAlpha * (1 - materialMix) + roughAlpha * materialMix;
       if (coverage <= 0.001) continue;
       const fieldIndex = y * pixelWidth + x;
-      const variation = densitySamples[fieldIndex] > 0
-        ? densityField[fieldIndex] / densitySamples[fieldIndex]
-        : 0;
+      let variation = 0;
+      if (densitySamples[fieldIndex] > 0) {
+        // Contact always owns its exact current glyph-local variation.
+        variation = densityField[fieldIndex] / densitySamples[fieldIndex];
+      } else if (roughAlpha > 0 && densityTransport !== null) {
+        // Surface-only pigment inherits transported raw variation. A zero
+        // carrier has no ratio and intentionally keeps the mean fallback.
+        variation = sampleSurfaceDensityVariation(
+          densityTransport,
+          x,
+          y,
+          pixelWidth,
+          pixelHeight,
+        ) ?? 0;
+      }
       const shapedVariation = shapeNibDensityVariation(nibId, variation);
       const concentration = Math.max(
         0,

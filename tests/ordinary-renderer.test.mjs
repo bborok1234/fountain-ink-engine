@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
-import { getMeanDensity } from "fountain-ink-engine/density";
-import { ORDINARY_GREEN_RECIPE_R4 } from "fountain-ink-engine/recipes";
+import {
+  compositeOrdinaryInk,
+  getMeanDensity,
+} from "fountain-ink-engine/density";
+import { ORDINARY_GREEN_RECIPE_R5 } from "fountain-ink-engine/recipes";
 
 function makeImageData(width, height, data) {
   return {
@@ -159,7 +162,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R4,
+      recipe: ORDINARY_GREEN_RECIPE_R5,
       createLayer: makeCanvas,
     },
     mask,
@@ -214,6 +217,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   ]);
   assert.deepEqual(Object.keys(stages.surface), [
     "materialCoverageCandidate",
+    "densityTransport",
     "applied",
   ]);
   assert.deepEqual(Object.keys(stages.optical), ["compositeRgba"]);
@@ -230,6 +234,8 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.equal(stages.density.sampleCount.length, 18 * 14);
   assert.equal(stages.surface.applied, true);
   assertRgbaShape(stages.surface.materialCoverageCandidate, 18, 14);
+  assert.ok(stages.surface.densityTransport.signedNumerator instanceof Float32Array);
+  assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
   assertRgbaShape(stages.optical.compositeRgba, 18, 14);
 
   assert.equal(result.imageData, stages.optical.compositeRgba);
@@ -239,6 +245,10 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
     result.materialCoverage,
     stages.surface.materialCoverageCandidate,
   );
+  assert.equal(
+    result.surfaceDensityTransport,
+    stages.surface.densityTransport,
+  );
 });
 
 test("zero absorption records an explicit unapplied Surface stage", () => {
@@ -247,6 +257,8 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
 
   assert.equal(result.stages.surface.applied, false);
   assert.equal(result.stages.surface.materialCoverageCandidate, null);
+  assert.equal(result.stages.surface.densityTransport, null);
+  assert.equal(result.surfaceDensityTransport, null);
   assert.equal(result.materialCoverage, null);
   assert.ok(result.stages.contact.rgbaMask.data.some((value, index) => (
     index % 4 === 3 && value > 0
@@ -295,6 +307,36 @@ test("stage diagnostics are deterministic and do not mutate renderer inputs", ()
   assert.deepEqual(firstFixture.glyphContacts, originalContacts);
 });
 
+test("density transport never changes Contact-owned Optical pixels", () => {
+  const { options } = makeOptions(42);
+  const result = renderOrdinaryInkMaterial(options);
+  const legacyMeanFallback = compositeOrdinaryInk({
+    pixelWidth: options.pixelWidth,
+    pixelHeight: options.pixelHeight,
+    mask: result.stages.contact.rgbaMask,
+    materialCoverage: result.stages.surface.materialCoverageCandidate,
+    densityField: result.stages.density.accumulatedVariation,
+    densitySamples: result.stages.density.sampleCount,
+    nibId: options.nibId,
+    flow: options.flow,
+    absorption: options.absorption,
+    recipe: options.recipe,
+  });
+  for (
+    let index = 0;
+    index < result.stages.density.sampleCount.length;
+    index += 1
+  ) {
+    const alphaOffset = index * 4 + 3;
+    if (result.stages.density.sampleCount[index] > 0) {
+      assert.equal(
+        result.imageData.data[alphaOffset],
+        legacyMeanFallback.data[alphaOffset],
+      );
+    }
+  }
+});
+
 test("a nonoverlapping suffix preserves existing Contact, Density, and Optical pixels at absorption zero", () => {
   const pixelWidth = 12;
   const pixelHeight = 5;
@@ -327,7 +369,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R4,
+    recipe: ORDINARY_GREEN_RECIPE_R5,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -423,7 +465,7 @@ test("a far suffix preserves the complete existing material crop at absorption 4
     flow: 58,
     scale: 1,
     fontSize: 12,
-    recipe: ORDINARY_GREEN_RECIPE_R4,
+    recipe: ORDINARY_GREEN_RECIPE_R5,
     createLayer: makeCanvas,
   };
   const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
@@ -488,6 +530,29 @@ test("a far suffix preserves the complete existing material crop at absorption 4
       prefixMaximumX,
     ),
   );
+  const prefixGridMaximumX = Math.ceil(
+    prefixMaximumX
+      * before.stages.surface.densityTransport.width
+      / pixelWidth,
+  );
+  for (const plane of ["signedNumerator", "pigmentWeight"]) {
+    assert.deepEqual(
+      cropScalar(
+        after.stages.surface.densityTransport[plane],
+        after.stages.surface.densityTransport.width,
+        after.stages.surface.densityTransport.height,
+        0,
+        prefixGridMaximumX,
+      ),
+      cropScalar(
+        before.stages.surface.densityTransport[plane],
+        before.stages.surface.densityTransport.width,
+        before.stages.surface.densityTransport.height,
+        0,
+        prefixGridMaximumX,
+      ),
+    );
+  }
   assert.deepEqual(
     cropRgba(
       after.stages.optical.compositeRgba,
@@ -538,7 +603,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R4,
+    recipe: ORDINARY_GREEN_RECIPE_R5,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);
@@ -570,6 +635,10 @@ test("keyboard flow changes mean and optical output but not contact, density fie
     assert.deepEqual(
       stages.surface.materialCoverageCandidate,
       reference.surface.materialCoverageCandidate,
+    );
+    assert.deepEqual(
+      stages.surface.densityTransport,
+      reference.surface.densityTransport,
     );
     assert.equal(stages.surface.applied, reference.surface.applied);
   }
@@ -619,6 +688,20 @@ test("stage fields remain finite, bounded, and nonblank", () => {
   assert.ok(stages.density.sampleCount.every((value) => (
     Number.isInteger(value) && value >= 0 && value <= 0xffff
   )));
+  assert.ok(stages.surface.densityTransport.signedNumerator.every(Number.isFinite));
+  assert.ok(stages.surface.densityTransport.pigmentWeight.every((value) => (
+    Number.isFinite(value) && value >= 0
+  )));
+  for (
+    let index = 0;
+    index < stages.surface.densityTransport.pigmentWeight.length;
+    index += 1
+  ) {
+    assert.ok(
+      Math.abs(stages.surface.densityTransport.signedNumerator[index])
+        <= stages.surface.densityTransport.pigmentWeight[index],
+    );
+  }
   for (const image of [
     stages.contact.rgbaMask,
     stages.surface.materialCoverageCandidate,

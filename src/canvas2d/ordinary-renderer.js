@@ -1,6 +1,10 @@
 import { createDensityField, compositeOrdinaryInk } from "../density/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
-import { createMaterialCoverage } from "../surface/index.js";
+import {
+  createKeyboardSurfaceState,
+  createMaterialCoverage,
+} from "../surface/index.js";
+import { resampleContactDensityToSurfaceGrid } from "../surface/density-transport.js";
 import {
   assertFiniteRange,
   assertPercent,
@@ -17,6 +21,7 @@ function makeDiagnosticStages({
   accumulatedVariation,
   sampleCount,
   materialCoverageCandidate,
+  densityTransport,
   compositeRgba,
 }) {
   return Object.freeze({
@@ -24,6 +29,7 @@ function makeDiagnosticStages({
     density: Object.freeze({ accumulatedVariation, sampleCount }),
     surface: Object.freeze({
       materialCoverageCandidate,
+      densityTransport,
       applied: materialCoverageCandidate !== null,
     }),
     optical: Object.freeze({ compositeRgba }),
@@ -75,6 +81,73 @@ export function makeMaterialCoverage({
 }
 
 /**
+ * Run one keyboard Surface solve with raw Contact density attached to positive
+ * pigment mass. Coverage remains the existing RGBA candidate; density remains
+ * a compact solver-grid numerator/carrier pair and is never expanded to a
+ * full-page Float32 field.
+ */
+function makeKeyboardSurfaceState({
+  mask,
+  maskPixels,
+  densityField,
+  densitySamples,
+  pixelWidth,
+  pixelHeight,
+  width,
+  height,
+  absorption,
+  surfaceSeed,
+  recipe,
+  createLayer = makeLayer,
+}) {
+  assertInkRecipeCompatible(recipe);
+  assertFiniteRange(absorption, "absorption", 0, 1);
+  assertSurfaceSeed(surfaceSeed);
+  const gridWidth = Math.max(160, Math.min(320, Math.round(width * 0.56)));
+  const gridHeight = Math.max(130, Math.min(240, Math.round(height * 0.56)));
+  const depositCanvas = createLayer(gridWidth, gridHeight);
+  const depositContext = depositCanvas.getContext("2d");
+  depositContext.imageSmoothingEnabled = true;
+  depositContext.imageSmoothingQuality = "high";
+  depositContext.drawImage(mask, 0, 0, gridWidth, gridHeight);
+  const deposit = depositContext.getImageData(0, 0, gridWidth, gridHeight);
+  const densityDeposit = resampleContactDensityToSurfaceGrid({
+    sourceWidth: pixelWidth,
+    sourceHeight: pixelHeight,
+    targetWidth: gridWidth,
+    targetHeight: gridHeight,
+    mask: maskPixels,
+    accumulatedVariation: densityField,
+    sampleCount: densitySamples,
+  });
+  const surfaceState = createKeyboardSurfaceState(
+    deposit,
+    absorption,
+    surfaceSeed,
+    recipe,
+    densityDeposit,
+  );
+  const material = depositContext.createImageData(gridWidth, gridHeight);
+  material.data.set(surfaceState.coverage.data);
+  const gridCanvas = createLayer(gridWidth, gridHeight);
+  gridCanvas.getContext("2d").putImageData(material, 0, 0);
+  const coverageCanvas = createLayer(pixelWidth, pixelHeight);
+  const coverageContext = coverageCanvas.getContext("2d");
+  coverageContext.imageSmoothingEnabled = true;
+  coverageContext.imageSmoothingQuality = "high";
+  coverageContext.drawImage(gridCanvas, 0, 0, pixelWidth, pixelHeight);
+  return Object.freeze({
+    materialCoverageCandidate: coverageContext.getImageData(
+      0,
+      0,
+      pixelWidth,
+      pixelHeight,
+    ),
+    densityTransport: surfaceState.densityTransport,
+  });
+}
+
+/**
  * Calculate density, Surface coverage, and ordinary optical RGBA from a mask.
  * Layout and glyph-mask placement remain caller responsibilities.
  * `glyphContacts` must describe the exact final masks and integer device-pixel
@@ -121,9 +194,12 @@ export function renderOrdinaryInkMaterial({
     pixelWidth,
     pixelHeight,
   );
-  const materialCoverage = normalizedAbsorption > 0.002
-    ? makeMaterialCoverage({
+  const surfaceState = normalizedAbsorption > 0.002
+    ? makeKeyboardSurfaceState({
       mask,
+      maskPixels,
+      densityField,
+      densitySamples,
       pixelWidth,
       pixelHeight,
       width,
@@ -134,12 +210,15 @@ export function renderOrdinaryInkMaterial({
       createLayer,
     })
     : null;
+  const materialCoverage = surfaceState?.materialCoverageCandidate ?? null;
+  const surfaceDensityTransport = surfaceState?.densityTransport ?? null;
   const result = outputContext.createImageData(pixelWidth, pixelHeight);
   compositeOrdinaryInk({
     pixelWidth,
     pixelHeight,
     mask: maskPixels,
     materialCoverage,
+    surfaceDensityTransport,
     densityField,
     densitySamples,
     nibId,
@@ -153,6 +232,7 @@ export function renderOrdinaryInkMaterial({
     accumulatedVariation: densityField,
     sampleCount: densitySamples,
     materialCoverageCandidate: materialCoverage,
+    densityTransport: surfaceDensityTransport,
     compositeRgba: result,
   });
   return {
@@ -161,5 +241,6 @@ export function renderOrdinaryInkMaterial({
     densityField: stages.density.accumulatedVariation,
     densitySamples: stages.density.sampleCount,
     materialCoverage: stages.surface.materialCoverageCandidate,
+    surfaceDensityTransport: stages.surface.densityTransport,
   };
 }

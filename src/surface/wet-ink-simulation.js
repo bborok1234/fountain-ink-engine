@@ -1,6 +1,7 @@
 import { coordinateNoiseUnchecked as coordinateNoise } from "../deterministic/random.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
+import { assertSurfaceDensityTransportGrid } from "./density-transport.js";
 
 const clamp = (value, minimum = 0, maximum = 1) =>
   Math.min(maximum, Math.max(minimum, value));
@@ -27,6 +28,11 @@ export class WetInkSimulation {
     this.nextMobile = new Float32Array(this.length);
     this.fiberX = new Float32Array(this.length);
     this.fiberY = new Float32Array(this.length);
+    // Keyboard-only signed density mass. Direct writing never allocates these
+    // planes, preserving its existing state, arithmetic, and memory path.
+    this.mobileSignedMass = null;
+    this.fixedSignedMass = null;
+    this.nextMobileSignedMass = null;
     this.activity = 0;
     this.makeFiberField();
   }
@@ -54,6 +60,9 @@ export class WetInkSimulation {
     this.fixed.fill(0);
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
+    this.mobileSignedMass?.fill(0);
+    this.fixedSignedMass?.fill(0);
+    this.nextMobileSignedMass?.fill(0);
     this.activity = 0;
   }
 
@@ -61,6 +70,51 @@ export class WetInkSimulation {
     assertSeed(options?.seed, "options.seed");
     if (imageData.width !== this.width || imageData.height !== this.height) {
       throw new Error("Mask dimensions must match the simulation grid.");
+    }
+    const densityTransportDescriptor = options === null
+      || typeof options !== "object"
+      ? undefined
+      : Object.getOwnPropertyDescriptor(options, "densityTransport");
+    if (
+      densityTransportDescriptor === undefined
+      && options !== null
+      && typeof options === "object"
+      && "densityTransport" in options
+    ) {
+      throw new TypeError("options.densityTransport must be an own property.");
+    }
+    if (
+      densityTransportDescriptor !== undefined
+      && (!densityTransportDescriptor.enumerable
+        || !("value" in densityTransportDescriptor))
+    ) {
+      throw new TypeError(
+        "options.densityTransport must be an enumerable own data property.",
+      );
+    }
+    const densityTransport = densityTransportDescriptor === undefined
+      ? null
+      : assertSurfaceDensityTransportGrid(
+        densityTransportDescriptor.value,
+        "options.densityTransport",
+      );
+    if (
+      densityTransport !== null
+      && (
+        densityTransport.width !== this.width
+        || densityTransport.height !== this.height
+      )
+    ) {
+      throw new TypeError(
+        "options.densityTransport dimensions must match the simulation grid.",
+      );
+    }
+    // Allocate only after the complete payload has been validated and before
+    // the first scalar deposit mutation.
+    if (densityTransport !== null && this.mobileSignedMass === null) {
+      this.mobileSignedMass = new Float32Array(this.length);
+      this.fixedSignedMass = new Float32Array(this.length);
+      this.nextMobileSignedMass = new Float32Array(this.length);
     }
 
     for (let y = 0; y < this.height; y += 1) {
@@ -84,11 +138,32 @@ export class WetInkSimulation {
           0,
           1.4,
         );
-        this.mobile[index] = clamp(
-          this.mobile[index] + alpha * options.pigmentLoad * contact,
-          0,
-          1.8,
-        );
+        if (densityTransport === null) {
+          this.mobile[index] = clamp(
+            this.mobile[index] + alpha * options.pigmentLoad * contact,
+            0,
+            1.8,
+          );
+        } else {
+          const previousMobile = this.mobile[index];
+          const nextMobile = clamp(
+            previousMobile + alpha * options.pigmentLoad * contact,
+            0,
+            1.8,
+          );
+          this.mobile[index] = nextMobile;
+          const carrier = densityTransport.pigmentWeight[index];
+          const ratio = carrier > 0
+            ? clamp(densityTransport.signedNumerator[index] / carrier, -1, 1)
+            : 0;
+          const nextSigned = this.mobileSignedMass[index]
+            + (nextMobile - previousMobile) * ratio;
+          this.mobileSignedMass[index] = clamp(
+            nextSigned,
+            -nextMobile,
+            nextMobile,
+          );
+        }
       }
     }
     this.activity = 1;
@@ -194,17 +269,95 @@ export class WetInkSimulation {
         );
 
         this.nextWater[index] = nextWater;
-        this.nextMobile[index] = Math.max(0, mobile + mobileLaplacian - fixing);
-        this.fixed[index] = clamp(this.fixed[index] + fixing, 0, 2.1);
+        if (this.mobileSignedMass === null) {
+          this.nextMobile[index] = Math.max(0, mobile + mobileLaplacian - fixing);
+          this.fixed[index] = clamp(this.fixed[index] + fixing, 0, 2.1);
+        } else {
+          const signedMobile = this.mobileSignedMass[index];
+          const signedMobileLaplacian =
+            (this.mobileSignedMass[left] + this.mobileSignedMass[right]
+              + this.mobileSignedMass[above] + this.mobileSignedMass[below]
+              - signedMobile * 4)
+            * pigmentMobility * clamp(water * 1.35, 0, 1);
+          const mobileAfterDiffusion = mobile + mobileLaplacian;
+          const mobileBeforeFixing = Math.max(0, mobileAfterDiffusion);
+          const signedBeforeFixing = clamp(
+            signedMobile + signedMobileLaplacian,
+            -mobileBeforeFixing,
+            mobileBeforeFixing,
+          );
+          const nextMobile = Math.max(0, mobileAfterDiffusion - fixing);
+          const previousFixed = this.fixed[index];
+          const nextFixed = clamp(previousFixed + fixing, 0, 2.1);
+          const removedFraction = mobileBeforeFixing > 0
+            ? clamp(fixing / mobileBeforeFixing)
+            : 0;
+          const storedFixedFraction = mobileBeforeFixing > 0
+            ? clamp((nextFixed - previousFixed) / mobileBeforeFixing)
+            : 0;
+          const nextMobileSigned = signedBeforeFixing * (1 - removedFraction);
+          const nextFixedSigned = this.fixedSignedMass[index]
+            + signedBeforeFixing * storedFixedFraction;
+          this.nextMobile[index] = nextMobile;
+          this.fixed[index] = nextFixed;
+          this.nextMobileSignedMass[index] = clamp(
+            nextMobileSigned,
+            -nextMobile,
+            nextMobile,
+          );
+          this.fixedSignedMass[index] = clamp(
+            nextFixedSigned,
+            -nextFixed,
+            nextFixed,
+          );
+        }
         activeWater += nextWater;
       }
     }
 
     [this.water, this.nextWater] = [this.nextWater, this.water];
     [this.mobile, this.nextMobile] = [this.nextMobile, this.mobile];
+    if (this.mobileSignedMass !== null) {
+      [this.mobileSignedMass, this.nextMobileSignedMass] = [
+        this.nextMobileSignedMass,
+        this.mobileSignedMass,
+      ];
+    }
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
+    this.nextMobileSignedMass?.fill(0);
     this.activity = activeWater / this.length;
+  }
+
+  /**
+   * Project transported raw density mass with the same positive optical
+   * weights as ordinary pigment. Color, mean density, flow, and nib shaping do
+   * not enter this transport field.
+   */
+  createDensityTransport(recipe) {
+    assertInkRecipeCompatible(recipe);
+    if (this.mobileSignedMass === null) return null;
+    const signedNumerator = new Float32Array(this.length);
+    const pigmentWeight = new Float32Array(this.length);
+    const optical = recipe.surface.direct.optical;
+    for (let index = 0; index < this.length; index += 1) {
+      const weight = Math.fround(
+        this.fixed[index] * optical.fixedWeight
+          + this.mobile[index] * optical.mobileWeight,
+      );
+      const numerator = Math.fround(
+        this.fixedSignedMass[index] * optical.fixedWeight
+          + this.mobileSignedMass[index] * optical.mobileWeight,
+      );
+      pigmentWeight[index] = weight;
+      signedNumerator[index] = clamp(numerator, -weight, weight);
+    }
+    return Object.freeze({
+      width: this.width,
+      height: this.height,
+      signedNumerator,
+      pigmentWeight,
+    });
   }
 
   render(imageData, recipe, opticalGain = 1) {

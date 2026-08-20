@@ -21,7 +21,7 @@ or mobile integration.
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R4,
+  ORDINARY_GREEN_RECIPE_R5,
   WetInkSimulation,
   createDensityField,
   getGlyphContactGeometry,
@@ -47,24 +47,24 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r4` is the active immutable, serializable r5/schema-3 recipe.
-`ordinary-green-r1` through `ordinary-green-r3` remain exported as archival
-r2/r3/r4 checkpoints:
+`ordinary-green-r5` is the active immutable, serializable r6/schema-3 recipe.
+`ordinary-green-r1` through `ordinary-green-r4` remain exported as archival
+r2/r3/r4/r5 checkpoints:
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R4,
+  ORDINARY_GREEN_RECIPE_R5,
   parseInkRecipe,
   serializeInkRecipe,
 } from "fountain-ink-engine/recipes";
 
-const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R4);
+const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R5);
 const restoredRecipe = parseInkRecipe(checkpoint);
 ```
 
 Structural recipe APIs preserve supported historical model records for archival
 round trips. Material calculation additionally requires the active engine
-model/schema. The reserved `ordinary-green@1` through `ordinary-green@4`
+model/schema. The reserved `ordinary-green@1` through `ordinary-green@5`
 identities must match their registered canonical definitions;
 changed parameters require a new revision or custom id.
 
@@ -122,6 +122,35 @@ integer `normalizationReferenceAlpha` in `1...255` to a custom schema-3 recipe
 and give that calculation a new recipe revision/model identity. Schema-2
 recipes and experiment records remain parseable as history; they are not
 silently upgraded or rendered by r5.
+
+## Surface density transport
+
+As of package `0.6.0-experimental.1`, Surface-only spread carries the raw signed
+glyph Density that created its pigment instead of reverting every spread pixel
+to mean density. The Canvas2D renderer exposes the compact result at
+`stages.surface.densityTransport`:
+
+```js
+const { stages } = renderOrdinaryInkMaterial(options);
+const transport = stages.surface.densityTransport;
+// null when Surface is skipped, otherwise:
+// { width, height, signedNumerator: Float32Array,
+//   pigmentWeight: Float32Array }
+```
+
+The public `createKeyboardSurfaceState` Surface entry point returns the same
+`{ coverage, densityTransport }` pair. Signed numerator and positive carrier
+are always transported and resampled separately; callers must not resample a
+pre-divided ratio or pack signed values through Canvas RGBA. Contact pixels keep
+their current glyph-local Density, while only Surface-visible pixels without a
+Contact sample use the transported ratio. A zero carrier has no ratio and uses
+the existing mean fallback.
+
+Migration from `0.5.x`: use `ORDINARY_GREEN_RECIPE_R5` and read `coverage` from
+`createKeyboardSurfaceState`, or keep using the compatible
+`createMaterialCoverage` coverage-only wrapper. No authored coefficient or
+recipe field was added, so schema 3 remains current. `ordinary-green-r4` stays
+parseable as an immutable r5 checkpoint but cannot be rendered by r6.
 
 ## Development
 
