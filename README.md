@@ -201,6 +201,11 @@ accepted final RGBA unchanged. Direct subpath consumers should move
 `compositeOrdinaryInk` imports from `fountain-ink-engine/density` to
 `fountain-ink-engine/optical`.
 
+Package `0.10.0-experimental.1` additionally moves absorption-dependent shading
+preservation to `getSurfaceDensityRange` in `./surface`. The final
+`getNibDensityRange` helper now belongs to `./density`; it combines the Surface
+base range with Contact's nib multiplier without changing the accepted values.
+
 ## Development
 
 ```bash

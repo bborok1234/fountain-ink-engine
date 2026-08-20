@@ -6,13 +6,13 @@ import {
   ROUND_NIB_RATIOS,
   geometryExpansion,
   getGlyphContactGeometry,
-  getNibDensityRange,
   getNibGeometry,
   getNibProfile,
   getScaledNibGeometry,
   morphAlpha,
   shapeNibDensityVariation,
 } from "../src/contact/index.js";
+import { getNibDensityRange } from "../src/density/index.js";
 import { hashString, randomFrom } from "../src/deterministic/index.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
 

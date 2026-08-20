@@ -112,6 +112,10 @@ RGB/alpha endpoints. It no longer receives Contact masks, glyph fields, flow,
 absorption, or transported Surface density. The existing high-level composite
 name remains a compatibility wrapper around the two explicit operators.
 
+Absorption-dependent density-range preservation now comes from Surface through
+`getSurfaceDensityRange`. Contact retains only nib geometry and its authored
+shading multiplier; the final range and all ordinary pixels remain unchanged.
+
 ## Current limits
 
 - Font selection, text wrapping, authored layout, input, and IME remain in the

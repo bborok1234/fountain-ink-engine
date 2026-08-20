@@ -1,5 +1,4 @@
 import {
-  getNibDensityRange,
   getNibProfile,
   shapeNibDensityVariation,
 } from "../contact/nib-profiles.js";
@@ -9,6 +8,7 @@ import {
   assertSurfaceDensityTransportGrid,
   sampleSurfaceDensityVariation,
 } from "../surface/density-transport.js";
+import { getSurfaceDensityRange } from "../surface/density-preservation.js";
 
 export const MAX_GLYPH_CONTACTS = 0xffff;
 const MINIMUM_NORMAL_NUMBER = 2 ** -1022;
@@ -253,6 +253,15 @@ export function getMeanDensity(nibId, flow, absorption, recipe) {
         + effectiveFlow * recipe.density.flowGain
         - normalizedAbsorption * recipe.density.absorptionLoss,
     ),
+  );
+}
+
+export function getNibDensityRange(nibId, normalizedAbsorption, recipe) {
+  assertInkRecipeCompatible(recipe);
+  return Math.min(
+    recipe.density.rangeMaximum,
+    getSurfaceDensityRange(normalizedAbsorption, recipe)
+      * getNibProfile(nibId).shadingMultiplier,
   );
 }
 

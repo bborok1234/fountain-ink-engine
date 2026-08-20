@@ -7,6 +7,7 @@ import {
   createKeyboardSurfaceState,
   createMaterialCoverage,
   getDirectDepositLoads,
+  getSurfaceDensityRange,
   resolveKeyboardSurfaceCoverage,
 } from "../src/surface/index.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
@@ -84,6 +85,24 @@ test("Surface owns the accepted Contact/candidate coverage resolution", () => {
     255, 255, 255, 128,
     0, 0, 0, 0,
   ]));
+});
+
+test("Surface owns absorption-dependent density preservation", () => {
+  assert.ok(
+    Math.abs(
+      getSurfaceDensityRange(0.42, ORDINARY_GREEN_RECIPE_R6)
+        - (ORDINARY_GREEN_RECIPE_R6.density.rangeMinimum
+          + 0.58 * ORDINARY_GREEN_RECIPE_R6.density.rangeSmoothGain)
+    ) < 1e-12,
+  );
+  assert.ok(
+    getSurfaceDensityRange(0, ORDINARY_GREEN_RECIPE_R6)
+      > getSurfaceDensityRange(1, ORDINARY_GREEN_RECIPE_R6),
+  );
+  assert.throws(
+    () => getSurfaceDensityRange(1.01, ORDINARY_GREEN_RECIPE_R6),
+    /normalizedAbsorption/,
+  );
 });
 
 test("resolved Surface coverage fails closed before allocating an invalid plane", () => {

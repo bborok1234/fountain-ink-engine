@@ -6,3 +6,4 @@ export {
   createMaterialCoverage,
 } from "./material-coverage.js";
 export { resolveKeyboardSurfaceCoverage } from "./coverage-resolver.js";
+export { getSurfaceDensityRange } from "./density-preservation.js";

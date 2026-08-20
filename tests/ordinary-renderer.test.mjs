@@ -3,12 +3,10 @@ import test from "node:test";
 import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
 import {
   getMeanDensity,
+  getNibDensityRange,
 } from "fountain-ink-engine/density";
 import { compositeOrdinaryInk } from "fountain-ink-engine/optical";
-import {
-  getNibDensityRange,
-  shapeNibDensityVariation,
-} from "fountain-ink-engine/contact";
+import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "fountain-ink-engine/recipes";
 

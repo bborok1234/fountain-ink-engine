@@ -3,6 +3,7 @@ export {
   createOrdinaryConcentrationField,
   createDensityField,
   getEffectiveFlow,
+  getNibDensityRange,
   getMeanDensity,
   sampleGlyphDensityVariation,
 } from "./ordinary-density.js";
