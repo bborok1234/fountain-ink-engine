@@ -43,10 +43,10 @@ Sites worker, native code, product data model, font, or reference image.
 
 The Canvas2D keyboard renderer now exposes the existing contact mask,
 accumulated density variation and sample count, optional Surface coverage
-candidate, nullable solver-grid density transport, and optical composite as a
+candidate, Surface-resolved Float32 coverage, nullable solver-grid density
+transport, and optical composite as a
 frozen four-stage diagnostic record.
-This adds observation names and tests without changing material arithmetic;
-the former top-level return fields remain same-reference aliases.
+The former top-level return fields remain same-reference aliases.
 
 The public Contact API now resolves each keyboard glyph through
 `getGlyphContactGeometry(nibId, fontSize, glyphSeed)`. It uses the accepted
@@ -96,6 +96,15 @@ erase more than 46% of the original Contact. The absorption-42 reference keeps
 its prior `0.549816...` Contact share and therefore remains numerically above
 the new floor. The mean-density loss, narrowed shading range, outward fibre
 spread, and transported halo remain separate effects.
+
+Surface now also owns the final full-resolution coverage resolution. The public
+`resolveKeyboardSurfaceCoverage` operator combines Contact alpha, the optional
+physical candidate, the absorption mix exponent, and minimum Contact retention
+into a Float32 plane. Optical consumes that plane and no longer reads or
+reconstructs Surface mix/retention policy. The extraction preserves the prior
+final RGBA equation at absorption 0/42/100. It adds one transient/returned
+4-byte-per-page-pixel plane; its browser/device frame and memory budget remains
+part of P6 hardening rather than a claim of zero cost.
 
 ## Current limits
 

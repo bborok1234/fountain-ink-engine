@@ -118,13 +118,15 @@ transport-specific typed-array peak while producing the returned grid is
 2,150,400 bytes. Only the 614,400-byte returned grid survives for renderer or
 diagnostic use; no full-page Float32 transport output is retained.
 
-The r7 Optical coverage resolve keeps the existing linear Contact/Surface mix
-when it is stronger, then applies the recipe-authored Contact-retention floor.
+The r7 coverage resolve is owned by Surface. It keeps the existing linear
+Contact/Surface mix when it is stronger, then applies the recipe-authored
+Contact-retention floor and returns a full-resolution Float32 coverage plane.
 This prevents high absorption from turning a small glyph into only a coarse
 grid blur while preserving the outward Surface halo. It does not add a shifted
 mask, shadow, duplicate pass, or font-size-dependent paper rule. Absorption 42
 remains above the `0.54` floor, while maximum absorption retains at least that
-fraction of the original Contact alpha.
+fraction of the original Contact alpha. Optical consumes this resolved plane;
+it no longer knows the Surface mix exponent or Contact-retention policy.
 
 ## Keyboard renderer diagnostics
 
@@ -137,6 +139,8 @@ observes the buffers already used by the accepted render path:
 - `surface.materialCoverageCandidate` and `surface.applied`: the resampled
   physical coverage candidate, or `null` with `applied: false` when the Surface
   branch is skipped;
+- `surface.resolvedCoverage`: the Surface-owned full-resolution Float32 plane
+  after Contact/candidate mixing and the authored Contact-retention floor;
 - `surface.densityTransport`: the nullable solver-grid signed numerator and
   positive pigment carrier. It is `null` when Surface is skipped;
 - `optical.compositeRgba`: the final ordinary RGBA composite.

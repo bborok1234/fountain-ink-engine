@@ -83,6 +83,7 @@ const requiredExports = [
   "compositeOrdinaryInk",
   "WetInkSimulation",
   "createMaterialCoverage",
+  "resolveKeyboardSurfaceCoverage",
   "getDirectDepositLoads",
   "makeGlyphMask",
   "renderOrdinaryInkMaterial",

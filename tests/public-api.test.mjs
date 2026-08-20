@@ -54,6 +54,10 @@ test("self-referenced package barrels expose the stable API", () => {
     engine.createKeyboardSurfaceState,
     surface.createKeyboardSurfaceState,
   );
+  assert.equal(
+    engine.resolveKeyboardSurfaceCoverage,
+    surface.resolveKeyboardSurfaceCoverage,
+  );
   assert.equal(canvas2d.makeKeyboardSurfaceState, undefined);
   assert.equal(typeof canvas2d.renderOrdinaryInkMaterial, "function");
 });

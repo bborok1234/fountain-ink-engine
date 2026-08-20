@@ -3,6 +3,7 @@ import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import {
   createKeyboardSurfaceState,
   createMaterialCoverage,
+  resolveKeyboardSurfaceCoverage,
 } from "../surface/index.js";
 import { resampleContactDensityToSurfaceGrid } from "../surface/density-transport.js";
 import {
@@ -21,6 +22,7 @@ function makeDiagnosticStages({
   accumulatedVariation,
   sampleCount,
   materialCoverageCandidate,
+  resolvedCoverage,
   densityTransport,
   compositeRgba,
 }) {
@@ -29,6 +31,7 @@ function makeDiagnosticStages({
     density: Object.freeze({ accumulatedVariation, sampleCount }),
     surface: Object.freeze({
       materialCoverageCandidate,
+      resolvedCoverage,
       densityTransport,
       applied: materialCoverageCandidate !== null,
     }),
@@ -212,12 +215,20 @@ export function renderOrdinaryInkMaterial({
     : null;
   const materialCoverage = surfaceState?.materialCoverageCandidate ?? null;
   const surfaceDensityTransport = surfaceState?.densityTransport ?? null;
+  const resolvedCoverage = resolveKeyboardSurfaceCoverage({
+    width: pixelWidth,
+    height: pixelHeight,
+    contactMask: maskPixels.data,
+    materialCoverageCandidate: materialCoverage,
+    absorption,
+    recipe,
+  });
   const result = outputContext.createImageData(pixelWidth, pixelHeight);
   compositeOrdinaryInk({
     pixelWidth,
     pixelHeight,
     mask: maskPixels,
-    materialCoverage,
+    resolvedCoverage,
     surfaceDensityTransport,
     densityField,
     densitySamples,
@@ -232,6 +243,7 @@ export function renderOrdinaryInkMaterial({
     accumulatedVariation: densityField,
     sampleCount: densitySamples,
     materialCoverageCandidate: materialCoverage,
+    resolvedCoverage,
     densityTransport: surfaceDensityTransport,
     compositeRgba: result,
   });
@@ -241,6 +253,7 @@ export function renderOrdinaryInkMaterial({
     densityField: stages.density.accumulatedVariation,
     densitySamples: stages.density.sampleCount,
     materialCoverage: stages.surface.materialCoverageCandidate,
+    resolvedCoverage: stages.surface.resolvedCoverage,
     surfaceDensityTransport: stages.surface.densityTransport,
   };
 }

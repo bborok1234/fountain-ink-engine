@@ -256,15 +256,6 @@ export function getMeanDensity(nibId, flow, absorption, recipe) {
   );
 }
 
-/** @param {number} absorption percent 0...100 */
-export function getMaterialMix(absorption, recipe) {
-  assertInkRecipeCompatible(recipe);
-  return Math.pow(
-    assertPercent(absorption, "absorption") / 100,
-    recipe.surface.keyboard.coverageMixExponent,
-  );
-}
-
 /**
  * One glyph-local sample of the accepted signed sinusoidal density field.
  *
@@ -466,7 +457,7 @@ const rgbaData = (value) => value?.data ?? value;
  *   pixelWidth:number,
  *   pixelHeight:number,
  *   mask:{data:Uint8ClampedArray}|Uint8ClampedArray,
- *   materialCoverage?:{data:Uint8ClampedArray}|Uint8ClampedArray|null,
+ *   resolvedCoverage:{width:number,height:number,data:Float32Array},
  *   surfaceDensityTransport?:{
  *     width:number,
  *     height:number,
@@ -486,7 +477,7 @@ export function compositeOrdinaryInk({
   pixelWidth,
   pixelHeight,
   mask,
-  materialCoverage = null,
+  resolvedCoverage,
   surfaceDensityTransport = null,
   densityField,
   densitySamples,
@@ -508,7 +499,6 @@ export function compositeOrdinaryInk({
     data: new Uint8ClampedArray(pixelWidth * pixelHeight * 4),
   };
   const normalizedAbsorption = absorption / 100;
-  const materialMix = getMaterialMix(absorption, recipe);
   const meanDensity = getMeanDensity(nibId, flow, absorption, recipe);
   const densityRange = getNibDensityRange(
     nibId,
@@ -517,25 +507,35 @@ export function compositeOrdinaryInk({
   );
   const pixels = result.data;
   const maskData = rgbaData(mask);
-  const materialData = materialCoverage ? rgbaData(materialCoverage) : null;
+  if (
+    resolvedCoverage?.width !== pixelWidth
+    || resolvedCoverage?.height !== pixelHeight
+    || !(resolvedCoverage?.data instanceof Float32Array)
+    || resolvedCoverage.data.length !== pixelWidth * pixelHeight
+  ) {
+    throw new TypeError(
+      "resolvedCoverage must expose width * height Float32 coverage data.",
+    );
+  }
+  const coverageData = resolvedCoverage.data;
+  for (let index = 0; index < coverageData.length; index += 1) {
+    if (!Number.isFinite(coverageData[index]) || coverageData[index] < 0 || coverageData[index] > 1) {
+      throw new TypeError("resolvedCoverage data must be finite in 0...1.");
+    }
+  }
 
   for (let y = 0; y < pixelHeight; y += 1) {
     for (let x = 0; x < pixelWidth; x += 1) {
       const offset = (y * pixelWidth + x) * 4;
       const maskAlpha = maskData[offset + 3] / 255;
-      const roughAlpha = materialData?.[offset + 3] / 255 || 0;
-      const mixedCoverage = maskAlpha * (1 - materialMix)
-        + roughAlpha * materialMix;
-      const retainedContact = maskAlpha
-        * recipe.surface.keyboard.minimumContactRetention;
-      const coverage = Math.max(mixedCoverage, retainedContact);
+      const coverage = coverageData[y * pixelWidth + x];
       if (coverage <= 0.001) continue;
       const fieldIndex = y * pixelWidth + x;
       let variation = 0;
       if (densitySamples[fieldIndex] > 0) {
         // Contact always owns its exact current glyph-local variation.
         variation = densityField[fieldIndex] / densitySamples[fieldIndex];
-      } else if (roughAlpha > 0 && densityTransport !== null) {
+      } else if (densityTransport !== null) {
         // Surface-only pigment inherits transported raw variation. A zero
         // carrier has no ratio and intentionally keeps the mean fallback.
         variation = sampleSurfaceDensityVariation(

@@ -5,3 +5,4 @@ export {
   createKeyboardSurfaceState,
   createMaterialCoverage,
 } from "./material-coverage.js";
+export { resolveKeyboardSurfaceCoverage } from "./coverage-resolver.js";
