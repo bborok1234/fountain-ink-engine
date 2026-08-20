@@ -22,17 +22,18 @@ Contact ──▶ Density ──▶ Surface ──▶ Optical components
 
 Owns model/schema/manifest versions and serializable experiment records. It
 does not invent timestamps or seeds. Fixture-manifest v1 preserves both its
-historical schema-1 plain-JSON recipes and schema-2/schema-3/schema-4 strict recipes by
+historical schema-1 plain-JSON recipes and schema-2/schema-3/schema-4/schema-5 strict recipes by
 explicit dispatch; archival acceptance never implies render compatibility or
 implicit migration.
 
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r6` contains the active density bounds, keyboard Surface load,
-fixed normalization reference, minimum Contact retention, direct-input load
-curve, and optical coefficients. It preserves r5's existing material
-coefficients while selecting the r7 calculation model and schema 4. Runtime nib, flow,
+`ordinary-green-r7` is the active control and the blue-black, burgundy and teal
+recipes are its ordinary-color peers. They share density bounds, keyboard
+Surface load, fixed normalization reference, minimum Contact retention and
+alpha endpoints while owning separate Density-to-RGB curves and direct optical
+color coefficients. They select the r8 calculation model and schema 5. Runtime nib, flow,
 absorption, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
@@ -149,7 +150,8 @@ supplies actual bundled-font masks.
 
 Owns concentration-to-color/alpha conversion only. The ordinary operator
 `compositeOrdinaryOptical` accepts normalized concentration and resolved Surface
-coverage, then applies recipe RGB and calibrated alpha endpoints. It does not
+coverage, linearly samples the recipe's ordered Density-to-RGB points, then
+applies calibrated alpha endpoints. It does not
 read Contact masks, glyph seeds, absorption, flow, fibre state, or density
 variation. `compositeOrdinaryInk` remains a public compatibility wrapper that
 calls the Density and Optical operators in order.
@@ -177,9 +179,9 @@ The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
 return fields remain same-reference aliases; `surfaceDensityTransport` is the
 same-reference top-level alias for the new grid. Stage containers are immutable;
 their typed-array/ImageData-compatible buffers are not copied or frozen. These
-are observation outputs, not proof that all calculation ownership has already
-moved into four independent operators. In particular, no normalized
-concentration plane or final mixed-coverage plane is claimed yet.
+are observation outputs, not a second calculation path. The normalized
+concentration and final resolved-coverage planes are now explicit outputs of
+their owning operators.
 
 ## Source distribution
 

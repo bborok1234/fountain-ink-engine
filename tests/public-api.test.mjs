@@ -66,6 +66,22 @@ test("self-referenced package barrels expose the stable API", () => {
     recipes.ORDINARY_GREEN_RECIPE_R6,
   );
   assert.equal(
+    engine.ORDINARY_GREEN_RECIPE_R7,
+    recipes.ORDINARY_GREEN_RECIPE_R7,
+  );
+  assert.equal(
+    engine.ORDINARY_BLUE_BLACK_RECIPE_R1,
+    recipes.ORDINARY_BLUE_BLACK_RECIPE_R1,
+  );
+  assert.equal(
+    engine.ORDINARY_BURGUNDY_RECIPE_R1,
+    recipes.ORDINARY_BURGUNDY_RECIPE_R1,
+  );
+  assert.equal(
+    engine.ORDINARY_TEAL_RECIPE_R1,
+    recipes.ORDINARY_TEAL_RECIPE_R1,
+  );
+  assert.equal(
     engine.createKeyboardSurfaceState,
     surface.createKeyboardSurfaceState,
   );
@@ -84,12 +100,12 @@ test("importing the Canvas adapter does not touch browser globals", () => {
 
 test("Canvas material adapters reject invalid units before browser allocation", () => {
   assert.throws(() => canvas2d.makeMaterialCoverage({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R6,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R7,
     absorption: 2,
     surfaceSeed: 0,
   }), /absorption must be a finite number in 0\.\.\.1/);
   assert.throws(() => canvas2d.renderOrdinaryInkMaterial({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R6,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R7,
     flow: 58,
     absorption: 101,
     surfaceSeed: 0,

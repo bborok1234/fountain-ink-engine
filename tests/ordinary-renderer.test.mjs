@@ -8,7 +8,12 @@ import {
 import { compositeOrdinaryInk } from "fountain-ink-engine/optical";
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
-import { ORDINARY_GREEN_RECIPE_R6 } from "fountain-ink-engine/recipes";
+import {
+  ORDINARY_BLUE_BLACK_RECIPE_R1,
+  ORDINARY_BURGUNDY_RECIPE_R1,
+  ORDINARY_GREEN_RECIPE_R7,
+  ORDINARY_TEAL_RECIPE_R1,
+} from "fountain-ink-engine/recipes";
 
 function makeImageData(width, height, data) {
   return {
@@ -165,7 +170,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R6,
+      recipe: ORDINARY_GREEN_RECIPE_R7,
       createLayer: makeCanvas,
     },
     mask,
@@ -228,15 +233,16 @@ function legacyCompositeBytes(result, options) {
     const alpha = (options.recipe.optical.minimumAlpha
       + (options.recipe.optical.maximumAlpha - options.recipe.optical.minimumAlpha)
         * concentration) * coverage;
-    output[offset] = options.recipe.optical.rgb.red;
-    output[offset + 1] = options.recipe.optical.rgb.green;
-    output[offset + 2] = options.recipe.optical.rgb.blue;
+    const legacyRgb = options.recipe.optical.densityColorCurve[0].rgb;
+    output[offset] = legacyRgb.red;
+    output[offset + 1] = legacyRgb.green;
+    output[offset + 2] = legacyRgb.blue;
     output[offset + 3] = Math.round(alpha * 255);
   }
   return output;
 }
 
-test("Surface ownership extraction preserves the prior final RGBA equation", () => {
+test("green r8 curve preserves the prior final RGBA equation", () => {
   for (const absorption of [0, 42, 100]) {
     const { options } = makeOptions(absorption);
     const result = renderOrdinaryInkMaterial(options);
@@ -348,6 +354,34 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
   )));
 });
 
+test("ordinary color recipes change only Optical RGB for the same material solve", () => {
+  const recipes = [
+    ORDINARY_GREEN_RECIPE_R7,
+    ORDINARY_BLUE_BLACK_RECIPE_R1,
+    ORDINARY_BURGUNDY_RECIPE_R1,
+    ORDINARY_TEAL_RECIPE_R1,
+  ];
+  const results = recipes.map((recipe) => {
+    const { options } = makeOptions(42);
+    return renderOrdinaryInkMaterial({ ...options, recipe });
+  });
+  const control = results[0].stages;
+  for (const result of results.slice(1)) {
+    assert.deepEqual(result.stages.contact.rgbaMask.data, control.contact.rgbaMask.data);
+    assert.deepEqual(result.stages.density.accumulatedVariation, control.density.accumulatedVariation);
+    assert.deepEqual(result.stages.density.sampleCount, control.density.sampleCount);
+    assert.deepEqual(result.stages.density.normalizedConcentration.data, control.density.normalizedConcentration.data);
+    assert.deepEqual(result.stages.surface.materialCoverageCandidate.data, control.surface.materialCoverageCandidate.data);
+    assert.deepEqual(result.stages.surface.resolvedCoverage.data, control.surface.resolvedCoverage.data);
+    assert.deepEqual(
+      Array.from(result.imageData.data).filter((_, index) => index % 4 === 3),
+      Array.from(control.optical.compositeRgba.data).filter((_, index) => index % 4 === 3),
+    );
+  }
+  const rgbaSignatures = results.map((result) => Buffer.from(result.imageData.data).toString("hex"));
+  assert.equal(new Set(rgbaSignatures).size, recipes.length);
+});
+
 test("stage diagnostics are deterministic and do not mutate renderer inputs", () => {
   const firstFixture = makeOptions(42);
   const secondFixture = makeOptions(42);
@@ -449,7 +483,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -545,7 +579,7 @@ test("a far suffix preserves the complete existing material crop at absorption 4
     flow: 58,
     scale: 1,
     fontSize: 12,
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
     createLayer: makeCanvas,
   };
   const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
@@ -683,7 +717,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R6,
+    recipe: ORDINARY_GREEN_RECIPE_R7,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);
