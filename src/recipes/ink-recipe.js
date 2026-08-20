@@ -1,4 +1,4 @@
-export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3]);
+export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3, 4]);
 export const MAX_KEYBOARD_SURFACE_STEPS = 64;
 
 const KEYBOARD_SURFACE_KEYS_BY_SCHEMA = Object.freeze({
@@ -20,6 +20,17 @@ const KEYBOARD_SURFACE_KEYS_BY_SCHEMA = Object.freeze({
     "normalizationScale",
     "normalizationReferenceAlpha",
     "coverageMixExponent",
+  ]),
+  4: Object.freeze([
+    "waterLoad",
+    "pigmentLoad",
+    "stepBase",
+    "stepAbsorptionGain",
+    "stepMilliseconds",
+    "normalizationScale",
+    "normalizationReferenceAlpha",
+    "coverageMixExponent",
+    "minimumContactRetention",
   ]),
 });
 
@@ -89,7 +100,7 @@ function canonicalValue(value) {
 }
 
 /**
- * Validate the recipe shapes used by recipe schemas v2 and v3.
+ * Validate the recipe shapes used by recipe schemas v2 through v4.
  * Runtime nib, flow, absorption, layout, and seeds intentionally live outside.
  *
  * @param {Record<string, unknown>} recipe
@@ -168,7 +179,7 @@ export function validateInkRecipe(recipe) {
   assertNumber(recipe.surface.keyboard.stepAbsorptionGain, "recipe.surface.keyboard.stepAbsorptionGain", 0, 1000);
   assertNumber(recipe.surface.keyboard.stepMilliseconds, "recipe.surface.keyboard.stepMilliseconds", 0.001, 1000);
   assertNumber(recipe.surface.keyboard.normalizationScale, "recipe.surface.keyboard.normalizationScale", 0.001, 10);
-  if (recipe.recipeSchemaVersion === 3) {
+  if (recipe.recipeSchemaVersion >= 3) {
     assertInteger(
       recipe.surface.keyboard.normalizationReferenceAlpha,
       "recipe.surface.keyboard.normalizationReferenceAlpha",
@@ -177,6 +188,14 @@ export function validateInkRecipe(recipe) {
     );
   }
   assertNumber(recipe.surface.keyboard.coverageMixExponent, "recipe.surface.keyboard.coverageMixExponent", 0.001, 10);
+  if (recipe.recipeSchemaVersion >= 4) {
+    assertNumber(
+      recipe.surface.keyboard.minimumContactRetention,
+      "recipe.surface.keyboard.minimumContactRetention",
+      0,
+      1,
+    );
+  }
   if (
     recipe.surface.keyboard.stepBase
       + recipe.surface.keyboard.stepAbsorptionGain

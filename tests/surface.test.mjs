@@ -8,7 +8,7 @@ import {
   createMaterialCoverage,
   getDirectDepositLoads,
 } from "../src/surface/index.js";
-import { ORDINARY_GREEN_RECIPE_R5 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
 import {
   resampleContactDensityToSurfaceGrid,
   sampleSurfaceDensityVariation,
@@ -58,25 +58,25 @@ function renderRawSurface(deposit, absorption) {
     DEFAULT_SURFACE_SEED,
   );
   simulation.depositMask(deposit, {
-    waterLoad: ORDINARY_GREEN_RECIPE_R5.surface.keyboard.waterLoad,
-    pigmentLoad: ORDINARY_GREEN_RECIPE_R5.surface.keyboard.pigmentLoad,
+    waterLoad: ORDINARY_GREEN_RECIPE_R6.surface.keyboard.waterLoad,
+    pigmentLoad: ORDINARY_GREEN_RECIPE_R6.surface.keyboard.pigmentLoad,
     seed: (DEFAULT_SURFACE_SEED ^ 0x85ebca6b) >>> 0,
   });
   const steps = Math.round(
-    ORDINARY_GREEN_RECIPE_R5.surface.keyboard.stepBase
+    ORDINARY_GREEN_RECIPE_R6.surface.keyboard.stepBase
       + absorption
-        * ORDINARY_GREEN_RECIPE_R5.surface.keyboard.stepAbsorptionGain,
+        * ORDINARY_GREEN_RECIPE_R6.surface.keyboard.stepAbsorptionGain,
   );
   for (let index = 0; index < steps; index += 1) {
     simulation.step(
-      ORDINARY_GREEN_RECIPE_R5.surface.keyboard.stepMilliseconds,
+      ORDINARY_GREEN_RECIPE_R6.surface.keyboard.stepMilliseconds,
       absorption,
     );
   }
   const image = {
     data: new Uint8ClampedArray(deposit.width * deposit.height * 4),
   };
-  simulation.render(image, ORDINARY_GREEN_RECIPE_R5);
+  simulation.render(image, ORDINARY_GREEN_RECIPE_R6);
   return image.data;
 }
 
@@ -119,21 +119,21 @@ function cropScalarPlane(field, width, minimumX, maximumX) {
 }
 
 test("direct flow loads come from the authored recipe", () => {
-  const loads = getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R5, 0.58);
+  const loads = getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R6, 0.58);
   assert.ok(Math.abs(loads.waterLoad - 0.2242) < 1e-12);
   assert.ok(Math.abs(loads.pigmentLoad - 0.1536) < 1e-12);
-  assert.ok(Object.isFrozen(getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R5, 0)));
+  assert.ok(Object.isFrozen(getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R6, 0)));
   assert.throws(() => getDirectDepositLoads(undefined, 0.58), /recipe/);
   for (const flow of [Number.NaN, Number.POSITIVE_INFINITY, -0.01, 1.01]) {
     assert.throws(
-      () => getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R5, flow),
+      () => getDirectDepositLoads(ORDINARY_GREEN_RECIPE_R6, flow),
       /normalizedFlow must be a finite number in 0\.\.\.1/,
     );
   }
 });
 
 test("excessive keyboard Surface work fails before touching a deposit", () => {
-  const excessive = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R5));
+  const excessive = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R6));
   excessive.id = "custom-excessive-steps";
   excessive.surface.keyboard.stepBase = 64;
   excessive.surface.keyboard.stepAbsorptionGain = 1;
@@ -160,7 +160,7 @@ test("invalid normalized absorption fails before touching a deposit", () => {
         untouchedDeposit,
         absorption,
         7,
-        ORDINARY_GREEN_RECIPE_R5,
+        ORDINARY_GREEN_RECIPE_R6,
       ),
       /absorption must be a finite number in 0\.\.\.1/,
     );
@@ -174,7 +174,7 @@ test("invalid fixed normalization references fail before touching a deposit", ()
     },
   };
   for (const value of [0, Number.NaN, 256]) {
-    const invalid = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R5));
+    const invalid = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R6));
     invalid.id = "custom-invalid-reference";
     invalid.surface.keyboard.normalizationReferenceAlpha = value;
     assert.throws(
@@ -188,7 +188,7 @@ test("invalid fixed normalization references fail before touching a deposit", ()
     );
   }
 
-  const accessor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R5));
+  const accessor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R6));
   accessor.id = "custom-accessor-reference";
   Object.defineProperty(
     accessor.surface.keyboard,
@@ -216,7 +216,7 @@ test("WetInkSimulation repeats typed-array state for the same input", () => {
     });
     for (let index = 0; index < 9; index += 1) simulation.step(16.667, 0.42);
     const image = { data: new Uint8ClampedArray(24 * 18 * 4) };
-    simulation.render(image, ORDINARY_GREEN_RECIPE_R5);
+    simulation.render(image, ORDINARY_GREEN_RECIPE_R6);
     return {
       water: simulation.water,
       mobile: simulation.mobile,
@@ -280,19 +280,19 @@ test("normalized material coverage is deterministic and structural ImageData", (
     deposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
   const second = createMaterialCoverage(
     deposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
   const differentSeed = createMaterialCoverage(
     deposit,
     0.42,
     (DEFAULT_SURFACE_SEED ^ 0x9e3779b9) >>> 0,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
   assert.deepEqual(first, second);
   assert.notDeepEqual(first.data, differentSeed.data);
@@ -393,14 +393,14 @@ test("keyboard Surface transports either sign within positive pigment mass", () 
     deposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
     makeTransport(0.75),
   );
   const negative = createKeyboardSurfaceState(
     deposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
     makeTransport(-0.75),
   );
   assert.deepEqual(positive.coverage, negative.coverage);
@@ -408,7 +408,7 @@ test("keyboard Surface transports either sign within positive pigment mass", () 
     deposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
   assert.deepEqual(
     positive.coverage,
@@ -440,8 +440,8 @@ test("keyboard Surface transports either sign within positive pigment mass", () 
   const bounded = new WetInkSimulation(width, height, DEFAULT_SURFACE_SEED);
   const boundedPayload = makeTransport(1);
   bounded.depositMask(deposit, {
-    waterLoad: ORDINARY_GREEN_RECIPE_R5.surface.keyboard.waterLoad,
-    pigmentLoad: ORDINARY_GREEN_RECIPE_R5.surface.keyboard.pigmentLoad,
+    waterLoad: ORDINARY_GREEN_RECIPE_R6.surface.keyboard.waterLoad,
+    pigmentLoad: ORDINARY_GREEN_RECIPE_R6.surface.keyboard.pigmentLoad,
     seed: 1,
     densityTransport: boundedPayload,
   });
@@ -537,7 +537,7 @@ test("malformed keyboard density transport fails before solver mutation or signe
     untouchedDeposit,
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
     invalidMagnitude,
   ), /magnitude must not exceed/);
   assert.equal(depositReads, 0);
@@ -557,11 +557,11 @@ test("a fixed authored reference removes far-suffix normalization coupling", () 
 
   const beforeLegacy = legacyStrongestNormalization(
     beforeRaw,
-    ORDINARY_GREEN_RECIPE_R5.surface.keyboard.normalizationScale,
+    ORDINARY_GREEN_RECIPE_R6.surface.keyboard.normalizationScale,
   );
   const afterLegacy = legacyStrongestNormalization(
     afterRaw,
-    ORDINARY_GREEN_RECIPE_R5.surface.keyboard.normalizationScale,
+    ORDINARY_GREEN_RECIPE_R6.surface.keyboard.normalizationScale,
   );
   assert.equal(beforeLegacy.strongest, 45);
   assert.equal(afterLegacy.strongest, 105);
@@ -575,13 +575,13 @@ test("a fixed authored reference removes far-suffix normalization coupling", () 
     beforeDeposit,
     absorption,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
   const after = createMaterialCoverage(
     afterDeposit,
     absorption,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
   assert.deepEqual(
     alphaCrop(before.data, before.width, 0, 30),
@@ -610,13 +610,13 @@ test("a nearby wet suffix may interact locally but not through normalization", (
     makeNearDeposit(false),
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
   const after = createMaterialCoverage(
     makeNearDeposit(true),
     0.42,
     DEFAULT_SURFACE_SEED,
-    ORDINARY_GREEN_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R6,
   );
 
   assert.deepEqual(
@@ -670,7 +670,7 @@ test("nearby wet footprints mix transported density only in their shared halo", 
       fixture.deposit,
       0.42,
       DEFAULT_SURFACE_SEED,
-      ORDINARY_GREEN_RECIPE_R5,
+      ORDINARY_GREEN_RECIPE_R6,
       fixture.densityTransport,
     );
   };
@@ -717,7 +717,7 @@ test("surface calculations reject an implicit seed", () => {
       makeDeposit(12, 12),
       0.42,
       undefined,
-      ORDINARY_GREEN_RECIPE_R5,
+      ORDINARY_GREEN_RECIPE_R6,
     ),
     /explicit unsigned 32-bit integer/,
   );

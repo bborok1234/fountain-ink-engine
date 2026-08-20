@@ -524,7 +524,11 @@ export function compositeOrdinaryInk({
       const offset = (y * pixelWidth + x) * 4;
       const maskAlpha = maskData[offset + 3] / 255;
       const roughAlpha = materialData?.[offset + 3] / 255 || 0;
-      const coverage = maskAlpha * (1 - materialMix) + roughAlpha * materialMix;
+      const mixedCoverage = maskAlpha * (1 - materialMix)
+        + roughAlpha * materialMix;
+      const retainedContact = maskAlpha
+        * recipe.surface.keyboard.minimumContactRetention;
+      const coverage = Math.max(mixedCoverage, retainedContact);
       if (coverage <= 0.001) continue;
       const fieldIndex = y * pixelWidth + x;
       let variation = 0;

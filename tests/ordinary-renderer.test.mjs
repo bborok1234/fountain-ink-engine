@@ -5,7 +5,7 @@ import {
   compositeOrdinaryInk,
   getMeanDensity,
 } from "fountain-ink-engine/density";
-import { ORDINARY_GREEN_RECIPE_R5 } from "fountain-ink-engine/recipes";
+import { ORDINARY_GREEN_RECIPE_R6 } from "fountain-ink-engine/recipes";
 
 function makeImageData(width, height, data) {
   return {
@@ -162,7 +162,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R5,
+      recipe: ORDINARY_GREEN_RECIPE_R6,
       createLayer: makeCanvas,
     },
     mask,
@@ -369,7 +369,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R5,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -465,7 +465,7 @@ test("a far suffix preserves the complete existing material crop at absorption 4
     flow: 58,
     scale: 1,
     fontSize: 12,
-    recipe: ORDINARY_GREEN_RECIPE_R5,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
     createLayer: makeCanvas,
   };
   const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
@@ -603,7 +603,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R5,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);

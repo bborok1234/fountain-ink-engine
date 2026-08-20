@@ -10,8 +10,8 @@ they are not automatically promoted to timeless pass/fail truth.
 ### E-000-short-name / A1
 
 - Parent: none
-- Engine model: ordinary-js-r6
-- Recipe schema: 3
+- Engine model: ordinary-js-r7
+- Recipe schema: 4
 - Fixture manifest: 1
 - Status: running | passed | learned | abandoned
 - Hypothesis:
@@ -309,3 +309,57 @@ they are not automatically promoted to timeless pass/fail truth.
   none. Strict append-after-dry immutability remains a separate incremental
   state experiment rather than a per-glyph solver or a change to this mass
   transport operator.
+
+## E-008-high-absorption-contact-retention / A1
+
+- Parent: `E-007-surface-density-transport / A1`
+- Engine model: `ordinary-js-r7`
+- Recipe schema: `4`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: highly absorbent paper may spread pigment outside the written
+  Contact and lower surface density, but it must not replace the complete glyph
+  core with only a coarse wet-grid raster. A recipe-authored minimum Contact
+  retention can preserve legibility without removing fibre diffusion or adding
+  a duplicate glyph effect.
+- Explicit inputs and seed: immutable `ordinary-green-r6`; Surface seed
+  `0x13579bdf`; M nib, flow 58, absorption 100 at font sizes 18/28/52px;
+  absorption-42 default-mix scalar fixture; one-pixel missing-grid-coverage
+  fixture; desktop 1280×720 and mobile 390×844 HTML harness views with the
+  bundled Nanum Pen Script font loaded.
+- Expected at normal size: 18px Korean remains readable at absorption 100;
+  28px and 52px keep a visibly soft/fibrous halo without reading as a uniformly
+  blurred glyph. Absorption 42 keeps its accepted mix. Direct writing,
+  transported Density, mean-density loss, and shading narrowing are unchanged.
+- Observed: the previous coverage equation used `materialMix = 1` at absorption
+  100, so original Contact contribution became exactly zero. The only remaining
+  shape was the page mask downsampled to at most 320×240, advanced for 18 Surface
+  steps, and smoothed back to the page; the user-supplied 18px example was nearly
+  illegible and the 52px example still looked like blur. Schema 4 now authors
+  `minimumContactRetention = 0.54` and resolves coverage as the maximum of the
+  previous mix and `Contact alpha × retention`. Fresh desktop and mobile
+  browser checks kept the 18px text readable with zero console warnings/errors;
+  28px/52px preserved outward softness. The absorption-42 crisp share is
+  `0.5498167344`, which is already above the floor, so its prior equation and
+  byte result remain authoritative.
+- Physical evidence: writing on porous paper is capillary spreading whose front
+  and line width depend on paper/ink properties, not a Gaussian replacement of
+  the deposited line ([Kim et al., 2011](https://doi.org/10.1103/PhysRevLett.107.264501)).
+  Deeper penetration can reduce surface optical density and saturation
+  ([Li et al., 2015](https://bioresources.cnr.ncsu.edu/resources/ink-penetration-of-uncoated-inkjet-paper-and-impact-on-printing-quality/));
+  that remains modeled by the independent mean-density loss rather than by
+  erasing Contact geometry.
+- Why it failed, if applicable: the former linear mix treated Surface coverage
+  as a replacement for Contact coverage at its maximum instead of an outward
+  material response with retained deposited pigment. Fixed solver resolution
+  made that ownership error catastrophic at small font sizes.
+- Discarded assumption: absorption 100 should mean 100% of Optical coverage
+  comes from the wet-grid candidate.
+- Preserved evidence: `ordinary-green@1` through `ordinary-green@5` and their
+  canonical pins, all r6 signed-mass transport and direct-state hashes, the A2
+  fixed normalization reference, fibre diffusion coefficients, RGB/alpha
+  endpoints, and the absorption-42 baseline mix.
+- Next different method: resume Surface layer-ownership extraction and define
+  distinct smooth/middle/absorbent recipes. Do not add blur, shifted glyphs, or
+  font-size-dependent paper rules; revisit the `0.54` floor only as an A2 if a
+  normal-size comparison demonstrates a concrete retention defect.

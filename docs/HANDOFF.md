@@ -25,8 +25,8 @@ fountain-ink-engine/canvas2d
 
 Clients must never import `fountain-ink-engine/src/...`.
 
-The active calculation is `ordinary-js-r6` with immutable
-`ordinary-green@5` (recipe schema 3). Keyboard Surface clients may use
+The active calculation is `ordinary-js-r7` with immutable
+`ordinary-green@6` (recipe schema 4). Keyboard Surface clients may use
 `createKeyboardSurfaceState` for `{ coverage, densityTransport }`; the latter
 is nullable and retains two separate Float32 planes, `signedNumerator` and
 positive `pigmentWeight`. `createMaterialCoverage` remains the coverage-only
