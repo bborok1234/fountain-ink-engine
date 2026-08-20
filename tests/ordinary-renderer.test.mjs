@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
 import { getMeanDensity } from "fountain-ink-engine/density";
-import { ORDINARY_GREEN_RECIPE_R2 } from "fountain-ink-engine/recipes";
+import { ORDINARY_GREEN_RECIPE_R3 } from "fountain-ink-engine/recipes";
 
 function makeImageData(width, height, data) {
   return {
@@ -94,19 +94,55 @@ function makeMask(width, height) {
   return makeCanvas(width, height, data);
 }
 
+function makeSparseMask(width, height, supportedPixels) {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (const [x, y, alpha = 255] of supportedPixels) {
+    const offset = (y * width + x) * 4;
+    data[offset] = 255;
+    data[offset + 1] = 255;
+    data[offset + 2] = 255;
+    data[offset + 3] = alpha;
+  }
+  return makeCanvas(width, height, data);
+}
+
+function makeSparseContact({
+  supportedPixels,
+  destinationX,
+  destinationY,
+  x,
+  baseline,
+  seed,
+}) {
+  const width = Math.max(...supportedPixels.map(([localX]) => localX)) + 1;
+  const height = Math.max(...supportedPixels.map(([, localY]) => localY)) + 1;
+  const mask = makeSparseMask(width, height, supportedPixels);
+  return {
+    rgbaMask: mask.getContext("2d").getImageData(0, 0, width, height),
+    destinationX,
+    destinationY,
+    x,
+    baseline,
+    seed,
+  };
+}
+
 function makeOptions(absorption) {
   const pixelWidth = 18;
   const pixelHeight = 14;
   const mask = makeMask(pixelWidth, pixelHeight);
-  const lineLayouts = [{
+  const glyphContacts = [{
+    rgbaMask: mask.getContext("2d").getImageData(
+      0,
+      0,
+      pixelWidth,
+      pixelHeight,
+    ),
+    destinationX: 0,
+    destinationY: 0,
+    x: 3,
     baseline: 11,
-    glyphs: [{
-      character: "가",
-      x: 3,
-      width: 10,
-      sourceIndex: 0,
-      cadence: { seed: 0x1234abcd },
-    }],
+    seed: 0x1234abcd,
   }];
   return {
     options: {
@@ -122,12 +158,12 @@ function makeOptions(absorption) {
       flow: 58,
       scale: 1,
       fontSize: 12,
-      lineLayouts,
-      recipe: ORDINARY_GREEN_RECIPE_R2,
+      glyphContacts,
+      recipe: ORDINARY_GREEN_RECIPE_R3,
       createLayer: makeCanvas,
     },
     mask,
-    lineLayouts,
+    glyphContacts,
   };
 }
 
@@ -168,7 +204,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
 
   assertRgbaShape(stages.contact.rgbaMask, 18, 14);
   assert.ok(stages.density.accumulatedVariation instanceof Float32Array);
-  assert.ok(stages.density.sampleCount instanceof Uint8Array);
+  assert.ok(stages.density.sampleCount instanceof Uint16Array);
   assert.equal(stages.density.accumulatedVariation.length, 18 * 14);
   assert.equal(stages.density.sampleCount.length, 18 * 14);
   assert.equal(stages.surface.applied, true);
@@ -203,7 +239,13 @@ test("stage diagnostics are deterministic and do not mutate renderer inputs", ()
   const firstFixture = makeOptions(42);
   const secondFixture = makeOptions(42);
   const originalMask = firstFixture.mask.snapshot();
-  const originalLayouts = structuredClone(firstFixture.lineLayouts);
+  const originalContacts = firstFixture.glyphContacts.map((contact) => ({
+    ...contact,
+    rgbaMask: {
+      ...contact.rgbaMask,
+      data: new Uint8ClampedArray(contact.rgbaMask.data),
+    },
+  }));
 
   const first = renderOrdinaryInkMaterial(firstFixture.options);
   const second = renderOrdinaryInkMaterial(secondFixture.options);
@@ -229,7 +271,129 @@ test("stage diagnostics are deterministic and do not mutate renderer inputs", ()
     second.stages.optical.compositeRgba.data,
   );
   assert.deepEqual(firstFixture.mask.snapshot(), originalMask);
-  assert.deepEqual(firstFixture.lineLayouts, originalLayouts);
+  assert.deepEqual(firstFixture.glyphContacts, originalContacts);
+});
+
+test("a nonoverlapping suffix preserves existing Contact, Density, and Optical pixels at absorption zero", () => {
+  const pixelWidth = 12;
+  const pixelHeight = 5;
+  const basePixels = [[1, 1, 160], [2, 1, 255]];
+  const suffixPixels = [[7, 1, 255], [8, 1, 192]];
+  const baseContact = makeSparseContact({
+    supportedPixels: [[0, 0, 160], [1, 0, 255]],
+    destinationX: 1,
+    destinationY: 1,
+    x: 1,
+    baseline: 4,
+    seed: 1,
+  });
+  const suffixContact = makeSparseContact({
+    supportedPixels: [[0, 0, 255], [1, 0, 192]],
+    destinationX: 7,
+    destinationY: 1,
+    x: 7,
+    baseline: 4,
+    seed: 2,
+  });
+  const common = {
+    pixelWidth,
+    pixelHeight,
+    width: pixelWidth,
+    height: pixelHeight,
+    absorption: 0,
+    surfaceSeed: 0x13579bdf,
+    nibId: "M",
+    flow: 58,
+    scale: 1,
+    fontSize: 6,
+    recipe: ORDINARY_GREEN_RECIPE_R3,
+    createLayer: makeCanvas,
+  };
+  const before = renderOrdinaryInkMaterial({
+    ...common,
+    outputContext: makeCanvas(pixelWidth, pixelHeight).getContext("2d"),
+    mask: makeSparseMask(pixelWidth, pixelHeight, basePixels),
+    glyphContacts: [baseContact],
+  });
+  const after = renderOrdinaryInkMaterial({
+    ...common,
+    outputContext: makeCanvas(pixelWidth, pixelHeight).getContext("2d"),
+    mask: makeSparseMask(
+      pixelWidth,
+      pixelHeight,
+      [...basePixels, ...suffixPixels],
+    ),
+    glyphContacts: [baseContact, suffixContact],
+  });
+
+  for (const [x, y] of basePixels) {
+    const pixelIndex = y * pixelWidth + x;
+    const rgbaOffset = pixelIndex * 4;
+    assert.deepEqual(
+      after.stages.contact.rgbaMask.data.slice(rgbaOffset, rgbaOffset + 4),
+      before.stages.contact.rgbaMask.data.slice(rgbaOffset, rgbaOffset + 4),
+    );
+    assert.equal(
+      after.stages.density.accumulatedVariation[pixelIndex],
+      before.stages.density.accumulatedVariation[pixelIndex],
+    );
+    assert.equal(
+      after.stages.density.sampleCount[pixelIndex],
+      before.stages.density.sampleCount[pixelIndex],
+    );
+    assert.deepEqual(
+      after.stages.optical.compositeRgba.data.slice(
+        rgbaOffset,
+        rgbaOffset + 4,
+      ),
+      before.stages.optical.compositeRgba.data.slice(
+        rgbaOffset,
+        rgbaOffset + 4,
+      ),
+    );
+  }
+});
+
+test("renderer rejects malformed glyph Contacts before Canvas reads or output allocation", () => {
+  let maskReads = 0;
+  let outputAllocations = 0;
+  const mask = {
+    getContext() {
+      maskReads += 1;
+      throw new Error("mask must not be read");
+    },
+  };
+  const outputContext = {
+    createImageData() {
+      outputAllocations += 1;
+      throw new Error("output must not be allocated");
+    },
+  };
+  assert.throws(() => renderOrdinaryInkMaterial({
+    outputContext,
+    mask,
+    pixelWidth: 4,
+    pixelHeight: 4,
+    width: 4,
+    height: 4,
+    absorption: 0,
+    surfaceSeed: 0,
+    nibId: "M",
+    flow: 58,
+    scale: 1,
+    fontSize: 6,
+    glyphContacts: [{
+      rgbaMask: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
+      destinationX: 0.25,
+      destinationY: 0,
+      x: 0,
+      baseline: 4,
+      seed: 1,
+    }],
+    recipe: ORDINARY_GREEN_RECIPE_R3,
+  }), /destinationX must be an integer/);
+  assert.equal(maskReads, 0);
+  assert.equal(outputAllocations, 0);
 });
 
 test("keyboard flow changes mean and optical output but not contact, density field, or Surface", () => {
@@ -305,7 +469,7 @@ test("stage fields remain finite, bounded, and nonblank", () => {
 
   assert.ok(stages.density.accumulatedVariation.every(Number.isFinite));
   assert.ok(stages.density.sampleCount.every((value) => (
-    Number.isInteger(value) && value >= 0 && value <= 255
+    Number.isInteger(value) && value >= 0 && value <= 0xffff
   )));
   for (const image of [
     stages.contact.rgbaMask,

@@ -77,6 +77,9 @@ export function makeMaterialCoverage({
 /**
  * Calculate density, Surface coverage, and ordinary optical RGBA from a mask.
  * Layout and glyph-mask placement remain caller responsibilities.
+ * `glyphContacts` must describe the exact final masks and integer device-pixel
+ * destinations already used to compose `mask`; x/baseline are CSS-pixel phase
+ * anchors, and every seed is an explicit uint32.
  * The returned `stages` record names the existing intermediate buffers without
  * adding a second calculation path. Legacy top-level fields remain same-reference
  * aliases for compatibility.
@@ -94,7 +97,7 @@ export function renderOrdinaryInkMaterial({
   flow,
   scale,
   fontSize,
-  lineLayouts,
+  glyphContacts,
   recipe,
   createLayer = makeLayer,
 }) {
@@ -103,6 +106,15 @@ export function renderOrdinaryInkMaterial({
   assertPercent(absorption, "absorption");
   assertSurfaceSeed(surfaceSeed);
   const normalizedAbsorption = absorption / 100;
+  // Validate every glyph Contact before Canvas reads, Surface work, or output
+  // allocation. createDensityField itself remains fail-closed for direct users.
+  const { densityField, densitySamples } = createDensityField({
+    pixelWidth,
+    pixelHeight,
+    scale,
+    fontSize,
+    glyphContacts,
+  });
   const maskPixels = mask.getContext("2d").getImageData(
     0,
     0,
@@ -122,13 +134,6 @@ export function renderOrdinaryInkMaterial({
       createLayer,
     })
     : null;
-  const { densityField, densitySamples } = createDensityField({
-    pixelWidth,
-    pixelHeight,
-    scale,
-    fontSize,
-    lineLayouts,
-  });
   const result = outputContext.createImageData(pixelWidth, pixelHeight);
   compositeOrdinaryInk({
     pixelWidth,

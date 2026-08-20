@@ -10,7 +10,7 @@ they are not automatically promoted to timeless pass/fail truth.
 ### E-000-short-name / A1
 
 - Parent: none
-- Engine model: ordinary-js-r3
+- Engine model: ordinary-js-r4
 - Recipe schema: 2
 - Fixture manifest: 1
 - Status: running | passed | learned | abandoned
@@ -147,3 +147,47 @@ they are not automatically promoted to timeless pass/fail truth.
   Preserve prior glyph identity while measuring the current Density overlap and
   page-global Surface normalization separately. The direct-writing pad remains
   excluded because it intentionally uses flow-dependent liquid deposit loads.
+
+## E-006-glyph-local-density-append-stability / A1
+
+- Parent: `E-005-keyboard-flow-axis-independence`
+- Engine model: `ordinary-js-r4`
+- Recipe schema: `2`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: signed keyboard density belongs only to each final glyph Contact
+  mask's real alpha support, so appending a nonoverlapping glyph cannot
+  reinterpret settled Density pixels merely because two approximate bounding
+  boxes overlap.
+- Explicit inputs and seed: structural 14×8 density fixture with a three-pixel
+  base Contact at `(2,2)`, a separate two-pixel suffix Contact at `(7,2)`, seeds
+  `1` and `2`, scale `1`, font size `10`; structural Canvas2D absorption-0
+  fixture with two-pixel base and suffix masks; explicit actual-overlap case;
+  legacy single-glyph seed `0x1234abcd`.
+- Expected at normal size: a nonoverlapping suffix leaves the existing Contact,
+  Density, and absorption-0 Optical crop exact. Actual Contact overlap averages
+  only the intersecting pixel. The active single-glyph result stays exact on
+  every visible Contact pixel and keeps the calibrated optical endpoints.
+- Observed: the r3 bbox±5 calculation changed 3 of 3 pre-existing support pixels
+  in the measured nonoverlapping append fixture. The r4 support-local calculation
+  changes 0 of 3. The Canvas2D append fixture preserves the existing Contact,
+  accumulated variation, count, and Optical RGBA bytes exactly at absorption 0;
+  repeated inputs are deterministic; the actual-overlap fixture increments only
+  the intersecting count from 1 to 2. Single-glyph visible Float32 values are
+  exact with r3, and the one-pixel ordinary endpoint remains `[29,55,40,213]`.
+- Why it failed, if applicable: not applicable for A1. The old failure came from
+  treating `glyph.x/width` plus an arbitrary five-pixel margin as density
+  ownership rather than using the final morphed Contact mask.
+- Discarded assumption: nearby glyph layout bounds are a valid proxy for actual
+  ink contact or overlap.
+- Preserved evidence: immutable `ordinary-green@1` and `ordinary-green@2`
+  canonical pins, the test-local r3 bbox reference calculation, unchanged
+  material coefficients, recipe schema 2, fixture manifest 1, and the existing
+  `getGlyphContactGeometry` contract.
+- Next different method: E-006/A2 must measure and isolate the remaining
+  nonzero-absorption append instability in Surface. Its page-global downsample,
+  wet simulation, and strongest-alpha normalization can still change an earlier
+  crop when a suffix is appended, while Surface-only spread pixels currently
+  fall back to mean density without transported glyph density. Do not claim
+  Surface stability from the A1 absorption-0 result or tune Density gains to
+  hide that separate ownership problem.

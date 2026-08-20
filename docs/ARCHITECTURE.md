@@ -28,9 +28,9 @@ explicit dispatch; archival acceptance never implies render compatibility.
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r2` contains the active density bounds, keyboard Surface load,
-direct-input load curve, and optical coefficients. It preserves r1's numeric
-material fields while selecting the r3 calculation model. Runtime nib, flow,
+`ordinary-green-r3` contains the active density bounds, keyboard Surface load,
+direct-input load curve, and optical coefficients. It preserves r1/r2's numeric
+material fields while selecting the r4 calculation model. Runtime nib, flow,
 absorption, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
@@ -63,7 +63,23 @@ path until a dedicated experiment addresses them.
 
 Owns ordinary-ink flow normalization, glyph-local signed density fields, and
 the deterministic composite that applies recipe-owned optical alpha endpoints.
-It accepts typed arrays and layout facts supplied by a client.
+It accepts typed arrays and final Contact facts supplied by a client.
+
+The r4 public contract is `createDensityField({ pixelWidth, pixelHeight, scale,
+fontSize, glyphContacts })`. Each glyph Contact contains an RGBA mask snapshot,
+integer device-pixel `destinationX`/`destinationY`, finite CSS-pixel `x` and
+`baseline` phase anchors, and an explicit uint32 `seed`. Density reads only
+alpha-greater-than-zero support. It accumulates multiple samples only where
+final Contact masks physically overlap; nonoverlapping bounding boxes have no
+effect. The complete list is validated before allocation, inputs are not
+mutated, and the maximum of 65,535 contacts pairs with a `Uint16Array` count
+plane to prevent wrap.
+
+Font shaping, glyph-mask creation, line layout, and placement remain client
+responsibilities. The Canvas2D adapter passes the structural Contact records to
+Density; it does not reconstruct approximate glyph bounds. Moving a glyph or
+changing its final mask is intentionally a new Contact input, not an append
+stability case.
 
 ### Surface
 
@@ -79,7 +95,7 @@ observes the buffers already used by the accepted render path:
 
 - `contact.rgbaMask`: the full-resolution RGBA glyph mask;
 - `density.accumulatedVariation` and `density.sampleCount`: the unnormalized
-  signed sum and count planes;
+  signed sum and `Uint16Array` count planes on actual glyph Contact support;
 - `surface.materialCoverageCandidate` and `surface.applied`: the resampled
   physical coverage candidate, or `null` with `applied: false` when the Surface
   branch is skipped;
