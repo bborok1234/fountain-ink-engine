@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
 import {
-  compositeOrdinaryInk,
   getMeanDensity,
 } from "fountain-ink-engine/density";
+import { compositeOrdinaryInk } from "fountain-ink-engine/optical";
 import {
   getNibDensityRange,
   shapeNibDensityVariation,
@@ -282,6 +282,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.deepEqual(Object.keys(stages.density), [
     "accumulatedVariation",
     "sampleCount",
+    "normalizedConcentration",
   ]);
   assert.deepEqual(Object.keys(stages.surface), [
     "materialCoverageCandidate",
@@ -301,6 +302,8 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.ok(stages.density.sampleCount instanceof Uint16Array);
   assert.equal(stages.density.accumulatedVariation.length, 18 * 14);
   assert.equal(stages.density.sampleCount.length, 18 * 14);
+  assert.ok(stages.density.normalizedConcentration.data instanceof Float32Array);
+  assert.equal(stages.density.normalizedConcentration.data.length, 18 * 14);
   assert.equal(stages.surface.applied, true);
   assertRgbaShape(stages.surface.materialCoverageCandidate, 18, 14);
   assert.equal(stages.surface.resolvedCoverage.width, 18);
@@ -314,6 +317,10 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.equal(result.imageData, stages.optical.compositeRgba);
   assert.equal(result.densityField, stages.density.accumulatedVariation);
   assert.equal(result.densitySamples, stages.density.sampleCount);
+  assert.equal(
+    result.normalizedConcentration,
+    stages.density.normalizedConcentration,
+  );
   assert.equal(
     result.materialCoverage,
     stages.surface.materialCoverageCandidate,

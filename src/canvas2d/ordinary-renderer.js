@@ -1,4 +1,8 @@
-import { createDensityField, compositeOrdinaryInk } from "../density/index.js";
+import {
+  createDensityField,
+  createOrdinaryConcentrationField,
+} from "../density/index.js";
+import { compositeOrdinaryOptical } from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import {
   createKeyboardSurfaceState,
@@ -24,11 +28,16 @@ function makeDiagnosticStages({
   materialCoverageCandidate,
   resolvedCoverage,
   densityTransport,
+  normalizedConcentration,
   compositeRgba,
 }) {
   return Object.freeze({
     contact: Object.freeze({ rgbaMask }),
-    density: Object.freeze({ accumulatedVariation, sampleCount }),
+    density: Object.freeze({
+      accumulatedVariation,
+      sampleCount,
+      normalizedConcentration,
+    }),
     surface: Object.freeze({
       materialCoverageCandidate,
       resolvedCoverage,
@@ -224,10 +233,9 @@ export function renderOrdinaryInkMaterial({
     recipe,
   });
   const result = outputContext.createImageData(pixelWidth, pixelHeight);
-  compositeOrdinaryInk({
+  const normalizedConcentration = createOrdinaryConcentrationField({
     pixelWidth,
     pixelHeight,
-    mask: maskPixels,
     resolvedCoverage,
     surfaceDensityTransport,
     densityField,
@@ -235,6 +243,13 @@ export function renderOrdinaryInkMaterial({
     nibId,
     flow,
     absorption,
+    recipe,
+  });
+  compositeOrdinaryOptical({
+    pixelWidth,
+    pixelHeight,
+    concentration: normalizedConcentration,
+    resolvedCoverage,
     recipe,
     output: result,
   });
@@ -245,6 +260,7 @@ export function renderOrdinaryInkMaterial({
     materialCoverageCandidate: materialCoverage,
     resolvedCoverage,
     densityTransport: surfaceDensityTransport,
+    normalizedConcentration,
     compositeRgba: result,
   });
   return {
@@ -252,6 +268,7 @@ export function renderOrdinaryInkMaterial({
     imageData: stages.optical.compositeRgba,
     densityField: stages.density.accumulatedVariation,
     densitySamples: stages.density.sampleCount,
+    normalizedConcentration: stages.density.normalizedConcentration,
     materialCoverage: stages.surface.materialCoverageCandidate,
     resolvedCoverage: stages.surface.resolvedCoverage,
     surfaceDensityTransport: stages.surface.densityTransport,

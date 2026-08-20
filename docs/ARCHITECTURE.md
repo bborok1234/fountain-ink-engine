@@ -64,8 +64,9 @@ path until a dedicated experiment addresses them.
 ### Density
 
 Owns ordinary-ink flow normalization, glyph-local signed density fields, and
-the deterministic composite that applies recipe-owned optical alpha endpoints.
-It accepts typed arrays and final Contact facts supplied by a client.
+the normalized `0...1` concentration plane. It accepts typed arrays, final
+Contact facts, Surface-resolved coverage, and optional transported signed mass.
+It does not select RGB or apply optical alpha endpoints.
 
 The r4 public contract is `createDensityField({ pixelWidth, pixelHeight, scale,
 fontSize, glyphContacts })`. Each glyph Contact contains an RGBA mask snapshot,
@@ -82,6 +83,11 @@ responsibilities. The Canvas2D adapter passes the structural Contact records to
 Density; it does not reconstruct approximate glyph bounds. Moving a glyph or
 changing its final mask is intentionally a new Contact input, not an append
 stability case.
+
+`createOrdinaryConcentrationField` resolves Contact-owned variation first,
+falls back to Surface-transported variation only outside Contact, applies the
+existing nib shaping, mean, density range and clamp, and returns a Float32
+concentration plane. Pixels outside resolved coverage remain zero.
 
 ### Surface
 
@@ -128,6 +134,15 @@ remains above the `0.54` floor, while maximum absorption retains at least that
 fraction of the original Contact alpha. Optical consumes this resolved plane;
 it no longer knows the Surface mix exponent or Contact-retention policy.
 
+### Optical components
+
+Owns concentration-to-color/alpha conversion only. The ordinary operator
+`compositeOrdinaryOptical` accepts normalized concentration and resolved Surface
+coverage, then applies recipe RGB and calibrated alpha endpoints. It does not
+read Contact masks, glyph seeds, absorption, flow, fibre state, or density
+variation. `compositeOrdinaryInk` remains a public compatibility wrapper that
+calls the Density and Optical operators in order.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -136,6 +151,8 @@ observes the buffers already used by the accepted render path:
 - `contact.rgbaMask`: the full-resolution RGBA glyph mask;
 - `density.accumulatedVariation` and `density.sampleCount`: the unnormalized
   signed sum and `Uint16Array` count planes on actual glyph Contact support;
+- `density.normalizedConcentration`: the final Float32 `0...1` Density plane
+  consumed by Optical;
 - `surface.materialCoverageCandidate` and `surface.applied`: the resampled
   physical coverage candidate, or `null` with `applied: false` when the Surface
   branch is skipped;

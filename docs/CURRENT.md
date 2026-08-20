@@ -44,7 +44,7 @@ Sites worker, native code, product data model, font, or reference image.
 The Canvas2D keyboard renderer now exposes the existing contact mask,
 accumulated density variation and sample count, optional Surface coverage
 candidate, Surface-resolved Float32 coverage, nullable solver-grid density
-transport, and optical composite as a
+transport, normalized concentration, and optical composite as a
 frozen four-stage diagnostic record.
 The former top-level return fields remain same-reference aliases.
 
@@ -105,6 +105,12 @@ reconstructs Surface mix/retention policy. The extraction preserves the prior
 final RGBA equation at absorption 0/42/100. It adds one transient/returned
 4-byte-per-page-pixel plane; its browser/device frame and memory budget remains
 part of P6 hardening rather than a claim of zero cost.
+
+Density now returns a separate full-resolution Float32 normalized concentration
+plane. Optical consumes only that plane, Surface-resolved coverage, and recipe
+RGB/alpha endpoints. It no longer receives Contact masks, glyph fields, flow,
+absorption, or transported Surface density. The existing high-level composite
+name remains a compatibility wrapper around the two explicit operators.
 
 ## Current limits
 

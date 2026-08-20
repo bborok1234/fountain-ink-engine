@@ -398,3 +398,35 @@ they are not automatically promoted to timeless pass/fail truth.
   boundaries: Density should expose normalized concentration, then Optical
   should own only concentration-to-color/alpha. Measure the added full-page
   Float32 plane in the P6 browser/DPR performance matrix before r1.
+
+## E-010-density-optical-ownership / A1
+
+- Parent: `E-009-surface-coverage-ownership / A1`
+- Engine model: `ordinary-js-r7`
+- Recipe schema: `4`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: Density can end at a normalized concentration plane and Optical
+  can map only concentration plus resolved coverage to recipe RGB/alpha without
+  changing the accepted ordinary result.
+- Explicit inputs and seed: immutable `ordinary-green-r6`; existing renderer
+  fixtures at absorption 0/42/100; Contact and Surface seeds recorded by their
+  parent experiments; HTML diagnostics at the bundled font.
+- Expected at normal size: the paper result remains unchanged. Diagnostics add
+  normalized concentration beside signed variation. Optical accepts no glyph,
+  flow, absorption, Surface candidate, or transport input.
+- Observed: Density returns a full-resolution Float32 normalized concentration
+  plane and Optical receives only that plane, resolved coverage, and recipe
+  RGB/alpha. The absorption 0/42/100 legacy-equation regression remains
+  byte-identical. Engine 83/83, 36 modules, 9 public entry points, 49-file pack,
+  and the HTML harness gate pass. Fresh diagnostics displayed signed variation
+  beside normalized concentration; M/18px/Surface-100 and the final Optical card
+  rendered with zero console warnings or errors.
+- Why it failed, if applicable: not applicable yet.
+- Discarded assumption: the operator that computes glyph variation must also
+  own color, calibrated alpha endpoints, and RGBA scratch-buffer behavior.
+- Preserved evidence or code: r7 calculation order, all recipe values, Surface
+  coverage/transport, Contact geometry, direct writing and final RGBA.
+- Next different method: remove the remaining absorption-owned density-range
+  response from Contact so Surface owns density preservation completely. Then
+  finish GlyphContact aperture/ratio contracts before introducing new colors.
