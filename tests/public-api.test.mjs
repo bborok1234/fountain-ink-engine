@@ -11,6 +11,10 @@ import * as surface from "fountain-ink-engine/surface";
 
 test("self-referenced package barrels expose the stable API", () => {
   assert.equal(engine.getNibGeometry, contact.getNibGeometry);
+  assert.equal(
+    engine.getGlyphContactGeometry,
+    contact.getGlyphContactGeometry,
+  );
   assert.equal(engine.WetInkSimulation, surface.WetInkSimulation);
   assert.equal(engine.hashString, deterministic.hashString);
   assert.equal(engine.compositeOrdinaryInk, density.compositeOrdinaryInk);
@@ -24,6 +28,10 @@ test("self-referenced package barrels expose the stable API", () => {
     engine.ORDINARY_GREEN_RECIPE_R1,
     recipes.ORDINARY_GREEN_RECIPE_R1,
   );
+  assert.equal(
+    engine.ORDINARY_GREEN_RECIPE_R2,
+    recipes.ORDINARY_GREEN_RECIPE_R2,
+  );
   assert.equal(typeof canvas2d.renderOrdinaryInkMaterial, "function");
 });
 
@@ -34,12 +42,12 @@ test("importing the Canvas adapter does not touch browser globals", () => {
 
 test("Canvas material adapters reject invalid units before browser allocation", () => {
   assert.throws(() => canvas2d.makeMaterialCoverage({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R1,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R2,
     absorption: 2,
     surfaceSeed: 0,
   }), /absorption must be a finite number in 0\.\.\.1/);
   assert.throws(() => canvas2d.renderOrdinaryInkMaterial({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R1,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R2,
     flow: 58,
     absorption: 101,
     surfaceSeed: 0,

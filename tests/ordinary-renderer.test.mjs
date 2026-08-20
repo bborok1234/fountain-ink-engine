@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
-import { ORDINARY_GREEN_RECIPE_R1 } from "fountain-ink-engine/recipes";
+import { getMeanDensity } from "fountain-ink-engine/density";
+import { ORDINARY_GREEN_RECIPE_R2 } from "fountain-ink-engine/recipes";
 
 function makeImageData(width, height, data) {
   return {
@@ -122,7 +123,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       lineLayouts,
-      recipe: ORDINARY_GREEN_RECIPE_R1,
+      recipe: ORDINARY_GREEN_RECIPE_R2,
       createLayer: makeCanvas,
     },
     mask,
@@ -229,6 +230,73 @@ test("stage diagnostics are deterministic and do not mutate renderer inputs", ()
   );
   assert.deepEqual(firstFixture.mask.snapshot(), originalMask);
   assert.deepEqual(firstFixture.lineLayouts, originalLayouts);
+});
+
+test("keyboard flow changes mean and optical output but not contact, density field, or Surface", () => {
+  const { options } = makeOptions(42);
+  const flows = [0, 58, 100];
+  const results = flows.map((flow) => renderOrdinaryInkMaterial({
+    ...options,
+    outputContext: makeCanvas(
+      options.pixelWidth,
+      options.pixelHeight,
+    ).getContext("2d"),
+    flow,
+  }));
+  const reference = results[0].stages;
+
+  for (const { stages } of results.slice(1)) {
+    assert.deepEqual(stages.contact.rgbaMask, reference.contact.rgbaMask);
+    assert.deepEqual(
+      stages.density.accumulatedVariation,
+      reference.density.accumulatedVariation,
+    );
+    assert.deepEqual(
+      stages.density.sampleCount,
+      reference.density.sampleCount,
+    );
+    assert.deepEqual(
+      stages.surface.materialCoverageCandidate,
+      reference.surface.materialCoverageCandidate,
+    );
+    assert.equal(stages.surface.applied, reference.surface.applied);
+  }
+
+  const means = flows.map((flow) => getMeanDensity(
+    options.nibId,
+    flow,
+    options.absorption,
+    options.recipe,
+  ));
+  assert.ok(means.every((mean) => (
+    mean > options.recipe.density.meanMinimum
+      && mean < options.recipe.density.meanMaximum
+  )), "fixture means must avoid recipe clamps");
+  assert.ok(means[0] < means[1] && means[1] < means[2]);
+
+  const opticalAlphaTotal = ({ stages }) => {
+    let total = 0;
+    for (
+      let offset = 3;
+      offset < stages.optical.compositeRgba.data.length;
+      offset += 4
+    ) {
+      total += stages.optical.compositeRgba.data[offset];
+    }
+    return total;
+  };
+  const alphaTotals = results.map(opticalAlphaTotal);
+  assert.ok(
+    alphaTotals[0] < alphaTotals[1] && alphaTotals[1] < alphaTotals[2],
+  );
+  assert.notDeepEqual(
+    results[0].stages.optical.compositeRgba,
+    results[1].stages.optical.compositeRgba,
+  );
+  assert.notDeepEqual(
+    results[1].stages.optical.compositeRgba,
+    results[2].stages.optical.compositeRgba,
+  );
 });
 
 test("stage fields remain finite, bounded, and nonblank", () => {

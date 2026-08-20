@@ -28,8 +28,9 @@ explicit dispatch; archival acceptance never implies render compatibility.
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r1` contains the current density bounds, keyboard Surface load,
-direct-input load curve, and optical coefficients. Runtime nib, flow,
+`ordinary-green-r2` contains the active density bounds, keyboard Surface load,
+direct-input load curve, and optical coefficients. It preserves r1's numeric
+material fields while selecting the r3 calculation model. Runtime nib, flow,
 absorption, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
@@ -46,6 +47,17 @@ actual segmentation/runtime context when it matters for replay.
 
 Owns nib geometry, physical contact profiles, signed morphology, and geometry
 expansion. It has no font or Canvas dependency.
+
+For keyboard glyphs, `getGlyphContactGeometry(nibId, fontSize, glyphSeed)` is
+the deterministic contact boundary. It hashes the existing `${nibId}:width`
+salt, advances the existing seeded PRNG once, and applies the fixed `0.8824`
+calibration gain before scaling the nib geometry. That gain is the exact former
+flow-58 value, so r3 preserves the accepted baseline without accepting flow or
+layout as contact inputs. Unknown nib IDs and invalid seeds fail closed.
+
+This contract does not include the direct-writing pad. Direct pointer contact
+and its flow-dependent water/pigment deposit loads remain a separate physical
+path until a dedicated experiment addresses them.
 
 ### Density
 

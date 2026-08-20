@@ -10,7 +10,7 @@ they are not automatically promoted to timeless pass/fail truth.
 ### E-000-short-name / A1
 
 - Parent: none
-- Engine model: ordinary-js-r2
+- Engine model: ordinary-js-r3
 - Recipe schema: 2
 - Fixture manifest: 1
 - Status: running | passed | learned | abandoned
@@ -114,3 +114,36 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: use these observation fields to extract one ownership
   boundary at a time; do not infer normalized concentration or final coverage
   fields that the current renderer does not calculate independently.
+
+## E-005-keyboard-flow-axis-independence / A1
+
+- Parent: `E-004-keyboard-stage-diagnostics`
+- Engine model: `ordinary-js-r3`
+- Recipe schema: `2`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: keyboard glyph contact geometry can stop accepting ink flow while
+  preserving the accepted flow-58 footprint exactly; flow then changes mean
+  density without changing the contact footprint.
+- Explicit inputs and seed: every UEF/EF/F/M/B/EB/SU nib at 18, 28, and 52px;
+  glyph seeds `0`, `0x1234abcd`, and `0xffffffff`; fixed contact calibration
+  `0.8824`, which exactly equals the former `0.72 + 0.58 * 0.28` gain.
+- Expected at normal size: r3 contact geometry is bit-exact with r2 at flow 58
+  for the complete matrix, while the public Contact function has no flow or
+  layout input. Existing density mean/range baselines remain unchanged.
+- Observed: the complete 63-case geometry matrix deep-equals the legacy flow-58
+  formula, repeated calls are deterministic, unknown nib IDs and invalid seeds
+  fail closed, and the accepted per-nib mean/range values remain exact.
+  `ordinary-green@1` keeps its original canonical fingerprint as an archival r2
+  recipe; independently pinned `ordinary-green@2` selects r3 with all material
+  coefficient fields unchanged.
+- Why it failed, if applicable: not applicable.
+- Discarded assumption: keyboard flow is not a justified input to font-contact
+  width variation merely because the original view computed them together.
+- Preserved evidence: `ordinary-green@1`, its canonical serialization and
+  fingerprint, r2's legacy geometry formula in the equivalence test, recipe
+  schema 2, and fixture manifest 1.
+- Next different method: test append stability as its own keyboard experiment.
+  Preserve prior glyph identity while measuring the current Density overlap and
+  page-global Surface normalization separately. The direct-writing pad remains
+  excluded because it intentionally uses flow-dependent liquid deposit loads.

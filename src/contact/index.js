@@ -18,3 +18,7 @@ export {
   morphologyPass,
   scaleNibGeometry,
 } from "./morphology.js";
+export {
+  GLYPH_CONTACT_VARIATION_CALIBRATION,
+  getGlyphContactGeometry,
+} from "./glyph-contact.js";

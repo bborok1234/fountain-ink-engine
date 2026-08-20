@@ -1,7 +1,7 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r2`
+> Engine model: `ordinary-js-r3`
 > Recipe schema: `2`
 > Fixture manifest: `1`
 
@@ -17,13 +17,16 @@ The first extraction deliberately keeps the accepted ordinary-ink formulas:
 - signed glyph-local density variation bounded by calibrated alpha endpoints;
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
-Those authored constants now live in the immutable `ordinary-green-r1` recipe.
-Nib, flow, absorption, layout, and seeds remain explicit runtime inputs. Public
+Those authored constants now live in the immutable active
+`ordinary-green-r2` recipe. `ordinary-green-r1` remains registered and
+structurally readable as the archival `ordinary-js-r2` checkpoint, but it is
+not calculation-compatible with the active r3 model. Nib, flow, absorption,
+layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
 from a historical engine model, while calculation entry points additionally
 require the active engine model/schema and a canonical registered definition
-for built-in identities such as `ordinary-green@1`.
+for built-in identities such as `ordinary-green@1` and `ordinary-green@2`.
 
 Fixture-manifest v1 records dispatch by their recorded recipe schema: original
 schema-1 recipes remain immutable archival JSON, while schema-2 records receive
@@ -41,11 +44,21 @@ candidate, and optical composite as a frozen four-stage diagnostic record.
 This adds observation names and tests without changing material arithmetic;
 the former top-level return fields remain same-reference aliases.
 
+The public Contact API now resolves each keyboard glyph through
+`getGlyphContactGeometry(nibId, fontSize, glyphSeed)`. It uses the accepted
+per-nib seed salt and PRNG with a fixed `0.8824` variation calibration, exactly
+matching the former flow-58 footprint while accepting neither flow nor layout.
+Flow therefore cannot change this keyboard contact geometry; it remains a
+density input downstream.
+
 ## Current limits
 
 - Font selection, text wrapping, authored layout, input, and IME remain in the
   HTML client. The engine's optional Canvas2D adapter owns glyph-mask
   rasterization, Surface resizing, and ordinary material composition.
+- The Contact-axis extraction covers keyboard/font glyphs only. The direct
+  writing pad uses physical pointer contact and flow-dependent liquid deposit
+  loads, and is explicitly outside E-005 rather than silently reinterpreted.
 - The ordinary RGB/alpha optical curve is the only extracted composite.
 - Stage diagnostics do not yet claim a normalized concentration field or final
   mixed-coverage field, and they do not by themselves complete layer ownership
