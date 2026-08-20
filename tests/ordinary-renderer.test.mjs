@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
 import { getMeanDensity } from "fountain-ink-engine/density";
-import { ORDINARY_GREEN_RECIPE_R3 } from "fountain-ink-engine/recipes";
+import { ORDINARY_GREEN_RECIPE_R4 } from "fountain-ink-engine/recipes";
 
 function makeImageData(width, height, data) {
   return {
@@ -159,7 +159,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R3,
+      recipe: ORDINARY_GREEN_RECIPE_R4,
       createLayer: makeCanvas,
     },
     mask,
@@ -173,6 +173,27 @@ function assertRgbaShape(image, width, height) {
   assert.ok(image.data instanceof Uint8ClampedArray);
   assert.equal(image.data.length, width * height * 4);
   assert.ok(image.data.every((value) => Number.isInteger(value)));
+}
+
+function cropRgba(image, minimumX, maximumX) {
+  const cropped = [];
+  for (let y = 0; y < image.height; y += 1) {
+    for (let x = minimumX; x < maximumX; x += 1) {
+      const offset = (y * image.width + x) * 4;
+      cropped.push(...image.data.slice(offset, offset + 4));
+    }
+  }
+  return cropped;
+}
+
+function cropScalar(field, width, height, minimumX, maximumX) {
+  const cropped = [];
+  for (let y = 0; y < height; y += 1) {
+    for (let x = minimumX; x < maximumX; x += 1) {
+      cropped.push(field[y * width + x]);
+    }
+  }
+  return cropped;
 }
 
 test("keyboard renderer exposes honest four-stage diagnostics and aliases", () => {
@@ -306,7 +327,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -354,6 +375,133 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
   }
 });
 
+test("a far suffix preserves the complete existing material crop at absorption 42", () => {
+  const pixelWidth = 80;
+  const pixelHeight = 36;
+  const rectangle = (minimumX, maximumX, alpha) => {
+    const pixels = [];
+    for (let y = 10; y < 18; y += 1) {
+      for (let x = minimumX; x < maximumX; x += 1) {
+        pixels.push([x, y, alpha]);
+      }
+    }
+    return pixels;
+  };
+  const localRectangle = (alpha) => {
+    const pixels = [];
+    for (let y = 0; y < 8; y += 1) {
+      for (let x = 0; x < 8; x += 1) pixels.push([x, y, alpha]);
+    }
+    return pixels;
+  };
+  const basePixels = rectangle(6, 14, 90);
+  const suffixPixels = rectangle(66, 74, 255);
+  const baseContact = makeSparseContact({
+    supportedPixels: localRectangle(90),
+    destinationX: 6,
+    destinationY: 10,
+    x: 6,
+    baseline: 18,
+    seed: 1,
+  });
+  const suffixContact = makeSparseContact({
+    supportedPixels: localRectangle(255),
+    destinationX: 66,
+    destinationY: 10,
+    x: 66,
+    baseline: 18,
+    seed: 2,
+  });
+  const common = {
+    pixelWidth,
+    pixelHeight,
+    width: pixelWidth,
+    height: pixelHeight,
+    absorption: 42,
+    surfaceSeed: 0x13579bdf,
+    nibId: "M",
+    flow: 58,
+    scale: 1,
+    fontSize: 12,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
+    createLayer: makeCanvas,
+  };
+  const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
+    ...common,
+    outputContext: makeCanvas(pixelWidth, pixelHeight).getContext("2d"),
+    mask: makeSparseMask(pixelWidth, pixelHeight, pixels),
+    glyphContacts,
+  });
+  const before = render(basePixels, [baseContact]);
+  const after = render(
+    [...basePixels, ...suffixPixels],
+    [baseContact, suffixContact],
+  );
+  const prefixMinimumX = 0;
+  const prefixMaximumX = 30;
+
+  assert.deepEqual(
+    cropRgba(after.stages.contact.rgbaMask, prefixMinimumX, prefixMaximumX),
+    cropRgba(before.stages.contact.rgbaMask, prefixMinimumX, prefixMaximumX),
+  );
+  assert.deepEqual(
+    cropScalar(
+      after.stages.density.accumulatedVariation,
+      pixelWidth,
+      pixelHeight,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+    cropScalar(
+      before.stages.density.accumulatedVariation,
+      pixelWidth,
+      pixelHeight,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+  );
+  assert.deepEqual(
+    cropScalar(
+      after.stages.density.sampleCount,
+      pixelWidth,
+      pixelHeight,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+    cropScalar(
+      before.stages.density.sampleCount,
+      pixelWidth,
+      pixelHeight,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+  );
+  assert.deepEqual(
+    cropRgba(
+      after.stages.surface.materialCoverageCandidate,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+    cropRgba(
+      before.stages.surface.materialCoverageCandidate,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+  );
+  assert.deepEqual(
+    cropRgba(
+      after.stages.optical.compositeRgba,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+    cropRgba(
+      before.stages.optical.compositeRgba,
+      prefixMinimumX,
+      prefixMaximumX,
+    ),
+  );
+});
+
 test("renderer rejects malformed glyph Contacts before Canvas reads or output allocation", () => {
   let maskReads = 0;
   let outputAllocations = 0;
@@ -390,7 +538,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);

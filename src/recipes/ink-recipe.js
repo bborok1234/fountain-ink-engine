@@ -1,5 +1,27 @@
-export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2]);
+export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3]);
 export const MAX_KEYBOARD_SURFACE_STEPS = 64;
+
+const KEYBOARD_SURFACE_KEYS_BY_SCHEMA = Object.freeze({
+  2: Object.freeze([
+    "waterLoad",
+    "pigmentLoad",
+    "stepBase",
+    "stepAbsorptionGain",
+    "stepMilliseconds",
+    "normalizationScale",
+    "coverageMixExponent",
+  ]),
+  3: Object.freeze([
+    "waterLoad",
+    "pigmentLoad",
+    "stepBase",
+    "stepAbsorptionGain",
+    "stepMilliseconds",
+    "normalizationScale",
+    "normalizationReferenceAlpha",
+    "coverageMixExponent",
+  ]),
+});
 
 const isRecord = (value) => {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -67,7 +89,7 @@ function canonicalValue(value) {
 }
 
 /**
- * Validate the recipe shape used by recipe schema v2.
+ * Validate the recipe shapes used by recipe schemas v2 and v3.
  * Runtime nib, flow, absorption, layout, and seeds intentionally live outside.
  *
  * @param {Record<string, unknown>} recipe
@@ -135,21 +157,25 @@ export function validateInkRecipe(recipe) {
   assertRecord(recipe.surface, "recipe.surface");
   assertExactKeys(recipe.surface, ["keyboard", "direct"], "recipe.surface");
   assertRecord(recipe.surface.keyboard, "recipe.surface.keyboard");
-  assertExactKeys(recipe.surface.keyboard, [
-    "waterLoad",
-    "pigmentLoad",
-    "stepBase",
-    "stepAbsorptionGain",
-    "stepMilliseconds",
-    "normalizationScale",
-    "coverageMixExponent",
-  ], "recipe.surface.keyboard");
+  assertExactKeys(
+    recipe.surface.keyboard,
+    KEYBOARD_SURFACE_KEYS_BY_SCHEMA[recipe.recipeSchemaVersion],
+    "recipe.surface.keyboard",
+  );
   assertNumber(recipe.surface.keyboard.waterLoad, "recipe.surface.keyboard.waterLoad", 0, 2);
   assertNumber(recipe.surface.keyboard.pigmentLoad, "recipe.surface.keyboard.pigmentLoad", 0, 2);
   assertInteger(recipe.surface.keyboard.stepBase, "recipe.surface.keyboard.stepBase", 0, 1000);
   assertNumber(recipe.surface.keyboard.stepAbsorptionGain, "recipe.surface.keyboard.stepAbsorptionGain", 0, 1000);
   assertNumber(recipe.surface.keyboard.stepMilliseconds, "recipe.surface.keyboard.stepMilliseconds", 0.001, 1000);
   assertNumber(recipe.surface.keyboard.normalizationScale, "recipe.surface.keyboard.normalizationScale", 0.001, 10);
+  if (recipe.recipeSchemaVersion === 3) {
+    assertInteger(
+      recipe.surface.keyboard.normalizationReferenceAlpha,
+      "recipe.surface.keyboard.normalizationReferenceAlpha",
+      1,
+      255,
+    );
+  }
   assertNumber(recipe.surface.keyboard.coverageMixExponent, "recipe.surface.keyboard.coverageMixExponent", 0.001, 10);
   if (
     recipe.surface.keyboard.stepBase

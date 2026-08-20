@@ -9,6 +9,7 @@ import {
 import { ORDINARY_GREEN_RECIPE_R1 } from "./ordinary-green-r1.js";
 import { ORDINARY_GREEN_RECIPE_R2 } from "./ordinary-green-r2.js";
 import { ORDINARY_GREEN_RECIPE_R3 } from "./ordinary-green-r3.js";
+import { ORDINARY_GREEN_RECIPE_R4 } from "./ordinary-green-r4.js";
 import { REGISTERED_BUILT_IN_RECIPE_SERIALIZATIONS } from "./registered-built-ins.js";
 
 const recipeKey = (recipe) => `${recipe.id}@${recipe.revision}`;
@@ -17,6 +18,7 @@ const AUTHORED_BUILT_IN_RECIPES = new Map([
   [recipeKey(ORDINARY_GREEN_RECIPE_R1), ORDINARY_GREEN_RECIPE_R1],
   [recipeKey(ORDINARY_GREEN_RECIPE_R2), ORDINARY_GREEN_RECIPE_R2],
   [recipeKey(ORDINARY_GREEN_RECIPE_R3), ORDINARY_GREEN_RECIPE_R3],
+  [recipeKey(ORDINARY_GREEN_RECIPE_R4), ORDINARY_GREEN_RECIPE_R4],
 ]);
 
 const RESERVED_RECIPE_IDS = new Set(

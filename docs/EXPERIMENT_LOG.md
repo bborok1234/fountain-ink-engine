@@ -10,8 +10,8 @@ they are not automatically promoted to timeless pass/fail truth.
 ### E-000-short-name / A1
 
 - Parent: none
-- Engine model: ordinary-js-r4
-- Recipe schema: 2
+- Engine model: ordinary-js-r5
+- Recipe schema: 3
 - Fixture manifest: 1
 - Status: running | passed | learned | abandoned
 - Hypothesis:
@@ -191,3 +191,56 @@ they are not automatically promoted to timeless pass/fail truth.
   fall back to mean density without transported glyph density. Do not claim
   Surface stability from the A1 absorption-0 result or tune Density gains to
   hide that separate ownership problem.
+
+## E-006-glyph-local-density-append-stability / A2
+
+- Parent: `E-006-glyph-local-density-append-stability / A1`
+- Engine model: `ordinary-js-r5`
+- Recipe schema: `3`
+- Fixture manifest: `1`
+- Status: passed
+- Hypothesis: keyboard Surface normalization must be a pointwise mapping from
+  raw simulated alpha to coverage using an authored recipe reference. A remote,
+  non-interacting suffix must not reinterpret already calculated prefix
+  coverage merely because it raises the page's observed strongest alpha.
+- Explicit inputs and seed: active `ordinary-green-r4`; Surface seed
+  `0x13579bdf`; reference harness M/28px/flow 58/absorption 42, CSS 788×608
+  resampled to the existing 320×240 grid; low-level 80×36 fixture with alpha-90
+  base at x 6–13 and alpha-255 suffix at x 66–73; renderer 80×36 far-suffix
+  fixture; adjacent-footprint exception fixture; direct-load coefficients from
+  r3 preserved exactly.
+- Expected at normal size: the liked absorption-42 default keeps its existing
+  normalized candidate, while a remote suffix leaves the prior Contact,
+  Density, Surface, and Optical crop byte-exact. Nearby wet footprints may still
+  interact locally through the solver. The direct-writing pad is unchanged.
+- Observed: one-time font-loaded harness calibration measured raw Surface alpha
+  maximum `107` (p99 `102`, p95 `99`, p90 `95`, 604 nonzero grid pixels) at the
+  default 11 steps, so schema 3 authors
+  `surface.keyboard.normalizationReferenceAlpha = 107`. At absorption 0.05 the
+  same mask measured maximum `99` after 7 steps; at absorption 1 it measured
+  `105` after 18 steps. A scalar reference was sufficient: a three-point curve
+  would add a second hypothesis, and the low-absorption candidate scale change
+  is mixed into only about 6.3% Surface coverage.
+- Observed locality: in the sensitive low-level fixture, raw prefix bytes were
+  already exact but the removed strongest-alpha mapping changed the divisor
+  from `45` to `105` and changed 64 prefix alpha bytes (maximum delta 144). The
+  r5 pointwise mapping changed zero. The Canvas2D renderer keeps the complete
+  far prefix crop exact across Contact RGBA, Density sum/count, Surface RGBA,
+  and Optical RGBA at absorption 42. An adjacent wet suffix changed 8 pixels in
+  the base-side neighborhood while a remote crop stayed exact, recording the
+  intentional diffusion/fixing exception rather than hiding it.
+- Why it failed, if applicable: not applicable for A2. The old failure came
+  solely from using the current page's strongest rendered alpha as every
+  pixel's normalization divisor; it was not wet-solver diffusion in the remote
+  fixture.
+- Discarded assumption: page-observed maximum pigment is a stable material
+  calibration reference.
+- Preserved evidence: `ordinary-green@1/@2/@3` source, canonical serializations,
+  schema-2 fingerprints, all pre-existing wet-solver, direct-load, density,
+  coverage-mix, color, and alpha coefficients; recipe schema 2 remains
+  parseable for historical records without migration. No raster was promoted
+  to a permanent golden.
+- Next different method: keep Surface-only spread pixels' mean-density fallback
+  explicit. Transporting glyph Density through wet paper, incremental drying,
+  and strict append-after-dry state are separate future experiments; do not
+  fold them into normalization tuning.

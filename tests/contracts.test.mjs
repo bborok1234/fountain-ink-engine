@@ -10,12 +10,13 @@ import {
 } from "../src/contracts/index.js";
 import {
   ORDINARY_GREEN_RECIPE_R3,
+  ORDINARY_GREEN_RECIPE_R4,
   assertInkRecipeCompatible,
 } from "../src/recipes/index.js";
 
 test("publishes three independent engine version axes", () => {
-  assert.equal(engineModelVersion, "ordinary-js-r4");
-  assert.equal(recipeSchemaVersion, 2);
+  assert.equal(engineModelVersion, "ordinary-js-r5");
+  assert.equal(recipeSchemaVersion, 3);
   assert.equal(fixtureManifestVersion, 1);
   assert.deepEqual(ENGINE_VERSIONS, {
     engineModelVersion,
@@ -30,7 +31,7 @@ test("creates explicit immutable experiment records without a wall clock", () =>
     id: "E-002-blue-ordinary",
     hypothesis: "A blue dye curve can reuse the same geometry.",
     seed: 42,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
     expected: "Geometry is unchanged.",
   });
   assert.equal(validateExperimentRecord(record), true);
@@ -45,19 +46,19 @@ test("rejects implicit, invalid, or non-serializable experiment inputs", () => {
     id: "",
     hypothesis: "missing id",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
   }));
   assert.throws(() => createExperimentRecord({
     id: "E-x",
     hypothesis: "aliased seed",
     seed: 0x1_0000_0000,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
   }), /unsigned 32-bit integer/);
   assert.throws(() => createExperimentRecord({
     id: "E-x",
     hypothesis: "invalid seed",
     seed: -1,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
   }));
   assert.throws(() => createExperimentRecord({
     id: "E-x",
@@ -69,27 +70,27 @@ test("rejects implicit, invalid, or non-serializable experiment inputs", () => {
     id: "E-x",
     hypothesis: "mismatched model",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
     engineModelVersion: "something-else",
   }), /must match/);
   assert.throws(() => createExperimentRecord({
     id: "E-x",
     hypothesis: "mismatched schema",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
     recipeSchemaVersion: 999,
   }), /Unsupported experiment recipeSchemaVersion/);
   assert.throws(() => createExperimentRecord({
     id: "E-x",
     hypothesis: "unknown fixture schema",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
     fixtureManifestVersion: 999,
   }), /Unsupported fixtureManifestVersion/);
 });
 
 test("experiment records deeply freeze a pre-frozen recipe root", () => {
-  const clone = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R3));
+  const clone = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R4));
   Object.freeze(clone);
   const record = createExperimentRecord({
     id: "E-deep-freeze",
@@ -104,7 +105,7 @@ test("experiment records deeply freeze a pre-frozen recipe root", () => {
 });
 
 test("experiment records reject a forged built-in recipe identity", () => {
-  const impostor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R3));
+  const impostor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R4));
   impostor.density.meanBase = 0.75;
   assert.throws(() => createExperimentRecord({
     id: "E-forged-built-in",
@@ -125,7 +126,7 @@ test("experiment metadata rejects accessors that outlive deep freezing", () => {
     id: "E-accessor-observation",
     hypothesis: "Observation evidence must be immutable plain data.",
     seed: 10,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
     observed,
   }), /result must be an enumerable data property/);
   externalResult = "changed";
@@ -137,9 +138,9 @@ test("experiment records require their complete schema as own data", () => {
     id: "E-own-data",
     hypothesis: "Checkpoint fields cannot come from a polluted prototype.",
     seed: 11,
-    recipe: ORDINARY_GREEN_RECIPE_R3,
+    recipe: ORDINARY_GREEN_RECIPE_R4,
   });
-  const missingOwnFields = { recipe: ORDINARY_GREEN_RECIPE_R3 };
+  const missingOwnFields = { recipe: ORDINARY_GREEN_RECIPE_R4 };
   assert.throws(
     () => validateExperimentRecord(missingOwnFields),
     /missing=id,attempt,parentExperimentId/,
@@ -160,6 +161,23 @@ test("experiment records require their complete schema as own data", () => {
       fixtureManifestVersion: 999,
     }),
     /Unsupported fixtureManifestVersion/,
+  );
+});
+
+test("schema-2 experiment checkpoints remain readable without migration", () => {
+  const historical = createExperimentRecord({
+    id: "E-005-density-locality-r3",
+    hypothesis: "A schema-2 checkpoint keeps its authored recipe unchanged.",
+    seed: 0x13579bdf,
+    recipe: ORDINARY_GREEN_RECIPE_R3,
+  });
+  assert.equal(validateExperimentRecord(historical), true);
+  assert.equal(historical.recipeSchemaVersion, 2);
+  assert.equal(historical.engineModelVersion, "ordinary-js-r4");
+  assert.deepEqual(historical.recipe, ORDINARY_GREEN_RECIPE_R3);
+  assert.throws(
+    () => assertInkRecipeCompatible(historical.recipe),
+    /incompatible/,
   );
 });
 

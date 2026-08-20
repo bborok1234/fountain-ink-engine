@@ -63,6 +63,7 @@ const requiredExports = [
   "ORDINARY_GREEN_RECIPE_R1",
   "ORDINARY_GREEN_RECIPE_R2",
   "ORDINARY_GREEN_RECIPE_R3",
+  "ORDINARY_GREEN_RECIPE_R4",
   "MAX_KEYBOARD_SURFACE_STEPS",
   "validateInkRecipe",
   "assertInkRecipeCompatible",
