@@ -6,6 +6,7 @@ import * as contact from "fountain-ink-engine/contact";
 import * as contracts from "fountain-ink-engine/contracts";
 import * as density from "fountain-ink-engine/density";
 import * as deterministic from "fountain-ink-engine/deterministic";
+import * as optical from "fountain-ink-engine/optical";
 import * as recipes from "fountain-ink-engine/recipes";
 import * as surface from "fountain-ink-engine/surface";
 
@@ -17,7 +18,15 @@ test("self-referenced package barrels expose the stable API", () => {
   );
   assert.equal(engine.WetInkSimulation, surface.WetInkSimulation);
   assert.equal(engine.hashString, deterministic.hashString);
-  assert.equal(engine.compositeOrdinaryInk, density.compositeOrdinaryInk);
+  assert.equal(engine.compositeOrdinaryInk, optical.compositeOrdinaryInk);
+  assert.equal(
+    engine.createOrdinaryConcentrationField,
+    density.createOrdinaryConcentrationField,
+  );
+  assert.equal(
+    engine.compositeOrdinaryOptical,
+    optical.compositeOrdinaryOptical,
+  );
   assert.equal(engine.MAX_GLYPH_CONTACTS, density.MAX_GLYPH_CONTACTS);
   assert.equal(engine.MAX_GLYPH_CONTACTS, 0xffff);
   assert.equal(engine.engineModelVersion, contracts.engineModelVersion);

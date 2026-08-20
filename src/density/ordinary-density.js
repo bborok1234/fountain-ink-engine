@@ -447,16 +447,13 @@ export function createDensityField(options) {
   return { densityField, densitySamples };
 }
 
-const rgbaData = (value) => value?.data ?? value;
-
 /**
- * Composite the ordinary fixed RGB and calibrated alpha endpoints into a
- * structural ImageData-compatible result.
+ * Resolve glyph-local and Surface-transported variation into a normalized
+ * concentration plane. Density ends here; color and alpha are Optical policy.
  *
  * @param {{
  *   pixelWidth:number,
  *   pixelHeight:number,
- *   mask:{data:Uint8ClampedArray}|Uint8ClampedArray,
  *   resolvedCoverage:{width:number,height:number,data:Float32Array},
  *   surfaceDensityTransport?:{
  *     width:number,
@@ -470,13 +467,11 @@ const rgbaData = (value) => value?.data ?? value;
  *   flow:number,
  *   absorption:number,
  *   recipe:Record<string, unknown>,
- *   output?:{width:number,height:number,data:Uint8ClampedArray}
  * }} options
  */
-export function compositeOrdinaryInk({
+export function createOrdinaryConcentrationField({
   pixelWidth,
   pixelHeight,
-  mask,
   resolvedCoverage,
   surfaceDensityTransport = null,
   densityField,
@@ -485,7 +480,6 @@ export function compositeOrdinaryInk({
   flow,
   absorption,
   recipe,
-  output,
 }) {
   assertInkRecipeCompatible(recipe);
   assertPercent(flow, "flow");
@@ -493,11 +487,6 @@ export function compositeOrdinaryInk({
   const densityTransport = surfaceDensityTransport === null
     ? null
     : assertSurfaceDensityTransportGrid(surfaceDensityTransport);
-  const result = output ?? {
-    width: pixelWidth,
-    height: pixelHeight,
-    data: new Uint8ClampedArray(pixelWidth * pixelHeight * 4),
-  };
   const normalizedAbsorption = absorption / 100;
   const meanDensity = getMeanDensity(nibId, flow, absorption, recipe);
   const densityRange = getNibDensityRange(
@@ -505,8 +494,6 @@ export function compositeOrdinaryInk({
     normalizedAbsorption,
     recipe,
   );
-  const pixels = result.data;
-  const maskData = rgbaData(mask);
   if (
     resolvedCoverage?.width !== pixelWidth
     || resolvedCoverage?.height !== pixelHeight
@@ -523,14 +510,19 @@ export function compositeOrdinaryInk({
       throw new TypeError("resolvedCoverage data must be finite in 0...1.");
     }
   }
+  if (!(densityField instanceof Float32Array) || densityField.length !== pixelWidth * pixelHeight) {
+    throw new TypeError("densityField must be a width * height Float32Array.");
+  }
+  if (!(densitySamples instanceof Uint16Array) || densitySamples.length !== pixelWidth * pixelHeight) {
+    throw new TypeError("densitySamples must be a width * height Uint16Array.");
+  }
+  const concentration = new Float32Array(pixelWidth * pixelHeight);
 
   for (let y = 0; y < pixelHeight; y += 1) {
     for (let x = 0; x < pixelWidth; x += 1) {
-      const offset = (y * pixelWidth + x) * 4;
-      const maskAlpha = maskData[offset + 3] / 255;
-      const coverage = coverageData[y * pixelWidth + x];
-      if (coverage <= 0.001) continue;
       const fieldIndex = y * pixelWidth + x;
+      const coverage = coverageData[fieldIndex];
+      if (coverage <= 0.001) continue;
       let variation = 0;
       if (densitySamples[fieldIndex] > 0) {
         // Contact always owns its exact current glyph-local variation.
@@ -547,18 +539,17 @@ export function compositeOrdinaryInk({
         ) ?? 0;
       }
       const shapedVariation = shapeNibDensityVariation(nibId, variation);
-      const concentration = Math.max(
+      concentration[fieldIndex] = Math.max(
         0,
         Math.min(1, meanDensity + shapedVariation * densityRange),
       );
-      const alpha = (recipe.optical.minimumAlpha
-        + (recipe.optical.maximumAlpha - recipe.optical.minimumAlpha)
-          * concentration) * coverage;
-      pixels[offset] = recipe.optical.rgb.red;
-      pixels[offset + 1] = recipe.optical.rgb.green;
-      pixels[offset + 2] = recipe.optical.rgb.blue;
-      pixels[offset + 3] = Math.round(alpha * 255);
     }
   }
-  return result;
+  return Object.freeze({
+    width: pixelWidth,
+    height: pixelHeight,
+    data: concentration,
+    meanDensity,
+    densityRange,
+  });
 }

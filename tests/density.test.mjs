@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  compositeOrdinaryInk,
+  createOrdinaryConcentrationField,
   createDensityField,
   getEffectiveFlow,
   getMeanDensity,
   sampleGlyphDensityVariation,
 } from "../src/density/index.js";
+import { compositeOrdinaryInk } from "../src/optical/index.js";
 import { ORDINARY_GREEN_RECIPE_R6 } from "../src/recipes/index.js";
 import { resolveKeyboardSurfaceCoverage } from "../src/surface/index.js";
 
@@ -629,6 +630,30 @@ test("ordinary composite stays inside calibrated direct-stroke endpoints", () =>
     recipe: ORDINARY_GREEN_RECIPE_R6,
   });
   assert.deepEqual(Array.from(result.data), [29, 55, 40, 213]);
+});
+
+test("Density exposes normalized concentration without optical color or alpha", () => {
+  const resolvedCoverage = {
+    width: 2,
+    height: 1,
+    data: new Float32Array([1, 0]),
+  };
+  const result = createOrdinaryConcentrationField({
+    pixelWidth: 2,
+    pixelHeight: 1,
+    resolvedCoverage,
+    densityField: new Float32Array([0.5, 0]),
+    densitySamples: new Uint16Array([1, 0]),
+    nibId: "M",
+    flow: 58,
+    absorption: 42,
+    recipe: ORDINARY_GREEN_RECIPE_R6,
+  });
+  assert.ok(result.data instanceof Float32Array);
+  assert.ok(result.data[0] > 0 && result.data[0] <= 1);
+  assert.equal(result.data[1], 0);
+  assert.equal(result.width, 2);
+  assert.equal(result.height, 1);
 });
 
 test("high absorption retains a legible Contact core without changing the default mix", () => {

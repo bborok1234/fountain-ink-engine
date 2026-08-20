@@ -4,4 +4,5 @@ export * from "./deterministic/index.js";
 export * from "./contact/index.js";
 export * from "./density/index.js";
 export * from "./surface/index.js";
+export * from "./optical/index.js";
 export * from "./canvas2d/index.js";

@@ -187,6 +187,20 @@ direct-writing path are unchanged. Consumers calling `compositeOrdinaryInk`
 directly must now pass `resolvedCoverage` instead of asking Density to interpret
 `materialCoverage`.
 
+## Density and Optical ownership
+
+Package `0.9.0-experimental.1` exposes `createOrdinaryConcentrationField` from
+`./density` and `compositeOrdinaryOptical` from the new `./optical` entry point.
+Density resolves glyph and transported variation into normalized `0...1`
+concentration. Optical receives only that concentration, resolved coverage and
+the recipe's RGB/alpha endpoints. The root `compositeOrdinaryInk` export remains
+as a compatibility wrapper; it is no longer a Density export.
+
+This extraction keeps engine model r7, `ordinary-green@6`, schema 4 and the
+accepted final RGBA unchanged. Direct subpath consumers should move
+`compositeOrdinaryInk` imports from `fountain-ink-engine/density` to
+`fountain-ink-engine/optical`.
+
 ## Development
 
 ```bash
