@@ -1,6 +1,6 @@
-export const dyeComponentModelVersion = "dye-component-js-r4";
-export const dyeComponentRecipeSchemaVersion = 3;
-export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3]);
+export const dyeComponentModelVersion = "dye-component-js-r5";
+export const dyeComponentRecipeSchemaVersion = 4;
+export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3, 4]);
 
 const RECIPE_KEYS_V1 = Object.freeze([
   "id",
@@ -23,6 +23,12 @@ const RECIPE_KEYS_V3 = Object.freeze([
   "edgeBlue",
   "edgeMixGain",
   "edgeMixMaximum",
+]);
+const RECIPE_KEYS_V4 = Object.freeze([
+  ...RECIPE_KEYS_V3,
+  "edgeZoneRadius",
+  "edgeZoneMinimumStrength",
+  "edgeZonePeakThreshold",
 ]);
 
 function assertPlainRecord(value, path) {
@@ -91,7 +97,9 @@ export function validateDyeComponentRecipe(recipe) {
     ? RECIPE_KEYS_V1
     : schema === 2
       ? RECIPE_KEYS_V2
-      : RECIPE_KEYS_V3;
+      : schema === 3
+        ? RECIPE_KEYS_V3
+        : RECIPE_KEYS_V4;
   assertExactDataProperties(recipe, recipeKeys, "dyeComponentRecipe");
   assertString(recipe.id, "dyeComponentRecipe.id");
   if (!Number.isSafeInteger(recipe.revision) || recipe.revision < 1) {
@@ -149,6 +157,29 @@ export function validateDyeComponentRecipe(recipe) {
       1,
     );
   }
+  if (schema >= 4) {
+    if (
+      !Number.isSafeInteger(recipe.edgeZoneRadius)
+      || recipe.edgeZoneRadius < 1
+      || recipe.edgeZoneRadius > 4
+    ) {
+      throw new TypeError(
+        "dyeComponentRecipe.edgeZoneRadius must be an integer in 1...4.",
+      );
+    }
+    assertNumber(
+      recipe.edgeZoneMinimumStrength,
+      "dyeComponentRecipe.edgeZoneMinimumStrength",
+      0,
+      1,
+    );
+    assertNumber(
+      recipe.edgeZonePeakThreshold,
+      "dyeComponentRecipe.edgeZonePeakThreshold",
+      0,
+      1,
+    );
+  }
   assertNumber(
     recipe.retentionMultiplier,
     "dyeComponentRecipe.retentionMultiplier",
@@ -164,7 +195,9 @@ export function serializeDyeComponentRecipe(recipe) {
     ? RECIPE_KEYS_V1
     : recipe.componentRecipeSchemaVersion === 2
       ? RECIPE_KEYS_V2
-      : RECIPE_KEYS_V3;
+      : recipe.componentRecipeSchemaVersion === 3
+        ? RECIPE_KEYS_V3
+        : RECIPE_KEYS_V4;
   return JSON.stringify(Object.fromEntries(
     [...recipeKeys].sort().map((key) => [key, recipe[key]]),
   ));

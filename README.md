@@ -51,11 +51,11 @@ material composition without adding a React dependency.
 
 ## Optional dye component state
 
-Package `0.23.0-experimental.1` exposes the fourth revision of the dye state
-and its first Optical second color:
+Package `0.24.0-experimental.1` exposes the fifth revision of the dye state
+and its bounded visible color zones:
 
 ```js
-import { EDGE_DYE_COMPONENT_RECIPE_R4 } from "fountain-ink-engine/dye-components";
+import { EDGE_DYE_COMPONENT_RECIPE_R5 } from "fountain-ink-engine/dye-components";
 
 const state = createKeyboardSurfaceState(
   deposit,
@@ -63,28 +63,34 @@ const state = createKeyboardSurfaceState(
   surfaceSeed,
   inkRecipe,
   densityTransport,
-  EDGE_DYE_COMPONENT_RECIPE_R4,
+  EDGE_DYE_COMPONENT_RECIPE_R5,
 );
 
 // state.dyeComponent = {
 //   width, height, mobileMass, fixedMass, subsurfaceMass,
-//   expectedFraction, visibleFraction, fractionDelta, edgeAccumulation
+//   expectedFraction, visibleFraction, fractionDelta,
+//   edgeAccumulation, colorZone
 // }
 ```
 
 It shares the ordinary wet footprint while keeping its own mass, mobility and
-retention. Pass `null` or omit the final argument to allocate no component
-state and preserve the ordinary path exactly.
+retention. Discontinuous accumulation and local positive enrichment peaks seed
+one-cell color zones; Optical changes RGB only inside existing ordinary alpha.
+Smooth paper may calculate this surface-film component without enabling an
+ordinary physical coverage candidate. Revisions 1–4 remain archival.
+
+Pass `null` or omit the final argument to allocate no component state and
+preserve the ordinary path exactly.
 
 `visibleFraction` is the bounded component share of visible base-plus-component
 mass. `fractionDelta` compares it with the authored initial mixture without
-reading ordinary Density or flow. `edgeAccumulation` keeps only positive
-enrichment with sufficient visible component mass and local Surface exposure.
-The Optical operator uses that sparse candidate as an activation gate and the
-positive fraction delta as the actual color mixture. It changes RGB only where
-ordinary alpha already exists and copies alpha exactly, so it cannot create a
-glyph outline, glow or wider footprint. R1–R3 remain exported for archival
-round-trip but are incompatible with the active r4 calculation.
+reading ordinary Density or flow. `edgeAccumulation` keeps discontinuous
+Surface accumulation and local positive enrichment peaks as seeds. `colorZone`
+expands them by at most one grid cell inside positive enrichment. The Optical
+operator changes RGB only where ordinary alpha already exists and copies alpha
+exactly, so it cannot create a glyph outline, glow or wider footprint. R1–R4
+remain exported for archival round-trip but are incompatible with the active
+r5 calculation.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior

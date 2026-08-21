@@ -752,6 +752,72 @@ export class WetInkSimulation {
         }
       }
     }
+    // Smooth, film-preserving paper has little page-plane Surface response, so
+    // the exposure-based candidate above can legitimately be empty. Preserve
+    // discontinuity by adding only strict local maxima of positive component
+    // enrichment as film-separation seeds; never turn the whole boundary on.
+    for (let y = 1; y < this.height - 1; y += 1) {
+      for (let x = 1; x < this.width - 1; x += 1) {
+        const index = y * this.width + x;
+        const delta = fractionDelta[index];
+        if (!(delta >= this.dyeComponentRecipe.edgeZonePeakThreshold)) continue;
+        const isLocalPeak = delta >= fractionDelta[index - 1]
+          && delta >= fractionDelta[index + 1]
+          && delta >= fractionDelta[index - this.width]
+          && delta >= fractionDelta[index + this.width]
+          && (
+            delta > fractionDelta[index - 1]
+            || delta > fractionDelta[index + 1]
+            || delta > fractionDelta[index - this.width]
+            || delta > fractionDelta[index + this.width]
+          );
+        if (!isLocalPeak) continue;
+        const enrichmentStrength = enrichmentMaximum > 0
+          ? clamp(delta / enrichmentMaximum)
+          : 0;
+        edgeAccumulation[index] = Math.max(
+          edgeAccumulation[index],
+          Math.fround(enrichmentStrength),
+        );
+      }
+    }
+    const colorZone = new Float32Array(this.length);
+    const zoneRadius = this.dyeComponentRecipe.edgeZoneRadius;
+    const zoneMinimum = this.dyeComponentRecipe.edgeZoneMinimumStrength;
+    for (let y = 0; y < this.height; y += 1) {
+      for (let x = 0; x < this.width; x += 1) {
+        const index = y * this.width + x;
+        const delta = fractionDelta[index];
+        const componentMass = this.dyeComponentMobile[index]
+          + this.dyeComponentFixed[index];
+        if (!(delta > 0) || !(componentMass > 0)) continue;
+        let hasCandidateSeed = false;
+        for (
+          let offsetY = -zoneRadius;
+          offsetY <= zoneRadius && !hasCandidateSeed;
+          offsetY += 1
+        ) {
+          const sampleY = y + offsetY;
+          if (sampleY < 0 || sampleY >= this.height) continue;
+          for (let offsetX = -zoneRadius; offsetX <= zoneRadius; offsetX += 1) {
+            const sampleX = x + offsetX;
+            if (sampleX < 0 || sampleX >= this.width) continue;
+            if (edgeAccumulation[sampleY * this.width + sampleX] > 0) {
+              hasCandidateSeed = true;
+              break;
+            }
+          }
+        }
+        if (!hasCandidateSeed) continue;
+        const enrichmentStrength = enrichmentMaximum > 0
+          ? clamp(delta / enrichmentMaximum)
+          : 0;
+        colorZone[index] = Math.fround(
+          zoneMinimum
+            + (1 - zoneMinimum) * Math.sqrt(enrichmentStrength),
+        );
+      }
+    }
     return Object.freeze({
       id: this.dyeComponentRecipe.id,
       revision: this.dyeComponentRecipe.revision,
@@ -766,6 +832,7 @@ export class WetInkSimulation {
       visibleFraction,
       fractionDelta,
       edgeAccumulation,
+      colorZone,
     });
   }
 

@@ -15,7 +15,7 @@ import {
 import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain-ink-engine/optical";
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
-import { EDGE_DYE_COMPONENT_RECIPE_R4 as ACTIVE_DYE_COMPONENT_RECIPE } from "fountain-ink-engine/dye-components";
+import { EDGE_DYE_COMPONENT_RECIPE_R5 as ACTIVE_DYE_COMPONENT_RECIPE } from "fountain-ink-engine/dye-components";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -389,7 +389,10 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
       "fiberEdgeCoverage",
       "applied",
   ]);
-  assert.deepEqual(Object.keys(stages.optical), ["compositeRgba"]);
+  assert.deepEqual(Object.keys(stages.optical), [
+    "baseCompositeRgba",
+    "compositeRgba",
+  ]);
   assert.ok(Object.isFrozen(stages));
   assert.ok(Object.isFrozen(stages.contact));
   assert.ok(Object.isFrozen(stages.density));
@@ -412,6 +415,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.ok(stages.surface.densityTransport.signedNumerator instanceof Float32Array);
   assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
   assert.equal(stages.surface.dyeComponent, null);
+  assert.equal(stages.optical.baseCompositeRgba, null);
   assertRgbaShape(stages.optical.compositeRgba, 18, 14);
 
   assert.equal(result.imageData, stages.optical.compositeRgba);
@@ -443,6 +447,12 @@ test("dye edge Optical changes RGB only inside the ordinary alpha footprint", ()
     dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
   });
   let changedRgb = 0;
+  let totalChannelDelta = 0;
+  let maximumChannelDelta = 0;
+  assert.deepEqual(
+    component.stages.optical.baseCompositeRgba.data,
+    ordinary.imageData.data,
+  );
   for (let offset = 0; offset < component.imageData.data.length; offset += 4) {
     assert.equal(component.imageData.data[offset + 3], ordinary.imageData.data[offset + 3]);
     const changed = component.imageData.data[offset] !== ordinary.imageData.data[offset]
@@ -450,9 +460,19 @@ test("dye edge Optical changes RGB only inside the ordinary alpha footprint", ()
       || component.imageData.data[offset + 2] !== ordinary.imageData.data[offset + 2];
     if (!changed) continue;
     changedRgb += 1;
+    for (let channel = 0; channel < 3; channel += 1) {
+      const delta = Math.abs(
+        component.imageData.data[offset + channel]
+          - ordinary.imageData.data[offset + channel],
+      );
+      totalChannelDelta += delta;
+      maximumChannelDelta = Math.max(maximumChannelDelta, delta);
+    }
     assert.ok(ordinary.imageData.data[offset + 3] > 0);
   }
-  assert.ok(changedRgb > 0);
+  assert.ok(changedRgb >= 40);
+  assert.ok(totalChannelDelta / (changedRgb * 3) >= 18);
+  assert.ok(maximumChannelDelta >= 50);
   assert.deepEqual(
     component.stages.surface.materialCoverageCandidate.data,
     ordinary.stages.surface.materialCoverageCandidate.data,
@@ -475,6 +495,68 @@ test("dye edge Optical changes RGB only inside the ordinary alpha footprint", ()
       (value) => value > 0,
     ),
   );
+});
+
+test("smooth paper keeps ordinary coverage while exposing a visible dye color zone", () => {
+  const { options } = makeOptions(42, 96, 48);
+  const gradientData = new Uint8ClampedArray(96 * 48 * 4);
+  for (let y = 7; y < 41; y += 1) {
+    for (let x = 8; x < 88; x += 1) {
+      const offset = (y * 96 + x) * 4;
+      gradientData[offset] = 255;
+      gradientData[offset + 1] = 255;
+      gradientData[offset + 2] = 255;
+      gradientData[offset + 3] = 72 + ((x * 17 + y * 11) % 184);
+    }
+  }
+  const gradientMask = makeCanvas(96, 48, gradientData);
+  const smoothOptions = {
+    ...options,
+    surfaceRecipe: PAPER_SURFACE_SMOOTH_R1,
+    mask: gradientMask,
+    glyphContacts: [{
+      rgbaMask: gradientMask.getContext("2d").getImageData(0, 0, 96, 48),
+      destinationX: 0,
+      destinationY: 0,
+      x: 3,
+      baseline: 36,
+      seed: 0x1234abcd,
+    }],
+  };
+  const ordinary = renderOrdinaryInkMaterial(smoothOptions);
+  const component = renderOrdinaryInkMaterial({
+    ...smoothOptions,
+    dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
+  });
+  assert.equal(ordinary.stages.surface.materialCoverageCandidate, null);
+  assert.equal(component.stages.surface.materialCoverageCandidate, null);
+  assert.deepEqual(
+    component.stages.surface.resolvedCoverage.data,
+    ordinary.stages.surface.resolvedCoverage.data,
+  );
+  assert.ok(component.stages.surface.dyeComponent);
+  assert.ok(
+    component.stages.surface.dyeComponent.colorZone.some((value) => value > 0),
+  );
+  assert.deepEqual(
+    component.stages.optical.baseCompositeRgba.data,
+    ordinary.imageData.data,
+  );
+  let changedRgb = 0;
+  for (let offset = 0; offset < component.imageData.data.length; offset += 4) {
+    assert.equal(
+      component.imageData.data[offset + 3],
+      ordinary.imageData.data[offset + 3],
+    );
+    if (
+      component.imageData.data[offset] !== ordinary.imageData.data[offset]
+      || component.imageData.data[offset + 1] !== ordinary.imageData.data[offset + 1]
+      || component.imageData.data[offset + 2] !== ordinary.imageData.data[offset + 2]
+    ) {
+      changedRgb += 1;
+    }
+  }
+  assert.ok(changedRgb >= 8);
 });
 
 test("internal concentration and dye enrichment remain independent diagnostics", () => {
@@ -500,6 +582,10 @@ test("internal concentration and dye enrichment remain independent diagnostics",
   assert.deepEqual(
     dry.stages.surface.dyeComponent.edgeAccumulation,
     wet.stages.surface.dyeComponent.edgeAccumulation,
+  );
+  assert.deepEqual(
+    dry.stages.surface.dyeComponent.colorZone,
+    wet.stages.surface.dyeComponent.colorZone,
   );
   assert.notDeepEqual(
     dry.stages.density.normalizedConcentration.data,

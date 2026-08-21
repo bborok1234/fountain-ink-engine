@@ -1182,7 +1182,7 @@ they are not automatically promoted to timeless pass/fail truth.
 - Dye component model/schema: `dye-component-js-r4 / 3`
 - Package: `0.23.0-experimental.1`
 - Fixture manifest: `2`
-- Status: passed normal-size checkpoint
+- Status: learned; perceptual checkpoint failed
 - Hypothesis: a separately transported dye can become a visible second color
   without turning the material candidate into a geometric outline. The
   component fraction should own color amount; the discontinuous candidate
@@ -1209,23 +1209,78 @@ they are not automatically promoted to timeless pass/fail truth.
   exact, and is deterministic. The component-off renderer remains the accepted
   ordinary path. R1–R3 canonical recipes remain archival and r4 has its own
   registered schema-3 identity.
-- Normal-size browser evidence: M/28 balanced remains predominantly the
-  ordinary green with restrained second-color zones. B/48 balanced makes the
-  discontinuous burgundy shift easier to see; B/48 absorbent follows its
-  different transport/candidate distribution without adding a halo. The page,
-  controls and diagnostics remained nonblank and the browser produced no
-  warning/error. An equal-viewport screenshot comparison used only as a tuning
-  aid measured the B/48 maximum screen-channel change at about 21/255 for gain
-  6 and about 28/255 for the accepted gain 12; it is not a permanent golden.
+- Observed at normal size: the final writing remained indistinguishable from
+  ordinary green even when diagnostics reported changed RGB bytes. On smooth
+  paper it was worse: `prepareOrdinaryInkCanvasInput` skipped the Surface
+  deposit and therefore skipped the dye component entirely, so the final was
+  genuinely identical. The diagnostics panel also kept large unavailable
+  paper-depth/fibre canvases visible, obscuring the one comparison that mattered.
 - Separation boundary: Sailor defines sheen as metallic reflection at edges or
   pooled ink that changes with viewing angle. E-028 is static front-view dye
   color only and deliberately contains no view vector, film reflection,
   sparkle or particle state.
-- Learned: candidate magnitude is a poor direct color control: it reads like a
-  thin effect mask and made the true component fraction irrelevant. Using the
-  candidate as activation and fraction delta as mixture produces a more honest
-  dual-dye relationship while preserving the sparse spatial signature.
-- Next different method: begin P5-B with a separate high-concentration surface
-  film threshold and view-dependent Optical layer. Its static fallback must
-  preserve the base/dual-dye writing and must not reuse E-028's burgundy RGB as
-  a fake metallic outline.
+- Why it failed: a sparse candidate and a small fraction delta were multiplied
+  together, leaving the authored second color buried inside ordinary shading.
+  The automated `changedRgb > 0` check proved arithmetic, not perception.
+- Discarded assumption: a few changed channels or an enlarged candidate
+  diagnostic are sufficient evidence that a normal-size color zone exists.
+- Preserved fixture or code: the separate component mass/fraction planes,
+  discontinuous accumulation candidate, exact alpha/coverage invariants and
+  archival `edge-dye-study@4` recipe remain useful evidence.
+- Next different method: grow a bounded color zone from real discontinuous
+  accumulation seeds and local film-enrichment peaks, but only through positive
+  second-dye support. Compute the component on smooth paper without enabling
+  physical Surface coverage. Compare ordinary base and final side by side.
+
+## E-029-visible-second-dye-zones / A1
+
+- Parent: `E-028-second-dye-optical-color / A1`
+- Ordinary engine model: `ordinary-js-r13` (unchanged)
+- Dye component model/schema: `dye-component-js-r5 / 4`
+- Package: `0.24.0-experimental.1`
+- Fixture manifest: `2`
+- Status: passed normal-size checkpoint
+- Hypothesis: discontinuous material seeds can produce readable static
+  second-dye zones without becoming a full outline if expansion is bounded in
+  Surface-grid space and clipped to positive component enrichment.
+- Operator: `edge-dye-study@5` keeps r4 transport coefficients but adds local
+  enrichment maxima as film-separation seeds when exposure-driven Surface
+  accumulation is absent. Each seed may reach one grid cell and only cells with
+  positive `fractionDelta` and visible component mass become a `colorZone`.
+  Zone strength starts at `0.38`, follows bounded enrichment and maps to RGB
+  `[152,26,116]` with gain `2`, capped at `0.86`. Optical still copies every
+  ordinary alpha byte exactly.
+- Smooth-paper boundary: an enabled component now requests the compact deposit
+  even when ordinary Surface coverage is inactive. The solver may return a dye
+  state, but `materialCoverageCandidate`, density transport and paper depth stay
+  `null`; resolved coverage remains ordinary Contact. Thus a preserved surface
+  ink film is not confused with paper-plane blur.
+- Automated evidence: component-off output is exact; smooth component-on
+  preserves resolved coverage and alpha while changing RGB inside the ordinary
+  footprint; balanced coverage/Contact/Density/Surface remain exact; r1-r4
+  canonical recipes stay archival. The color zone is deterministic, bounded
+  to 0...1 and is less occupied on the active absorbent paper than balanced.
+- Diagnostics evidence: unavailable Surface fields are hidden instead of
+  rendered as large empty canvases. Optical retains an optional ordinary-base
+  RGBA only while the component is active and displays it beside the final,
+  reporting changed pixels plus mean/maximum channel delta. No second solve is
+  performed.
+- Memory boundary: the maximum 320×240 Surface component keeps the existing
+  1,228,800-byte lazy solver state and retains 2,150,400 bytes including the new
+  `colorZone`, for 3,379,200 bytes during diagnostic-state creation. The
+  component-on Optical comparison additionally retains one ordinary page RGBA
+  (`4 × pagePixels` bytes); component off allocates neither addition.
+- Normal-size browser evidence: M/28 balanced produced a distinct burgundy
+  zone while ordinary green remained the main color. B/48 smooth produced
+  18,856 changed RGB pixels in the full-resolution render with mean changed
+  channel delta 27.3 and maximum 106; the side-by-side card made the authored
+  color difference visible without alpha or geometry growth. These numbers are
+  diagnostics, not a pixel golden or a claim of measured real-ink chemistry.
+- Separation boundary: this is static dual-dye color. It has no view vector,
+  Fresnel response, metallic film or particle state; P5-B sheen remains a
+  separate experiment.
+- Learned: the primary visual gate must inspect final writing at normal size.
+  Intermediate planes and numeric deltas explain the result but cannot promote
+  an effect that the final comparison does not reveal.
+- Next different method: after review/merge, resume P5-B with a separate
+  concentration-thresholded surface film and view-dependent Optical layer.

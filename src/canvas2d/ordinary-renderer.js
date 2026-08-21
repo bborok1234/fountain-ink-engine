@@ -8,6 +8,7 @@ import {
   compositeOrdinaryOptical,
 } from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
+import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
 import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 import {
   createKeyboardSurfaceState,
@@ -43,6 +44,7 @@ function makeDiagnosticStages({
   dyeComponent,
   fiberEdgeCoverage,
   normalizedConcentration,
+  baseCompositeRgba,
   compositeRgba,
 }) {
   return Object.freeze({
@@ -61,7 +63,7 @@ function makeDiagnosticStages({
       fiberEdgeCoverage,
       applied: materialCoverageCandidate !== null,
     }),
-    optical: Object.freeze({ compositeRgba }),
+    optical: Object.freeze({ baseCompositeRgba, compositeRgba }),
   });
 }
 
@@ -149,9 +151,15 @@ export function prepareOrdinaryInkCanvasInput({
   width,
   height,
   surfaceRecipe,
+  dyeComponentRecipe = null,
   createLayer = makeLayer,
 }) {
   assertSurfaceRecipeCompatible(surfaceRecipe);
+  if (dyeComponentRecipe !== null) {
+    // Compatibility is asserted again at the calculation boundary; this early
+    // check prevents a forged component from causing a Canvas allocation.
+    assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+  }
   const maskPixels = mask.getContext("2d").getImageData(
     0,
     0,
@@ -164,9 +172,10 @@ export function prepareOrdinaryInkCanvasInput({
       surfaceRecipe.axes.depthUptake,
       surfaceRecipe.axes.lateralMobility,
     );
+  const surfaceApplied = surfaceResponse > 0.002;
   return Object.freeze({
     maskPixels,
-    surfaceDeposit: surfaceResponse > 0.002
+    surfaceDeposit: surfaceApplied || dyeComponentRecipe !== null
       ? makeKeyboardSurfaceDeposit({
         mask,
         width,
@@ -174,6 +183,7 @@ export function prepareOrdinaryInkCanvasInput({
         createLayer,
       })
       : null,
+    surfaceApplied,
   });
 }
 
@@ -196,6 +206,13 @@ export function beginOrdinaryInkMaterial({
   assertSurfaceRecipeCompatible(surfaceRecipe);
   assertPercent(flow, "flow");
   assertSurfaceSeed(surfaceSeed);
+  const surfaceResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
+    ? surfaceRecipe.axes.verticalUptake
+    : Math.max(
+      surfaceRecipe.axes.depthUptake,
+      surfaceRecipe.axes.lateralMobility,
+    );
+  const surfaceApplied = surfaceResponse > 0.002;
   const { densityField, densitySamples } = createDensityField({
     pixelWidth,
     pixelHeight,
@@ -210,15 +227,17 @@ export function beginOrdinaryInkMaterial({
       surfaceRecipe,
       surfaceSeed,
       recipe,
-      resampleContactDensityToSurfaceGrid({
-        sourceWidth: pixelWidth,
-        sourceHeight: pixelHeight,
-        targetWidth: surfaceDeposit.width,
-        targetHeight: surfaceDeposit.height,
-        mask: maskPixels,
-        accumulatedVariation: densityField,
-        sampleCount: densitySamples,
-      }),
+      surfaceApplied
+        ? resampleContactDensityToSurfaceGrid({
+          sourceWidth: pixelWidth,
+          sourceHeight: pixelHeight,
+          targetWidth: surfaceDeposit.width,
+          targetHeight: surfaceDeposit.height,
+          mask: maskPixels,
+          accumulatedVariation: densityField,
+          sampleCount: densitySamples,
+        })
+        : null,
       dyeComponentRecipe,
     );
   const fiberEdgeCoverage = createPaperFiberEdge({
@@ -235,9 +254,11 @@ export function beginOrdinaryInkMaterial({
     maskPixels,
     densityField,
     densitySamples,
-    surfaceCoverageGrid: surfaceState?.coverage ?? null,
-    surfaceDensityTransport: surfaceState?.densityTransport ?? null,
-    paperDepth: surfaceState?.paperDepth ?? null,
+    surfaceCoverageGrid: surfaceApplied ? surfaceState?.coverage ?? null : null,
+    surfaceDensityTransport: surfaceApplied
+      ? surfaceState?.densityTransport ?? null
+      : null,
+    paperDepth: surfaceApplied ? surfaceState?.paperDepth ?? null : null,
     dyeComponent: surfaceState?.dyeComponent ?? null,
     dyeComponentRecipe,
     fiberEdgeCoverage,
@@ -304,6 +325,13 @@ export function completeOrdinaryInkMaterial({
     recipe,
     output,
   });
+  const baseCompositeRgba = dyeComponent === null || dyeComponentRecipe === null
+    ? null
+    : Object.freeze({
+      width: pixelWidth,
+      height: pixelHeight,
+      data: new Uint8ClampedArray(ordinaryResult.data),
+    });
   const result = dyeComponent === null || dyeComponentRecipe === null
     ? ordinaryResult
     : (() => {
@@ -315,7 +343,7 @@ export function completeOrdinaryInkMaterial({
       compositeDyeEdgeOptical({
         pixelWidth,
         pixelHeight,
-        baseRgba: structuralRgba,
+        baseRgba: baseCompositeRgba,
         dyeComponent,
         dyeComponentRecipe,
         output: structuralRgba,
@@ -333,6 +361,7 @@ export function completeOrdinaryInkMaterial({
     dyeComponent,
     fiberEdgeCoverage,
     normalizedConcentration,
+    baseCompositeRgba,
     compositeRgba: result,
   });
   return {
@@ -396,6 +425,7 @@ export function renderOrdinaryInkMaterial({
     width,
     height,
     surfaceRecipe,
+    dyeComponentRecipe,
     createLayer,
   });
   const prepared = beginOrdinaryInkMaterial({
