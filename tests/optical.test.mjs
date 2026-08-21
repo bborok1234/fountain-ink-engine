@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { compositeOrdinaryOptical } from "../src/optical/index.js";
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R4,
-  ORDINARY_BURGUNDY_RECIPE_R4,
-  ORDINARY_GREEN_RECIPE_R10,
-  ORDINARY_TEAL_RECIPE_R4,
+  ORDINARY_BLUE_BLACK_RECIPE_R5,
+  ORDINARY_BURGUNDY_RECIPE_R5,
+  ORDINARY_GREEN_RECIPE_R11,
+  ORDINARY_TEAL_RECIPE_R5,
 } from "../src/recipes/index.js";
 
 test("Optical maps only normalized concentration and resolved coverage", () => {
@@ -19,7 +19,7 @@ test("Optical maps only normalized concentration and resolved coverage", () => {
     pixelHeight: 1,
     concentration: { width: 2, height: 1, data: new Float32Array([0.5, 1]) },
     resolvedCoverage: { width: 2, height: 1, data: new Float32Array([1, 0]) },
-    recipe: ORDINARY_GREEN_RECIPE_R10,
+    recipe: ORDINARY_GREEN_RECIPE_R11,
     output,
   });
   assert.equal(result, output);
@@ -30,10 +30,10 @@ test("Optical maps only normalized concentration and resolved coverage", () => {
 
 test("r8 color curves map low, middle, and high Density without changing alpha", () => {
   const recipes = [
-    ORDINARY_GREEN_RECIPE_R10,
-    ORDINARY_BLUE_BLACK_RECIPE_R4,
-    ORDINARY_BURGUNDY_RECIPE_R4,
-    ORDINARY_TEAL_RECIPE_R4,
+    ORDINARY_GREEN_RECIPE_R11,
+    ORDINARY_BLUE_BLACK_RECIPE_R5,
+    ORDINARY_BURGUNDY_RECIPE_R5,
+    ORDINARY_TEAL_RECIPE_R5,
   ];
   const concentration = {
     width: 3,
@@ -77,7 +77,7 @@ test("density color curves interpolate channels rather than applying a hue skin"
     pixelHeight: 1,
     concentration: { width: 2, height: 1, data: new Float32Array([0.25, 0.75]) },
     resolvedCoverage: { width: 2, height: 1, data: new Float32Array([1, 1]) },
-    recipe: ORDINARY_BLUE_BLACK_RECIPE_R4,
+    recipe: ORDINARY_BLUE_BLACK_RECIPE_R5,
   });
   assert.deepEqual(Array.from(result.data.slice(0, 3)), [60, 80, 96]);
   assert.deepEqual(Array.from(result.data.slice(4, 7)), [32, 51, 70]);
@@ -94,7 +94,7 @@ test("Optical rejects malformed scalar planes before mutating output", () => {
     pixelHeight: 1,
     concentration: { width: 1, height: 1, data: new Float32Array([NaN]) },
     resolvedCoverage: { width: 1, height: 1, data: new Float32Array([1]) },
-    recipe: ORDINARY_GREEN_RECIPE_R10,
+    recipe: ORDINARY_GREEN_RECIPE_R11,
     output,
   }), /concentration data must be finite/);
   assert.deepEqual(Array.from(output.data), [9, 8, 7, 6]);

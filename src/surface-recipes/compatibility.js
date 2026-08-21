@@ -12,6 +12,7 @@ import { PAPER_SURFACE_BALANCED_R2 } from "./paper-balanced-r2.js";
 import { PAPER_SURFACE_ABSORBENT_R1 } from "./paper-absorbent-r1.js";
 import { PAPER_SURFACE_ABSORBENT_R2 } from "./paper-absorbent-r2.js";
 import { PAPER_SURFACE_ABSORBENT_R3 } from "./paper-absorbent-r3.js";
+import { PAPER_SURFACE_ABSORBENT_R4 } from "./paper-absorbent-r4.js";
 import { SUPPORTED_SURFACE_RUNTIME_VERSIONS } from "./versions.js";
 import { REGISTERED_SURFACE_RECIPE_SERIALIZATIONS } from "./registered-built-ins.js";
 
@@ -23,6 +24,7 @@ const BUILT_INS = [
   PAPER_SURFACE_ABSORBENT_R1,
   PAPER_SURFACE_ABSORBENT_R2,
   PAPER_SURFACE_ABSORBENT_R3,
+  PAPER_SURFACE_ABSORBENT_R4,
 ];
 const RESERVED_IDS = new Set(
   Object.keys(REGISTERED_SURFACE_RECIPE_SERIALIZATIONS).map((key) =>

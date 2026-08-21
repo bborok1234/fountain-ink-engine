@@ -48,8 +48,8 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r10` is the active immutable, serializable r11/schema-6 control.
-Blue-black, burgundy and teal r4 are active ordinary-color peers. Paper behavior
+`ordinary-green-r11` is the active immutable, serializable r12/schema-6 control.
+Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior
 is selected independently from `./surface-recipes`: smooth, balanced, or
 absorbent. Earlier ink revisions remain exported as archival checkpoints:
 
@@ -225,10 +225,10 @@ The active catalog exports:
 
 ```js
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R2,
-  ORDINARY_BURGUNDY_RECIPE_R2,
-  ORDINARY_GREEN_RECIPE_R8,
-  ORDINARY_TEAL_RECIPE_R2,
+  ORDINARY_BLUE_BLACK_RECIPE_R5,
+  ORDINARY_BURGUNDY_RECIPE_R5,
+  ORDINARY_GREEN_RECIPE_R11,
+  ORDINARY_TEAL_RECIPE_R5,
 } from "fountain-ink-engine/recipes";
 ```
 
@@ -239,9 +239,9 @@ coverage and alpha; only Optical RGB differs. The green control repeats
 green projection. These are ordinary dyes, not dual shading, sheen, shimmer or
 edge-outline recipes.
 
-Migration from `0.11.x`: select a schema-5 recipe explicitly. Historical
-schema-2 through schema-4 recipes still parse and round-trip but do not enter
-the r8 calculation without a new authored revision.
+Migration from `0.15.x`: select a schema-6 r12 recipe explicitly. Historical
+schema-2 through schema-6 recipes still parse and round-trip but do not enter
+the r12 calculation without a new authored revision.
 
 ## Independent paper Surface recipes
 
@@ -267,13 +267,20 @@ deterministic, Contact-connected, counter-safe sparse fibre edge at full raster
 resolution. Absorbent paper now has more visible exterior feathering than
 balanced paper without dilating or blurring the complete glyph.
 
+Package `0.16.0-experimental.1` makes that fibre edge scale-aware without
+retuning paper coefficients. `paper-absorbent@4` keeps the accepted DPR2 look,
+preserves historical r3 bytes, and keeps comparable CSS-space fibre reach and
+integrated alpha at DPR1/2/3. The operator now follows only the active Contact
+frontier instead of rescanning the complete local region at each step. Run
+`npm run bench:fiber` for the 18/28/52px scale matrix.
+
 The Canvas2D diagnostic record exposes this state at
 `stages.surface.paperDepth`; its `pigment` and optional `signedNumerator` are
 solver-grid Float32 arrays. The state describes ink stored below the visible
 paper surface, so Optical does not composite it as an extra shadow or blur.
 At B/20px and the absorbent preset, the authored Contact floor remains legible
 and the coarse Surface halo is bounded. Smooth r1, balanced r1 and absorbent
-r1/r2 remain registered historical checkpoints.
+r1/r2/r3 remain registered historical checkpoints.
 
 ## Development
 

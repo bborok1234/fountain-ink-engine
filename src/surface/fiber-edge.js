@@ -137,6 +137,9 @@ export function createPaperFiberEdge(options) {
   const reachCssPixels = surfaceRecipe.keyboard.fiberEdgeReachCssPixels;
   const occupancy = surfaceRecipe.keyboard.fiberEdgeOccupancy;
   const strength = surfaceRecipe.keyboard.fiberEdgeStrength;
+  const scaleCoverage = surfaceRecipe.surfaceModelVersion === "paper-surface-js-r4"
+    ? scale / 2
+    : 1;
   const reach = Math.max(1, Math.round(reachCssPixels * scale));
   const data = new Uint8Array(pixelCount);
 
@@ -144,14 +147,17 @@ export function createPaperFiberEdge(options) {
   let minimumY = height;
   let maximumX = -1;
   let maximumY = -1;
+  const contactSources = [];
   for (let index = 0; index < pixelCount; index += 1) {
-    if (contactData[index * 4 + 3] <= BARRIER_ALPHA) continue;
+    const alpha = contactData[index * 4 + 3];
+    if (alpha <= BARRIER_ALPHA) continue;
     const x = index % width;
     const y = Math.floor(index / width);
     minimumX = Math.min(minimumX, x);
     minimumY = Math.min(minimumY, y);
     maximumX = Math.max(maximumX, x);
     maximumY = Math.max(maximumY, y);
+    if (alpha >= SOURCE_ALPHA) contactSources.push(index);
   }
   if (maximumX < minimumX || maximumY < minimumY) {
     return Object.freeze({ width, height, data });
@@ -169,54 +175,82 @@ export function createPaperFiberEdge(options) {
     height,
     bounds,
   );
-  let frontier = new Uint8Array(localWidth * localHeight);
+  const localLength = localWidth * localHeight;
+  let frontier = [];
+
+  const gatherCandidates = (sources, fromContact) => {
+    const candidateAlpha = new Uint8Array(localLength);
+    const candidateIndices = [];
+    for (const sourceIndex of sources) {
+      const sourcePageX = fromContact
+        ? sourceIndex % width
+        : bounds.minimumX + sourceIndex % localWidth;
+      const sourcePageY = fromContact
+        ? Math.floor(sourceIndex / width)
+        : bounds.minimumY + Math.floor(sourceIndex / localWidth);
+      const sourceAlpha = fromContact
+        ? contactData[sourceIndex * 4 + 3]
+        : data[sourcePageY * width + sourcePageX];
+      for (const [dx, dy] of NEIGHBORS_8) {
+        const pageX = sourcePageX + dx;
+        const pageY = sourcePageY + dy;
+        const localX = pageX - bounds.minimumX;
+        const localY = pageY - bounds.minimumY;
+        if (
+          localX <= 0
+          || localY <= 0
+          || localX >= localWidth - 1
+          || localY >= localHeight - 1
+        ) continue;
+        const localIndex = localY * localWidth + localX;
+        const pageIndex = pageY * width + pageX;
+        if (exterior[localIndex] === 0 || data[pageIndex] !== 0) continue;
+        if (candidateAlpha[localIndex] === 0) candidateIndices.push(localIndex);
+        candidateAlpha[localIndex] = Math.max(
+          candidateAlpha[localIndex],
+          sourceAlpha,
+        );
+      }
+    }
+    return { candidateAlpha, candidateIndices };
+  };
 
   for (let distance = 1; distance <= reach; distance += 1) {
-    const nextFrontier = new Uint8Array(frontier.length);
+    const sources = distance === 1 ? contactSources : frontier;
+    if (sources.length === 0) break;
+    const { candidateAlpha, candidateIndices } = gatherCandidates(
+      sources,
+      distance === 1,
+    );
+    const nextFrontier = [];
     const gate = distance === 1
       ? occupancy
       : 0.1 + occupancy * 0.08;
-    for (let localY = 1; localY < localHeight - 1; localY += 1) {
-      for (let localX = 1; localX < localWidth - 1; localX += 1) {
-        const localIndex = localY * localWidth + localX;
-        if (exterior[localIndex] === 0 || frontier[localIndex] !== 0) continue;
-        const pageX = bounds.minimumX + localX;
-        const pageY = bounds.minimumY + localY;
-        const pageIndex = pageY * width + pageX;
-        if (data[pageIndex] !== 0) continue;
-
-        let sourceAlpha = 0;
-        for (const [dx, dy] of NEIGHBORS_8) {
-          const neighborLocal = (localY + dy) * localWidth + localX + dx;
-          if (distance === 1) {
-            const neighborPage = (pageY + dy) * width + pageX + dx;
-            sourceAlpha = Math.max(
-              sourceAlpha,
-              contactData[neighborPage * 4 + 3],
-            );
-          } else {
-            sourceAlpha = Math.max(sourceAlpha, frontier[neighborLocal]);
-          }
-        }
-        if (sourceAlpha < (distance === 1 ? SOURCE_ALPHA : 10)) continue;
-        const gateNoise = coordinateNoise(
-          pageX,
-          pageY,
-          (surfaceSeed ^ 0x6c8e9cf5 ^ Math.imul(distance, 0x9e3779b1)) >>> 0,
-        );
-        if (gateNoise < 1 - gate) continue;
-        const texture = 0.74 + coordinateNoise(
-          pageX,
-          pageY,
-          surfaceSeed ^ 0x243f6a88,
-        ) * 0.26;
-        const alpha = distance === 1
-          ? Math.round(sourceAlpha * strength * texture)
-          : Math.round(sourceAlpha * 0.78 * texture);
-        if (alpha <= 0) continue;
-        data[pageIndex] = Math.max(data[pageIndex], alpha);
-        nextFrontier[localIndex] = alpha;
-      }
+    for (const localIndex of candidateIndices) {
+      const localX = localIndex % localWidth;
+      const localY = Math.floor(localIndex / localWidth);
+      const pageX = bounds.minimumX + localX;
+      const pageY = bounds.minimumY + localY;
+      const pageIndex = pageY * width + pageX;
+      const sourceAlpha = candidateAlpha[localIndex];
+      if (sourceAlpha < (distance === 1 ? SOURCE_ALPHA : 10)) continue;
+      const gateNoise = coordinateNoise(
+        pageX,
+        pageY,
+        (surfaceSeed ^ 0x6c8e9cf5 ^ Math.imul(distance, 0x9e3779b1)) >>> 0,
+      );
+      if (gateNoise < 1 - gate) continue;
+      const texture = 0.74 + coordinateNoise(
+        pageX,
+        pageY,
+        surfaceSeed ^ 0x243f6a88,
+      ) * 0.26;
+      const alpha = distance === 1
+        ? Math.round(sourceAlpha * strength * scaleCoverage * texture)
+        : Math.round(sourceAlpha * 0.78 * texture);
+      if (alpha <= 0) continue;
+      data[pageIndex] = Math.min(255, alpha);
+      nextFrontier.push(localIndex);
     }
     frontier = nextFrontier;
   }

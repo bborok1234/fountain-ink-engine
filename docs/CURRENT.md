@@ -1,9 +1,9 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r11`
+> Engine model: `ordinary-js-r12`
 > Ink recipe schema: `6`
-> Surface model/schema: `paper-surface-js-r3 / 3` (absorbent r3), with historical r1/r2 preserved
+> Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `2`
 
 ## Now
@@ -18,14 +18,14 @@ The first extraction deliberately keeps the accepted ordinary-ink formulas:
 - signed glyph-local density variation bounded by calibrated alpha endpoints;
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
-Ink constants now live in the immutable active `ordinary-green-r10` control
-recipe and the blue-black, burgundy, and teal r4 ordinary recipes. Paper
+Ink constants now live in the immutable active `ordinary-green-r11` control
+recipe and the blue-black, burgundy, and teal r5 ordinary recipes. Paper
 behavior lives separately in `paper-smooth-r1`, active `paper-balanced-r2`,
-and active `paper-absorbent-r3`; earlier paper revisions remain historical
-evidence. `ordinary-green-r1` through `ordinary-green-r9`
+and active `paper-absorbent-r4`; earlier paper revisions remain historical
+evidence. `ordinary-green-r1` through `ordinary-green-r10`
 remain registered and structurally readable as archival `ordinary-js-r2`
-through `ordinary-js-r10` checkpoints, but they are not calculation-compatible
-with the active r11 model. Nib, flow, Surface recipe,
+through `ordinary-js-r11` checkpoints, but they are not calculation-compatible
+with the active r12 model. Nib, flow, Surface recipe,
 layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
@@ -41,17 +41,26 @@ All supported Surface schemas remain explicit;
 there is no implicit conversion of `verticalUptake` into paper depth.
 
 Paper Surface is an explicit eight-axis recipe. The historical r1 family keeps
-`verticalUptake`; absorbent r2/r3 replace that ambiguous page-plane axis with
+`verticalUptake`; absorbent r2/r3/r4 replace that ambiguous page-plane axis with
 `depthUptake`. Lateral mobility then controls both page X/Y diffusion, while
 depth uptake transfers water and mobile pigment locally into a lazy subsurface
 state. Dye affinity, surface retention, film preservation and roughness remain
 independent. Particle catch and paper reflectance are versioned hooks for later
 specialty/optical work and are neutral today. Balanced r2 keeps the historical
 solver candidate and direct-input state but reduces that candidate's continuous
-contribution during keyboard Surface resolution. Absorbent r3 preserves a
+contribution during keyboard Surface resolution. Absorbent r4 preserves a
 readable Contact core, reports pigment below the visible paper, and adds sparse
 page-anchored fibre branches outside Contact without entering enclosed counters.
 Historical smooth/balanced/absorbent revisions keep their registered bytes.
+
+The absorbent fibre operator now walks only the deterministic Contact frontier
+instead of rescanning the full local region at every reach step. Historical r3
+output remains byte-identical. Active r4 keeps the accepted DPR2 result and
+scales only first-branch alpha with raster scale, so DPR1/2/3 retain comparable
+CSS-space reach and integrated coverage. On the 790×610 synthetic 28px
+benchmark, p50 changed from 10.99/67.71/183.43ms before the sparse frontier to
+2.37/8.98/20.95ms at DPR1/2/3. These are Node measurements, not a browser frame
+budget.
 
 The engine contains no React component, text control, Vite configuration,
 Sites worker, native code, product data model, font, or reference image.
@@ -154,12 +163,12 @@ matching direct-pad color projection.
   not claimed here. A zero transported carrier intentionally has no ratio and
   retains the mean-density fallback.
 - The r2/r3 paper-depth state is a local scalar depth bucket, not a layered
-  paper cross-section or reverse-side bleed-through renderer. Absorbent r3 has
+  paper cross-section or reverse-side bleed-through renderer. Absorbent r4 has
   a bounded high-resolution exterior fibre operator, but does not yet model a
   page-wide directional fibre network or reverse-side transport.
 - The maximum 320×240 transport solve adds 921,600 bytes of lazy solver state,
   614,400 bytes of transient resampled input, and a 614,400-byte returned grid.
-  No full-page Float32 transport output is retained. Absorbent r3 additionally
+  No full-page Float32 transport output is retained. Absorbent r4 additionally
   creates one transient full-page Uint8 fibre-alpha plane. Browser frame budgets
   are not yet fixed; the E-007 Node benchmark is a comparison, not a device claim.
 - Stage diagnostics expose normalized concentration and final resolved

@@ -22,3 +22,4 @@ export { PAPER_SURFACE_BALANCED_R2 } from "./paper-balanced-r2.js";
 export { PAPER_SURFACE_ABSORBENT_R1 } from "./paper-absorbent-r1.js";
 export { PAPER_SURFACE_ABSORBENT_R2 } from "./paper-absorbent-r2.js";
 export { PAPER_SURFACE_ABSORBENT_R3 } from "./paper-absorbent-r3.js";
+export { PAPER_SURFACE_ABSORBENT_R4 } from "./paper-absorbent-r4.js";

@@ -684,3 +684,60 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: quantify the sparse edge at DPR1/2/3 and profile its
   full-resolution one-byte plane. Do not increase coarse-grid diffusion if the
   fibres need later visual tuning.
+
+## E-018-fibre-edge-dpr-and-frontier-cost / A1
+
+- Parent: `E-017-paper-feather-order-and-fibre-edge / A1`
+- Engine model: `ordinary-js-r12`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2`
+- Status: passed checkpoint
+- Hypothesis: the absorbent fibre edge can keep the accepted DPR2 appearance,
+  comparable CSS-space reach and coverage at DPR1/3, and lower cost if it
+  follows only active Contact/frontier pixels instead of scanning the complete
+  local region once for every reach step.
+- Explicit inputs and seed: `ordinary-green@11`, `paper-absorbent@4`, Surface
+  seed `0x13579bdf`; synthetic 790×610 CSS paper at 18/28/52px and raster scales
+  1/2/3; a counter fixture at all three scales. The HTML diagnostics route
+  accepts an explicit `dpr=1|2|3` only when `diagnostics=1`; normal UI remains
+  capped at its previous DPR2 behavior.
+- Expected: DPR2 is unchanged; DPR1/3 fibre reach remains 1.5–2.1 CSS pixels and
+  integrated alpha area stays within 12% of DPR2. Archived
+  `paper-absorbent@3` remains byte-identical. A 28px synthetic render should be
+  materially faster at every scale without another full-page retained plane.
+- Observed: the scaled counter fixture measured CSS reach 2.0/2.0/1.67 and
+  integrated alpha area 10.11/9.46/9.90 at DPR1/2/3. Historical r3 output was
+  byte-identical to the pre-change implementation at all three scales. The
+  one-byte fibre output remains exactly width×height: 481,900 / 1,927,600 /
+  4,337,100 bytes for the 790×610 benchmark.
+- Performance evidence: before the sparse frontier, 28px p50 was
+  10.99/67.71/183.43ms at DPR1/2/3. After it, the same benchmark measured
+  2.37/8.98/20.95ms. The complete 18/28/52 matrix is reproducible with
+  `npm run bench:fiber`. These are warm Node measurements, not a committed
+  browser/device frame budget.
+- Automated evidence: active r4 DPR reach/coverage, r3 exact historical sums,
+  counter exclusion, deterministic connectivity, direct solver r3/r4 equality,
+  active recipe coefficient equality, public export/version/identity pins,
+  and diagnostics-only raster override all pass. Engine 117/117 and the full
+  HTML harness gate pass.
+- Browser evidence: desktop M/18, M/28 and M/52 absorbent previews were checked
+  at forced raster DPR1/2/3. The main canvas measured 788×608, 1576×1216 and
+  2364×1824 while retaining the same CSS size. A 390×844 B/18 absorbent fixture
+  at DPR3 measured 1047×1164 for a 349×388 CSS canvas and remained readable.
+  Diagnostic fibre counts were nonzero at every scale and console warnings and
+  errors were zero.
+- Why it failed, if applicable: not applicable. The prior implementation was
+  correct at DPR2 but paid for many pixels that could not become frontier and
+  authored fibre alpha in device-pixel rather than CSS-space units.
+- Discarded assumption: a small nominal CSS reach makes repeated full-region
+  scans cheap at DPR3, or one device-pixel alpha calibration represents the
+  same visible fibre on every raster scale.
+- Preserved evidence or code: all r1-r3 Surface pins, r3 pixels, DPR2 r4 pixels,
+  paper axes, reach/occupancy/strength, Contact/counter rules, coarse Surface
+  solver, Density transport, Optical projection, direct-input state, text/IME
+  ownership and default production raster cap.
+- Next different method: perform the real bundled-font/browser matrix at
+  DPR1/2/3, 18/28/52px and 320–1440px viewports, then set a browser frame and
+  rapid-append backlog budget. Do not tune fibre gains unless normal-size
+  evidence shows a concrete visual defect.
