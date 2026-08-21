@@ -6,6 +6,7 @@ import {
   MAX_PAPER_SURFACE_STEPS,
   assertSurfaceRecipeCompatible,
 } from "../surface-recipes/index.js";
+import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
 
 export const DEFAULT_SURFACE_SEED = 0x13579bdf;
 
@@ -21,6 +22,7 @@ export const DEFAULT_SURFACE_SEED = 0x13579bdf;
  * @param {Record<string, unknown>} recipe
  * @param {{width:number,height:number,signedNumerator:Float32Array,
  *   pigmentWeight:Float32Array}|null} densityTransport
+ * @param {Record<string, unknown>|null} dyeComponentRecipe
  */
 export function createKeyboardSurfaceState(
   deposit,
@@ -28,6 +30,7 @@ export function createKeyboardSurfaceState(
   surfaceSeed,
   inkRecipe,
   densityTransport = null,
+  dyeComponentRecipe = null,
 ) {
   assertInkRecipeCompatible(inkRecipe);
   assertSurfaceRecipeCompatible(surfaceRecipe);
@@ -35,6 +38,9 @@ export function createKeyboardSurfaceState(
   const validatedDensityTransport = densityTransport === null
     ? null
     : assertSurfaceDensityTransportGrid(densityTransport);
+  if (dyeComponentRecipe !== null) {
+    assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+  }
   if (
     validatedDensityTransport !== null
     && (
@@ -58,6 +64,9 @@ export function createKeyboardSurfaceState(
     ...(validatedDensityTransport === null
       ? {}
       : { densityTransport: validatedDensityTransport }),
+    ...(dyeComponentRecipe === null
+      ? {}
+      : { dyeComponentRecipe }),
   });
   const stepResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
     ? surfaceRecipe.axes.verticalUptake
@@ -100,6 +109,7 @@ export function createKeyboardSurfaceState(
     coverage: material,
     densityTransport: simulation.createDensityTransport(inkRecipe),
     paperDepth: simulation.createPaperDepthState(),
+    dyeComponent: simulation.createDyeComponentState(),
   });
 }
 

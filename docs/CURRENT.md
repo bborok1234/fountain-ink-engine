@@ -3,6 +3,7 @@
 > Status: Active experimental library
 > Engine model: `ordinary-js-r13`
 > Ink recipe schema: `6`
+> Dye component model/schema: `dye-component-js-r1 / 1`
 > Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `2`
 
@@ -101,6 +102,15 @@ not duplicate, shadow, or scale a glyph, and it does not claim live pressure,
 angle, double-nib feed reserve, or exact Sailor product reproduction. Existing
 seven nib results and all ordinary material coefficients remain unchanged.
 
+Package `0.20.0-experimental.1` adds the independently versioned
+`edge-dye-study@1` diagnostic component. It deposits a fraction of the base
+pigment mass into separate mobile/fixed planes, follows the same water and
+paper fibre field, applies its own mobility and retention multipliers, and
+uses a separate depth plane on depth-uptake paper. The component has no Optical
+color in A1. With the component absent, no component plane is allocated and
+the ordinary solver bytes remain exact; with it present, ordinary water,
+pigment, coverage, Density transport and final RGBA remain unchanged.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,
@@ -115,8 +125,8 @@ Sites worker, native code, product data model, font, or reference image.
 The Canvas2D keyboard renderer now exposes the existing contact mask,
 accumulated density variation and sample count, optional Surface coverage
 candidate, Surface-resolved Float32 coverage, nullable solver-grid density
-transport, nullable paper-depth pigment state, normalized concentration, and
-optical composite as a
+transport, nullable paper-depth pigment state, nullable diagnostic dye mass,
+normalized concentration, and optical composite as a
 frozen four-stage diagnostic record.
 The former top-level return fields remain same-reference aliases.
 

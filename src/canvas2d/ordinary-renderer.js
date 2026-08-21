@@ -37,6 +37,7 @@ function makeDiagnosticStages({
   resolvedCoverage,
   densityTransport,
   paperDepth,
+  dyeComponent,
   fiberEdgeCoverage,
   normalizedConcentration,
   compositeRgba,
@@ -53,6 +54,7 @@ function makeDiagnosticStages({
       resolvedCoverage,
       densityTransport,
       paperDepth,
+      dyeComponent,
       fiberEdgeCoverage,
       applied: materialCoverageCandidate !== null,
     }),
@@ -185,6 +187,7 @@ export function beginOrdinaryInkMaterial({
   fontSize,
   glyphContacts,
   recipe,
+  dyeComponentRecipe = null,
 }) {
   assertInkRecipeCompatible(recipe);
   assertSurfaceRecipeCompatible(surfaceRecipe);
@@ -213,6 +216,7 @@ export function beginOrdinaryInkMaterial({
         accumulatedVariation: densityField,
         sampleCount: densitySamples,
       }),
+      dyeComponentRecipe,
     );
   const fiberEdgeCoverage = createPaperFiberEdge({
     width: pixelWidth,
@@ -231,6 +235,7 @@ export function beginOrdinaryInkMaterial({
     surfaceCoverageGrid: surfaceState?.coverage ?? null,
     surfaceDensityTransport: surfaceState?.densityTransport ?? null,
     paperDepth: surfaceState?.paperDepth ?? null,
+    dyeComponent: surfaceState?.dyeComponent ?? null,
     fiberEdgeCoverage,
     nibId,
     flow,
@@ -259,6 +264,7 @@ export function completeOrdinaryInkMaterial({
     densitySamples,
     surfaceDensityTransport,
     paperDepth,
+    dyeComponent,
     fiberEdgeCoverage,
     nibId,
     flow,
@@ -301,6 +307,7 @@ export function completeOrdinaryInkMaterial({
     resolvedCoverage,
     densityTransport: surfaceDensityTransport,
     paperDepth,
+    dyeComponent,
     fiberEdgeCoverage,
     normalizedConcentration,
     compositeRgba: result,
@@ -315,6 +322,7 @@ export function completeOrdinaryInkMaterial({
     resolvedCoverage: stages.surface.resolvedCoverage,
     surfaceDensityTransport: stages.surface.densityTransport,
     paperDepth: stages.surface.paperDepth,
+    dyeComponent: stages.surface.dyeComponent,
     fiberEdgeCoverage: stages.surface.fiberEdgeCoverage,
   };
 }
@@ -344,6 +352,7 @@ export function renderOrdinaryInkMaterial({
   fontSize,
   glyphContacts,
   recipe,
+  dyeComponentRecipe = null,
   createLayer = makeLayer,
 }) {
   assertInkRecipeCompatible(recipe);
@@ -379,6 +388,7 @@ export function renderOrdinaryInkMaterial({
     fontSize,
     glyphContacts,
     recipe,
+    dyeComponentRecipe,
   });
   const materialCoverageCandidate = prepared.surfaceCoverageGrid === null
     ? null

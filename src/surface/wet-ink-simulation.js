@@ -3,12 +3,28 @@ import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
 import { assertSurfaceDensityTransportGrid } from "./density-transport.js";
 import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
+import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
 
 const clamp = (value, minimum = 0, maximum = 1) =>
   Math.min(maximum, Math.max(minimum, value));
 
 function assertSeed(value, path) {
   return assertUint32(value, path);
+}
+
+function readOptionalOwnDataProperty(value, name, path) {
+  if (value === null || typeof value !== "object") return undefined;
+  const descriptor = Object.getOwnPropertyDescriptor(value, name);
+  if (descriptor === undefined) {
+    if (name in value) {
+      throw new TypeError(`${path} must be an own property.`);
+    }
+    return undefined;
+  }
+  if (!descriptor.enumerable || !("value" in descriptor)) {
+    throw new TypeError(`${path} must be an enumerable own data property.`);
+  }
+  return descriptor.value;
 }
 
 /**
@@ -39,6 +55,14 @@ export class WetInkSimulation {
     // path keep their exact seven-plane allocation and arithmetic.
     this.subsurfacePigment = null;
     this.subsurfaceSignedMass = null;
+    // Optional P5 dye component. These planes are absent from ordinary and
+    // direct-writing paths. The component shares water but owns its own mass,
+    // mobility and retention response.
+    this.dyeComponentRecipe = null;
+    this.dyeComponentMobile = null;
+    this.dyeComponentFixed = null;
+    this.nextDyeComponentMobile = null;
+    this.dyeComponentSubsurface = null;
     this.activity = 0;
     this.makeFiberField();
   }
@@ -71,6 +95,10 @@ export class WetInkSimulation {
     this.nextMobileSignedMass?.fill(0);
     this.subsurfacePigment?.fill(0);
     this.subsurfaceSignedMass?.fill(0);
+    this.dyeComponentMobile?.fill(0);
+    this.dyeComponentFixed?.fill(0);
+    this.nextDyeComponentMobile?.fill(0);
+    this.dyeComponentSubsurface?.fill(0);
     this.activity = 0;
   }
 
@@ -79,31 +107,15 @@ export class WetInkSimulation {
     if (imageData.width !== this.width || imageData.height !== this.height) {
       throw new Error("Mask dimensions must match the simulation grid.");
     }
-    const densityTransportDescriptor = options === null
-      || typeof options !== "object"
-      ? undefined
-      : Object.getOwnPropertyDescriptor(options, "densityTransport");
-    if (
-      densityTransportDescriptor === undefined
-      && options !== null
-      && typeof options === "object"
-      && "densityTransport" in options
-    ) {
-      throw new TypeError("options.densityTransport must be an own property.");
-    }
-    if (
-      densityTransportDescriptor !== undefined
-      && (!densityTransportDescriptor.enumerable
-        || !("value" in densityTransportDescriptor))
-    ) {
-      throw new TypeError(
-        "options.densityTransport must be an enumerable own data property.",
-      );
-    }
-    const densityTransport = densityTransportDescriptor === undefined
+    const densityTransportValue = readOptionalOwnDataProperty(
+      options,
+      "densityTransport",
+      "options.densityTransport",
+    );
+    const densityTransport = densityTransportValue === undefined
       ? null
       : assertSurfaceDensityTransportGrid(
-        densityTransportDescriptor.value,
+        densityTransportValue,
         "options.densityTransport",
       );
     if (
@@ -117,12 +129,37 @@ export class WetInkSimulation {
         "options.densityTransport dimensions must match the simulation grid.",
       );
     }
+    const dyeComponentRecipe = readOptionalOwnDataProperty(
+      options,
+      "dyeComponentRecipe",
+      "options.dyeComponentRecipe",
+    ) ?? null;
+    if (dyeComponentRecipe !== null) {
+      assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+      if (
+        this.dyeComponentRecipe !== null
+        && (
+          this.dyeComponentRecipe.id !== dyeComponentRecipe.id
+          || this.dyeComponentRecipe.revision !== dyeComponentRecipe.revision
+        )
+      ) {
+        throw new TypeError(
+          "A WetInkSimulation cannot mix different dye component recipes.",
+        );
+      }
+    }
     // Allocate only after the complete payload has been validated and before
     // the first scalar deposit mutation.
     if (densityTransport !== null && this.mobileSignedMass === null) {
       this.mobileSignedMass = new Float32Array(this.length);
       this.fixedSignedMass = new Float32Array(this.length);
       this.nextMobileSignedMass = new Float32Array(this.length);
+    }
+    if (dyeComponentRecipe !== null && this.dyeComponentMobile === null) {
+      this.dyeComponentRecipe = dyeComponentRecipe;
+      this.dyeComponentMobile = new Float32Array(this.length);
+      this.dyeComponentFixed = new Float32Array(this.length);
+      this.nextDyeComponentMobile = new Float32Array(this.length);
     }
 
     for (let y = 0; y < this.height; y += 1) {
@@ -146,14 +183,14 @@ export class WetInkSimulation {
           0,
           1.4,
         );
+        const previousMobile = this.mobile[index];
         if (densityTransport === null) {
           this.mobile[index] = clamp(
-            this.mobile[index] + alpha * options.pigmentLoad * contact,
+            previousMobile + alpha * options.pigmentLoad * contact,
             0,
             1.8,
           );
         } else {
-          const previousMobile = this.mobile[index];
           const nextMobile = clamp(
             previousMobile + alpha * options.pigmentLoad * contact,
             0,
@@ -170,6 +207,15 @@ export class WetInkSimulation {
             nextSigned,
             -nextMobile,
             nextMobile,
+          );
+        }
+        if (dyeComponentRecipe !== null) {
+          const depositedBaseMass = this.mobile[index] - previousMobile;
+          this.dyeComponentMobile[index] = clamp(
+            this.dyeComponentMobile[index]
+              + depositedBaseMass * dyeComponentRecipe.massFraction,
+            0,
+            1.8,
           );
         }
       }
@@ -283,6 +329,12 @@ export class WetInkSimulation {
     ) {
       this.subsurfaceSignedMass = new Float32Array(this.length);
     }
+    if (
+      this.dyeComponentMobile !== null
+      && this.dyeComponentSubsurface === null
+    ) {
+      this.dyeComponentSubsurface = new Float32Array(this.length);
+    }
     let activeWater = 0;
 
     for (let y = 1; y < this.height - 1; y += 1) {
@@ -387,6 +439,48 @@ export class WetInkSimulation {
             nextSubsurface,
           );
         }
+        if (this.dyeComponentMobile !== null) {
+          const componentMobile = this.dyeComponentMobile[index];
+          const componentMobility = pigmentMobility
+            * this.dyeComponentRecipe.mobilityMultiplier;
+          const componentLaplacian =
+            (this.dyeComponentMobile[left] + this.dyeComponentMobile[right]
+              + this.dyeComponentMobile[above]
+              + this.dyeComponentMobile[below] - componentMobile * 4)
+            * componentMobility * clamp(water * 1.35, 0, 1);
+          const componentAfterSpread = Math.max(
+            0,
+            componentMobile + componentLaplacian,
+          );
+          const componentDepth = componentAfterSpread * depthFraction;
+          const componentSurface = componentAfterSpread - componentDepth;
+          const baseFixingFraction = surfaceMobile > 0
+            ? clamp(fixing / surfaceMobile)
+            : 0;
+          const componentFixingFraction = clamp(
+            baseFixingFraction
+              * this.dyeComponentRecipe.retentionMultiplier,
+          );
+          const componentFixing = componentSurface
+            * componentFixingFraction;
+          const componentNextMobile = Math.max(
+            0,
+            componentSurface - componentFixing,
+          );
+          const componentNextFixed = clamp(
+            this.dyeComponentFixed[index] + componentFixing,
+            0,
+            2.1,
+          );
+          const componentNextSubsurface = clamp(
+            this.dyeComponentSubsurface[index] + componentDepth,
+            0,
+            2.1,
+          );
+          this.nextDyeComponentMobile[index] = componentNextMobile;
+          this.dyeComponentFixed[index] = componentNextFixed;
+          this.dyeComponentSubsurface[index] = componentNextSubsurface;
+        }
         activeWater += nextWater;
       }
     }
@@ -399,9 +493,16 @@ export class WetInkSimulation {
         this.mobileSignedMass,
       ];
     }
+    if (this.dyeComponentMobile !== null) {
+      [this.dyeComponentMobile, this.nextDyeComponentMobile] = [
+        this.nextDyeComponentMobile,
+        this.dyeComponentMobile,
+      ];
+    }
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
     this.nextMobileSignedMass?.fill(0);
+    this.nextDyeComponentMobile?.fill(0);
     this.activity = activeWater / this.length;
   }
 
@@ -500,6 +601,39 @@ export class WetInkSimulation {
             nextFixed,
           );
         }
+        if (this.dyeComponentMobile !== null) {
+          const componentMobile = this.dyeComponentMobile[index];
+          const componentMobility = pigmentMobility
+            * this.dyeComponentRecipe.mobilityMultiplier;
+          const componentLaplacian =
+            (this.dyeComponentMobile[left] + this.dyeComponentMobile[right]
+              + this.dyeComponentMobile[above]
+              + this.dyeComponentMobile[below] - componentMobile * 4)
+            * componentMobility * clamp(water * 1.35, 0, 1);
+          const componentAfterDiffusion = Math.max(
+            0,
+            componentMobile + componentLaplacian,
+          );
+          const mobileBeforeFixing = Math.max(0, mobile + mobileLaplacian);
+          const baseFixingFraction = mobileBeforeFixing > 0
+            ? clamp(fixing / mobileBeforeFixing)
+            : 0;
+          const componentFixingFraction = clamp(
+            baseFixingFraction
+              * this.dyeComponentRecipe.retentionMultiplier,
+          );
+          const componentFixing = componentAfterDiffusion
+            * componentFixingFraction;
+          this.nextDyeComponentMobile[index] = Math.max(
+            0,
+            componentAfterDiffusion - componentFixing,
+          );
+          this.dyeComponentFixed[index] = clamp(
+            this.dyeComponentFixed[index] + componentFixing,
+            0,
+            2.1,
+          );
+        }
         activeWater += nextWater;
       }
     }
@@ -512,9 +646,16 @@ export class WetInkSimulation {
         this.mobileSignedMass,
       ];
     }
+    if (this.dyeComponentMobile !== null) {
+      [this.dyeComponentMobile, this.nextDyeComponentMobile] = [
+        this.nextDyeComponentMobile,
+        this.dyeComponentMobile,
+      ];
+    }
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
     this.nextMobileSignedMass?.fill(0);
+    this.nextDyeComponentMobile?.fill(0);
     this.activity = activeWater / this.length;
   }
 
@@ -558,6 +699,21 @@ export class WetInkSimulation {
       signedNumerator: this.subsurfaceSignedMass === null
         ? null
         : new Float32Array(this.subsurfaceSignedMass),
+    });
+  }
+
+  createDyeComponentState() {
+    if (this.dyeComponentMobile === null) return null;
+    return Object.freeze({
+      id: this.dyeComponentRecipe.id,
+      revision: this.dyeComponentRecipe.revision,
+      width: this.width,
+      height: this.height,
+      mobileMass: new Float32Array(this.dyeComponentMobile),
+      fixedMass: new Float32Array(this.dyeComponentFixed),
+      subsurfaceMass: this.dyeComponentSubsurface === null
+        ? null
+        : new Float32Array(this.dyeComponentSubsurface),
     });
   }
 

@@ -15,6 +15,7 @@ import {
 import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain-ink-engine/optical";
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
+import { EDGE_DYE_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/dye-components";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -386,6 +387,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
       "resolvedCoverage",
       "densityTransport",
       "paperDepth",
+      "dyeComponent",
       "fiberEdgeCoverage",
       "applied",
   ]);
@@ -411,6 +413,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.equal(stages.surface.resolvedCoverage.data.length, 18 * 14);
   assert.ok(stages.surface.densityTransport.signedNumerator instanceof Float32Array);
   assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
+  assert.equal(stages.surface.dyeComponent, null);
   assertRgbaShape(stages.optical.compositeRgba, 18, 14);
 
   assert.equal(result.imageData, stages.optical.compositeRgba);
@@ -430,7 +433,40 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
     stages.surface.densityTransport,
   );
   assert.equal(result.paperDepth, stages.surface.paperDepth);
+  assert.equal(result.dyeComponent, stages.surface.dyeComponent);
   assert.equal(result.fiberEdgeCoverage, stages.surface.fiberEdgeCoverage);
+});
+
+test("diagnostic dye state does not alter ordinary renderer output", () => {
+  const { options } = makeOptions(42);
+  const ordinary = renderOrdinaryInkMaterial(options);
+  const component = renderOrdinaryInkMaterial({
+    ...options,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R1,
+  });
+  assert.deepEqual(component.imageData.data, ordinary.imageData.data);
+  assert.deepEqual(
+    component.stages.surface.materialCoverageCandidate.data,
+    ordinary.stages.surface.materialCoverageCandidate.data,
+  );
+  assert.deepEqual(
+    component.stages.surface.resolvedCoverage.data,
+    ordinary.stages.surface.resolvedCoverage.data,
+  );
+  assert.deepEqual(
+    component.stages.surface.densityTransport,
+    ordinary.stages.surface.densityTransport,
+  );
+  assert.deepEqual(
+    component.stages.surface.paperDepth,
+    ordinary.stages.surface.paperDepth,
+  );
+  assert.equal(ordinary.stages.surface.dyeComponent, null);
+  assert.ok(
+    component.stages.surface.dyeComponent.mobileMass.some(
+      (value) => value > 0,
+    ),
+  );
 });
 
 test("absorbent r2 preserves the Contact core and confines coarse Surface spread", () => {
@@ -595,6 +631,7 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
   assert.ok(result.stages.surface.resolvedCoverage.data.some((value) => value > 0));
   assert.equal(result.stages.surface.densityTransport, null);
   assert.equal(result.stages.surface.paperDepth, null);
+  assert.equal(result.stages.surface.dyeComponent, null);
   assert.equal(result.surfaceDensityTransport, null);
   assert.equal(result.materialCoverage, null);
   assert.ok(result.stages.contact.rgbaMask.data.some((value, index) => (

@@ -1044,3 +1044,52 @@ they are not automatically promoted to timeless pass/fail truth.
   for color separation/edge concentration. First prove that disabling the new
   component preserves the selected ordinary recipe exactly; then close the
   remaining P2 optional-component-off invariant.
+
+## E-025-independent-dye-component-state / A1
+
+- Parent: `E-024-cross-music-contact / A1`
+- Ordinary engine model: `ordinary-js-r13` (unchanged)
+- Dye component model/schema: `dye-component-js-r1 / 1`
+- Package: `0.20.0-experimental.1`
+- Ink recipe schema: `6` (unchanged)
+- Fixture manifest: `2`
+- Status: passed structural checkpoint
+- Hypothesis: visible dual shading should begin with separately conserved dye
+  state, not an outline filter. A second dye can share the ordinary wet
+  footprint while owning different mass, mobility and retention, and disabling
+  it must preserve the chosen ordinary calculation exactly.
+- Research evidence: a porous-paper study reports evaporation,
+  chromatographic and filtration effects in liquid stains
+  ([Chemical Engineering Science, 2015](https://www.sciencedirect.com/science/article/pii/S0009250915001232),
+  DOI 10.1016/j.ces.2015.02.017). A primary inkjet study shows that different
+  dye interactions with a porous matrix cause component separation
+  ([ACS/PMC, 2021](https://pmc.ncbi.nlm.nih.gov/articles/PMC8515847/)).
+  Fountain-pen ink analysis by HPLC identifies multiple main/minor dye
+  components
+  ([Forensic Science International, 2008](https://www.sciencedirect.com/science/article/pii/S0379073808002855),
+  DOI 10.1016/j.forsciint.2008.06.008). These sources support separate state;
+  they do not prescribe Fountain's authored coefficients.
+- Authored state: `edge-dye-study@1` deposits `0.32` of the accepted base mass
+  into its own mobile plane, applies `1.45×` mobility and `0.62×` retention,
+  and transfers the same local share into a separate subsurface plane on
+  depth-uptake paper. It reads the existing deterministic water/fibre field but
+  never writes ordinary water, mobile pigment or fixed pigment.
+- Automated evidence: component off allocates zero dedicated planes and keeps
+  ordinary water/mobile/fixed/depth bytes exact. Component on is deterministic,
+  finite and nonnegative; it reaches more solver cells and fixes a smaller mass
+  share than the base pigment. Coverage, Density transport, paper depth and
+  final ordinary RGBA stay exact. Invalid/accessor recipes fail before deposit
+  mutation or component allocation. The component identity has an independent
+  canonical serialization and rejects same-revision retuning.
+- Harness boundary: `?diagnostics=1&dye-component=1` passes the public component
+  recipe into the one synchronous material solve and shows mobile/fixed/depth
+  totals inside the Surface card. The default page and direct-writing lab do
+  not enable it.
+- Learned: a physically plausible state exists, but its existence alone is not
+  a visible color edge. No Optical color, outline, edge threshold or page-relative
+  normalization was added, so P5-A's internal-vs-edge diagnostic and
+  discontinuous edge accumulation remain open.
+- Next different method: derive separate interior concentration and boundary
+  enrichment diagnostics from base/component mass ratios. Only after those
+  fields are stable should an Optical color curve be authored; never color the
+  complete glyph boundary as a uniform outline.
