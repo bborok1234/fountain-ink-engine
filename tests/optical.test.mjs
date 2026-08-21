@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compositeOrdinaryOptical } from "../src/optical/index.js";
+import {
+  compositeDyeEdgeOptical,
+  compositeOrdinaryOptical,
+} from "../src/optical/index.js";
+import { EDGE_DYE_COMPONENT_RECIPE_R4 } from "../src/dye-components/index.js";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -97,5 +101,68 @@ test("Optical rejects malformed scalar planes before mutating output", () => {
     recipe: ORDINARY_GREEN_RECIPE_R12,
     output,
   }), /concentration data must be finite/);
+  assert.deepEqual(Array.from(output.data), [9, 8, 7, 6]);
+});
+
+test("dye edge Optical mixes RGB in place without changing alpha or coverage", () => {
+  const base = {
+    width: 3,
+    height: 1,
+    data: new Uint8ClampedArray([
+      29, 55, 40, 200,
+      29, 55, 40, 200,
+      29, 55, 40, 0,
+    ]),
+  };
+  const result = compositeDyeEdgeOptical({
+    pixelWidth: 3,
+    pixelHeight: 1,
+    baseRgba: base,
+    dyeComponent: {
+      id: "edge-dye-study",
+      revision: 4,
+      width: 3,
+      height: 1,
+      edgeAccumulation: new Float32Array([0.1, 0.1, 0.1]),
+      expectedFraction: 0.25,
+      fractionDelta: new Float32Array([0.3, 0, 0.3]),
+    },
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R4,
+  });
+  assert.equal(result, base);
+  assert.deepEqual(Array.from(result.data), [
+    107, 49, 67, 200,
+    29, 55, 40, 200,
+    29, 55, 40, 0,
+  ]);
+});
+
+test("dye edge Optical validates the complete candidate before output mutation", () => {
+  const base = {
+    width: 1,
+    height: 1,
+    data: new Uint8ClampedArray([29, 55, 40, 200]),
+  };
+  const output = {
+    width: 1,
+    height: 1,
+    data: new Uint8ClampedArray([9, 8, 7, 6]),
+  };
+  assert.throws(() => compositeDyeEdgeOptical({
+    pixelWidth: 1,
+    pixelHeight: 1,
+    baseRgba: base,
+    dyeComponent: {
+      id: "edge-dye-study",
+      revision: 4,
+      width: 1,
+      height: 1,
+      edgeAccumulation: new Float32Array([Number.NaN]),
+      expectedFraction: 0.25,
+      fractionDelta: new Float32Array([0.3]),
+    },
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R4,
+    output,
+  }), /edgeAccumulation values must be finite/);
   assert.deepEqual(Array.from(output.data), [9, 8, 7, 6]);
 });

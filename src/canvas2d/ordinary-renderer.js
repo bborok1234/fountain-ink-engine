@@ -3,7 +3,10 @@ import {
   createOrdinaryConcentrationField,
 } from "../density/index.js";
 import { assertDensityFieldInputs } from "../density/ordinary-density.js";
-import { compositeOrdinaryOptical } from "../optical/index.js";
+import {
+  compositeDyeEdgeOptical,
+  compositeOrdinaryOptical,
+} from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 import {
@@ -236,6 +239,7 @@ export function beginOrdinaryInkMaterial({
     surfaceDensityTransport: surfaceState?.densityTransport ?? null,
     paperDepth: surfaceState?.paperDepth ?? null,
     dyeComponent: surfaceState?.dyeComponent ?? null,
+    dyeComponentRecipe,
     fiberEdgeCoverage,
     nibId,
     flow,
@@ -265,6 +269,7 @@ export function completeOrdinaryInkMaterial({
     surfaceDensityTransport,
     paperDepth,
     dyeComponent,
+    dyeComponentRecipe,
     fiberEdgeCoverage,
     nibId,
     flow,
@@ -291,7 +296,7 @@ export function completeOrdinaryInkMaterial({
     surfaceRecipe,
     recipe,
   });
-  const result = compositeOrdinaryOptical({
+  const ordinaryResult = compositeOrdinaryOptical({
     pixelWidth,
     pixelHeight,
     concentration: normalizedConcentration,
@@ -299,6 +304,24 @@ export function completeOrdinaryInkMaterial({
     recipe,
     output,
   });
+  const result = dyeComponent === null || dyeComponentRecipe === null
+    ? ordinaryResult
+    : (() => {
+      const structuralRgba = {
+        width: pixelWidth,
+        height: pixelHeight,
+        data: ordinaryResult.data,
+      };
+      compositeDyeEdgeOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: structuralRgba,
+        dyeComponent,
+        dyeComponentRecipe,
+        output: structuralRgba,
+      });
+      return ordinaryResult;
+    })();
   const stages = makeDiagnosticStages({
     rgbaMask: maskPixels,
     accumulatedVariation: densityField,
