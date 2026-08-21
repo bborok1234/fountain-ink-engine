@@ -331,6 +331,15 @@ importable and that the source has no forbidden application dependency.
 - `recipeSchemaVersion`: changes when serialized material inputs change shape.
 - `fixtureManifestVersion`: changes when experiment/checkpoint metadata changes.
 
+Fixture manifest v3 adds two explicit records without changing material
+calculation. `componentInputs` stores each active specialty family with its
+complete compatible recipe, observation and optional seed. `renderContext`
+stores the literal text and actual grapheme list, one uint32 seed per grapheme,
+seed-derivation ids, Surface seed, nib/flow/font-size/origin, viewport/DPR/raster
+facts, font package/file SHA-256 and dependency-lock SHA-256. The client must
+supply every fact; the engine only validates and freezes it. Historical v1/v2
+records retain their exact older shapes.
+
 An authored recipe additionally has an `id` and `revision`. Changing its result
 requires a new revision; changing the serialized field shape requires a new
 `recipeSchemaVersion`.

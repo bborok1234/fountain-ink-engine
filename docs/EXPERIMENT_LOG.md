@@ -1570,3 +1570,54 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: P5 is now complete at its current checklist boundary.
   Return to the first unchecked P6 checkpoint/version and stable-output work
   rather than adding another visual material family.
+
+## E-036-replay-context-checkpoint-manifest-v3 / A1
+
+- Parent: P6 version and determinism / replay-critical input handoff
+- Engine/recipe/Surface calculation: unchanged (`ordinary-js-r13`, ink schema
+  `6`, paper Surface models unchanged)
+- Fixture manifest: `2` → `3`
+- Package: `0.30.0-experimental.1`
+- Status: passed structural, Workbench and desktop/mobile browser observation
+- Hypothesis: a checkpoint can preserve every input needed to explain a browser
+  render without treating the current pixels as permanent artistic truth and
+  without inventing font, seed, runtime or component facts inside the engine.
+- Gap found: manifest v2 stored ink and paper recipes plus one generic seed, but
+  omitted literal text, host grapheme segmentation, per-glyph cadence seeds,
+  Surface seed, nib/flow/size/origin, viewport/DPR/raster scale, font asset
+  identity, dependency lock identity and all P5 component recipes/observations.
+- V3 contract: strict `renderContext` stores the literal string, actual grapheme
+  array, one uint32 seed per grapheme, glyph and Surface seed-derivation ids,
+  explicit Surface seed, nib/flow/font size/normalized position, viewport,
+  DPR/raster/color-space facts, font family/weight/style/package/version/load
+  state and WOFF2 SHA-256, plus package-lock SHA-256. Graphemes must reconstruct
+  the literal string and seed count must match grapheme count exactly.
+- Component contract: strict `componentInputs` stores zero or one entry per
+  supported family with the full compatible recipe, explicit observation and
+  optional seed. The existing one-slot solver rule rejects simultaneous dye and
+  pigment. Oxidation timestamps, sheen view, shimmer light/Reduce Motion and
+  shimmer seed therefore survive a handoff rather than hiding in UI state.
+- Integrity evidence: the Workbench test hashes the actual imported Nanum Pen
+  Script Korean WOFF2 to
+  `244502434003503d35bb673087dcdb2484fd1bccf19880d79379563ac93c0038`
+  and its current package lock to
+  `876f8fd55de2dd52ca46c58c284edb8ba9dc48f2e6320777574371b5ad4ec068`.
+  A dependency or font change fails the checkpoint test until the new evidence
+  is reviewed and recorded.
+- Backward compatibility: v1 and v2 keep their exact key sets and validate
+  without fabricated render context. V3 objects reject missing/extra keys,
+  accessors, sparse arrays, grapheme/text mismatch, seed-count mismatch,
+  invalid hashes, unsupported component families and forged registered recipes.
+- Workbench evidence: the visible one-click capture recorded fixture v3 with 23
+  graphemes, 23 explicit seeds, one oxidation component and its 90-second
+  observation. Desktop recorded 1280×720/DPR2/raster2; a fresh 390×844 capture
+  recorded 390×844/DPR1/raster1. The long JSON remains horizontally contained,
+  and browser warning/error stayed empty with one in-app tab.
+- A1 limit: `navigator.userAgent` identifies the segmentation/runtime host but
+  is not an ICU data-file hash. Persisting the actual grapheme array removes
+  ambiguity for replay; cross-browser byte equality and the relationship
+  between this input manifest and named field signatures remain the next P6
+  stable-output contract.
+- Next different method: define stable output by named deterministic stage
+  signatures for one manifest, with an explicit environment scope and without
+  promoting a screenshot to a permanent golden.

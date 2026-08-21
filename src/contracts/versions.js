@@ -5,7 +5,7 @@ export const engineModelVersion = "ordinary-js-r13";
 export const recipeSchemaVersion = 6;
 
 /** Experiment/checkpoint metadata shape. */
-export const fixtureManifestVersion = 2;
+export const fixtureManifestVersion = 3;
 
 export const ENGINE_VERSIONS = Object.freeze({
   engineModelVersion,

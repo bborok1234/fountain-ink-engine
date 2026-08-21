@@ -188,6 +188,20 @@ existing ink alpha and leaves Contact, Density, Surface coverage and alpha exact
 The built-in 90-second half-life is an authored digital study value, not a
 measured claim about a commercial ink.
 
+## Versioned experiment checkpoints
+
+Package `0.30.0-experimental.1` makes fixture manifest v3 the current
+checkpoint shape. Alongside the full ink and paper recipes, it stores strict
+`componentInputs` and a `renderContext` containing literal text, the actual
+host-produced grapheme list, every explicit glyph seed and derivation id,
+Surface seed, nib/flow/size/origin, viewport/DPR/raster facts, font identity and
+asset SHA-256, and dependency-lock SHA-256. The engine validates and freezes
+these values but never invents browser, font, time, or seed facts.
+
+Manifest v1 and v2 remain archival and do not receive fabricated v3 fields.
+The checkpoint is a replay/handoff input contract, not a permanent artistic
+pixel golden. Named field signatures remain separate observation evidence.
+
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior
 is selected independently from `./surface-recipes`: smooth, balanced, or
