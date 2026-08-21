@@ -93,6 +93,14 @@ normalized concentration and final Optical signatures. A translation fixture
 also proves that the same explicit seed and phase-relative Contact preserve a
 glyph-local Density signature while the page signature changes with placement.
 
+The final calculation-independent P2 validity matrix renders all 7 active nibs,
+4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 252 cases. Every
+page plane has its exact declared length, Float32 fields are finite and bounded,
+nonblank Contact remains nonblank through resolved coverage and Optical alpha,
+signed Surface/depth numerators stay within their positive carriers, and the
+retained diagnostic buffers remain below the explicit
+`32 × pagePixels + 16 × surfaceGridCells` structural budget.
+
 The engine contains no React component, text control, Vite configuration,
 Sites worker, native code, product data model, font, or reference image.
 
