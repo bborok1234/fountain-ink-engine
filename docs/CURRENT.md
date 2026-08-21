@@ -1,9 +1,9 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r9`
+> Engine model: `ordinary-js-r10`
 > Ink recipe schema: `6`
-> Surface model/schema: `paper-surface-js-r1 / 1`
+> Surface model/schema: `paper-surface-js-r2 / 2` (absorbent r2), with r1 smooth/balanced preserved
 > Fixture manifest: `2`
 
 ## Now
@@ -18,13 +18,14 @@ The first extraction deliberately keeps the accepted ordinary-ink formulas:
 - signed glyph-local density variation bounded by calibrated alpha endpoints;
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
-Ink constants now live in the immutable active `ordinary-green-r8` control
-recipe and the blue-black, burgundy, and teal r2 ordinary recipes. Paper
-behavior lives separately in `paper-smooth-r1`, `paper-balanced-r1`, and
-`paper-absorbent-r1`. `ordinary-green-r1` through `ordinary-green-r7`
+Ink constants now live in the immutable active `ordinary-green-r9` control
+recipe and the blue-black, burgundy, and teal r3 ordinary recipes. Paper
+behavior lives separately in `paper-smooth-r1`, `paper-balanced-r1`, and the
+active `paper-absorbent-r2`; `paper-absorbent-r1` remains historical evidence.
+`ordinary-green-r1` through `ordinary-green-r8`
 remain registered and structurally readable as archival `ordinary-js-r2`
-through `ordinary-js-r7` checkpoints, but they are not calculation-compatible
-with the active r9 model. Nib, flow, Surface recipe,
+through `ordinary-js-r9` checkpoints, but they are not calculation-compatible
+with the active r10 model. Nib, flow, Surface recipe,
 layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
@@ -34,16 +35,21 @@ for built-in identities.
 
 Fixture-manifest v2 records ink and Surface identities independently. The v1
 reader and historical ink schemas remain archival and are never implicitly
-migrated; only compatible schema-6 ink plus schema-1 Surface recipes enter the
-current material calculation.
+migrated; only compatible schema-6 ink plus an explicitly supported schema-1
+or schema-2 Surface recipe enters the current material calculation. Both
+Surface schemas remain explicit;
+there is no implicit conversion of `verticalUptake` into paper depth.
 
-Paper Surface is an explicit eight-axis recipe. Vertical uptake, lateral
-mobility, dye affinity, surface retention, film preservation and roughness feed
-the current solver independently. Particle catch and paper reflectance are
+Paper Surface is an explicit eight-axis recipe. The historical r1 family keeps
+`verticalUptake`; the r2 absorbent family replaces that ambiguous page-plane
+axis with `depthUptake`. Lateral mobility now controls both page X/Y diffusion,
+while depth uptake transfers water and mobile pigment locally into a lazy
+subsurface state. Dye affinity, surface retention, film preservation and
+roughness remain independent. Particle catch and paper reflectance are
 versioned hooks for later specialty/optical work and are neutral today. The
-balanced paper reproduces the former absorption-42 coverage and direct solver
-state byte-for-byte; absorbent paper uses stronger vertical than lateral motion
-so its edge softens without becoming a generic blur.
+smooth and balanced r1 papers keep their prior bytes. Absorbent r2 preserves a
+readable Contact core, limits coarse lateral spread and reports pigment stored
+below the visible paper surface.
 
 The engine contains no React component, text control, Vite configuration,
 Sites worker, native code, product data model, font, or reference image.
@@ -51,7 +57,8 @@ Sites worker, native code, product data model, font, or reference image.
 The Canvas2D keyboard renderer now exposes the existing contact mask,
 accumulated density variation and sample count, optional Surface coverage
 candidate, Surface-resolved Float32 coverage, nullable solver-grid density
-transport, normalized concentration, and optical composite as a
+transport, nullable paper-depth pigment state, normalized concentration, and
+optical composite as a
 frozen four-stage diagnostic record.
 The former top-level return fields remain same-reference aliases.
 
@@ -144,6 +151,10 @@ matching direct-pad color projection.
   Strict append-after-drying semantics would require incremental state and is
   not claimed here. A zero transported carrier intentionally has no ratio and
   retains the mean-density fallback.
+- The r2 paper-depth state is a local scalar depth bucket, not a layered paper
+  cross-section or reverse-side bleed-through renderer. Sparse high-resolution
+  fibre feathering remains a separate future operator if normal-size evidence
+  requires it.
 - The maximum 320×240 transport solve adds 921,600 bytes of lazy solver state,
   614,400 bytes of transient resampled input, and a 614,400-byte returned grid.
   No full-page Float32 transport output is retained. Browser frame budgets are

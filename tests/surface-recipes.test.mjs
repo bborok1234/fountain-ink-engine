@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import test from "node:test";
 import {
   PAPER_SURFACE_ABSORBENT_R1,
+  PAPER_SURFACE_ABSORBENT_R2,
   PAPER_SURFACE_BALANCED_R1,
   PAPER_SURFACE_SMOOTH_R1,
   assertSurfaceRecipeCompatible,
@@ -15,6 +16,7 @@ const SURFACES = [
   [PAPER_SURFACE_SMOOTH_R1, "a33fba2a677e213b247ca65ec1905b218ba3c582fe4900f37e0604881c15a612"],
   [PAPER_SURFACE_BALANCED_R1, "abdf381b4206322b9884b2a8643f3c0836a7d98934fdf1ec2da73064c617d9d2"],
   [PAPER_SURFACE_ABSORBENT_R1, "aa289f94e40264db2325459eeb8fcf29b7c805a093a14cde321c82cd34b7851f"],
+  [PAPER_SURFACE_ABSORBENT_R2, "8f4297d3bd38d8598fd0e05d675a2f8cb6c50e8114e7e9c3e2170a66264c862b"],
 ];
 
 test("paper Surface recipes are immutable, canonical, and independently pinned", () => {
@@ -49,6 +51,21 @@ test("paper axes encode uptake, lateral mobility, retention, and shading indepen
   );
   assert.ok(
     PAPER_SURFACE_SMOOTH_R1.keyboard.contactRetentionFloor
+      > PAPER_SURFACE_ABSORBENT_R1.keyboard.contactRetentionFloor,
+  );
+});
+
+test("absorbent r2 separates paper depth from page-plane mobility", () => {
+  assert.equal(PAPER_SURFACE_ABSORBENT_R2.surfaceRecipeSchemaVersion, 2);
+  assert.equal(PAPER_SURFACE_ABSORBENT_R2.surfaceModelVersion, "paper-surface-js-r2");
+  assert.ok(
+    PAPER_SURFACE_ABSORBENT_R2.axes.depthUptake
+      > PAPER_SURFACE_ABSORBENT_R2.axes.lateralMobility,
+  );
+  assert.equal("verticalUptake" in PAPER_SURFACE_ABSORBENT_R2.axes, false);
+  assert.equal("stepUptakeGain" in PAPER_SURFACE_ABSORBENT_R2.keyboard, false);
+  assert.ok(
+    PAPER_SURFACE_ABSORBENT_R2.keyboard.contactRetentionFloor
       > PAPER_SURFACE_ABSORBENT_R1.keyboard.contactRetentionFloor,
   );
 });

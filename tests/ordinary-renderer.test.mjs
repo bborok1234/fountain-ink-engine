@@ -9,14 +9,15 @@ import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R2,
-  ORDINARY_BURGUNDY_RECIPE_R2,
-  ORDINARY_GREEN_RECIPE_R8,
-  ORDINARY_TEAL_RECIPE_R2,
+  ORDINARY_BLUE_BLACK_RECIPE_R3,
+  ORDINARY_BURGUNDY_RECIPE_R3,
+  ORDINARY_GREEN_RECIPE_R9,
+  ORDINARY_TEAL_RECIPE_R3,
 } from "fountain-ink-engine/recipes";
 import { legacySurfaceAt } from "./helpers/material-fixtures.mjs";
 import {
   PAPER_SURFACE_ABSORBENT_R1,
+  PAPER_SURFACE_ABSORBENT_R2,
   PAPER_SURFACE_BALANCED_R1,
   PAPER_SURFACE_SMOOTH_R1,
 } from "fountain-ink-engine/surface-recipes";
@@ -201,7 +202,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R8,
+      recipe: ORDINARY_GREEN_RECIPE_R9,
       createLayer: makeCanvas,
     },
     mask,
@@ -321,10 +322,11 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
     "normalizedConcentration",
   ]);
   assert.deepEqual(Object.keys(stages.surface), [
-    "materialCoverageCandidate",
-    "resolvedCoverage",
-    "densityTransport",
-    "applied",
+      "materialCoverageCandidate",
+      "resolvedCoverage",
+      "densityTransport",
+      "paperDepth",
+      "applied",
   ]);
   assert.deepEqual(Object.keys(stages.optical), ["compositeRgba"]);
   assert.ok(Object.isFrozen(stages));
@@ -366,6 +368,48 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
     result.surfaceDensityTransport,
     stages.surface.densityTransport,
   );
+  assert.equal(result.paperDepth, stages.surface.paperDepth);
+});
+
+test("absorbent r2 preserves the Contact core and confines coarse Surface spread", () => {
+  const { options } = makeOptions(42);
+  const render = (surfaceRecipe) => renderOrdinaryInkMaterial({
+    ...options,
+    surfaceRecipe,
+  });
+  const r1 = render(PAPER_SURFACE_ABSORBENT_R1);
+  const r2 = render(PAPER_SURFACE_ABSORBENT_R2);
+  assert.deepEqual(
+    r2.stages.contact.rgbaMask.data,
+    r1.stages.contact.rgbaMask.data,
+  );
+  assert.deepEqual(
+    r2.stages.density.accumulatedVariation,
+    r1.stages.density.accumulatedVariation,
+  );
+  assert.ok(r2.stages.surface.paperDepth);
+  assert.ok(r2.stages.surface.paperDepth.pigment.some((value) => value > 0));
+  assert.equal(r1.stages.surface.paperDepth, null);
+  assert.ok(
+    r2.stages.surface.resolvedCoverage.materialMix
+      < r1.stages.surface.resolvedCoverage.materialMix,
+  );
+  let r1Outside = 0;
+  let r2Outside = 0;
+  for (let index = 0; index < options.pixelWidth * options.pixelHeight; index += 1) {
+    const contact = r2.stages.contact.rgbaMask.data[index * 4 + 3] / 255;
+    const r2Coverage = r2.stages.surface.resolvedCoverage.data[index];
+    if (contact >= 0.5) {
+      assert.ok(
+        r2Coverage + 1e-7
+          >= contact * PAPER_SURFACE_ABSORBENT_R2.keyboard.contactRetentionFloor,
+      );
+    } else if (contact === 0) {
+      if (r1.stages.surface.resolvedCoverage.data[index] > 0.1) r1Outside += 1;
+      if (r2Coverage > 0.1) r2Outside += 1;
+    }
+  }
+  assert.ok(r2Outside <= r1Outside);
 });
 
 test("paper recipes change Surface response without changing Contact or Density accident", () => {
@@ -417,6 +461,7 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
   assert.equal(result.stages.surface.materialCoverageCandidate, null);
   assert.ok(result.stages.surface.resolvedCoverage.data.some((value) => value > 0));
   assert.equal(result.stages.surface.densityTransport, null);
+  assert.equal(result.stages.surface.paperDepth, null);
   assert.equal(result.surfaceDensityTransport, null);
   assert.equal(result.materialCoverage, null);
   assert.ok(result.stages.contact.rgbaMask.data.some((value, index) => (
@@ -429,10 +474,10 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
 
 test("ordinary color recipes change only Optical RGB for the same material solve", () => {
   const recipes = [
-    ORDINARY_GREEN_RECIPE_R8,
-    ORDINARY_BLUE_BLACK_RECIPE_R2,
-    ORDINARY_BURGUNDY_RECIPE_R2,
-    ORDINARY_TEAL_RECIPE_R2,
+    ORDINARY_GREEN_RECIPE_R9,
+    ORDINARY_BLUE_BLACK_RECIPE_R3,
+    ORDINARY_BURGUNDY_RECIPE_R3,
+    ORDINARY_TEAL_RECIPE_R3,
   ];
   const results = recipes.map((recipe) => {
     const { options } = makeOptions(42);
@@ -556,7 +601,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -652,7 +697,7 @@ test("a far suffix preserves the complete existing material crop at absorption 4
     flow: 58,
     scale: 1,
     fontSize: 12,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     createLayer: makeCanvas,
   };
   const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
@@ -790,7 +835,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);

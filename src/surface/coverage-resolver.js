@@ -76,8 +76,11 @@ export function resolveKeyboardSurfaceCoverage(options) {
       pixelCount,
       "materialCoverageCandidate",
     );
+  const geometryResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
+    ? surfaceRecipe.axes.verticalUptake
+    : surfaceRecipe.axes.lateralMobility;
   const materialMix = Math.pow(
-    surfaceRecipe.axes.verticalUptake,
+    geometryResponse,
     surfaceRecipe.keyboard.coverageMixExponent,
   );
   const resolvedCoverage = new Float32Array(pixelCount);

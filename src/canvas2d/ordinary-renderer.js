@@ -25,6 +25,7 @@ function makeDiagnosticStages({
   materialCoverageCandidate,
   resolvedCoverage,
   densityTransport,
+  paperDepth,
   normalizedConcentration,
   compositeRgba,
 }) {
@@ -39,6 +40,7 @@ function makeDiagnosticStages({
       materialCoverageCandidate,
       resolvedCoverage,
       densityTransport,
+      paperDepth,
       applied: materialCoverageCandidate !== null,
     }),
     optical: Object.freeze({ compositeRgba }),
@@ -153,6 +155,7 @@ function makeKeyboardSurfaceState({
       pixelHeight,
     ),
     densityTransport: surfaceState.densityTransport,
+    paperDepth: surfaceState.paperDepth,
   });
 }
 
@@ -202,7 +205,13 @@ export function renderOrdinaryInkMaterial({
     pixelWidth,
     pixelHeight,
   );
-  const surfaceState = surfaceRecipe.axes.verticalUptake > 0.002
+  const surfaceResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
+    ? surfaceRecipe.axes.verticalUptake
+    : Math.max(
+      surfaceRecipe.axes.depthUptake,
+      surfaceRecipe.axes.lateralMobility,
+    );
+  const surfaceState = surfaceResponse > 0.002
     ? makeKeyboardSurfaceState({
       mask,
       maskPixels,
@@ -220,6 +229,7 @@ export function renderOrdinaryInkMaterial({
     : null;
   const materialCoverage = surfaceState?.materialCoverageCandidate ?? null;
   const surfaceDensityTransport = surfaceState?.densityTransport ?? null;
+  const paperDepth = surfaceState?.paperDepth ?? null;
   const resolvedCoverage = resolveKeyboardSurfaceCoverage({
     width: pixelWidth,
     height: pixelHeight,
@@ -255,6 +265,7 @@ export function renderOrdinaryInkMaterial({
     materialCoverageCandidate: materialCoverage,
     resolvedCoverage,
     densityTransport: surfaceDensityTransport,
+    paperDepth,
     normalizedConcentration,
     compositeRgba: result,
   });
@@ -267,5 +278,6 @@ export function renderOrdinaryInkMaterial({
     materialCoverage: stages.surface.materialCoverageCandidate,
     resolvedCoverage: stages.surface.resolvedCoverage,
     surfaceDensityTransport: stages.surface.densityTransport,
+    paperDepth: stages.surface.paperDepth,
   };
 }

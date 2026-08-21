@@ -12,13 +12,13 @@ import {
   ORDINARY_GREEN_RECIPE_R3,
   ORDINARY_GREEN_RECIPE_R5,
   ORDINARY_GREEN_RECIPE_R6,
-  ORDINARY_GREEN_RECIPE_R8,
+  ORDINARY_GREEN_RECIPE_R9,
   assertInkRecipeCompatible,
 } from "../src/recipes/index.js";
 import { PAPER_SURFACE_BALANCED_R1 } from "../src/surface-recipes/index.js";
 
 test("publishes three independent engine version axes", () => {
-  assert.equal(engineModelVersion, "ordinary-js-r9");
+  assert.equal(engineModelVersion, "ordinary-js-r10");
   assert.equal(recipeSchemaVersion, 6);
   assert.equal(fixtureManifestVersion, 2);
   assert.deepEqual(ENGINE_VERSIONS, {
@@ -34,7 +34,7 @@ test("creates explicit immutable experiment records without a wall clock", () =>
     id: "E-002-blue-ordinary",
     hypothesis: "A blue dye curve can reuse the same geometry.",
     seed: 42,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
     expected: "Geometry is unchanged.",
   });
@@ -51,21 +51,21 @@ test("rejects implicit, invalid, or non-serializable experiment inputs", () => {
     id: "",
     hypothesis: "missing id",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
   }));
   assert.throws(() => createExperimentRecord({
     id: "E-x",
     hypothesis: "aliased seed",
     seed: 0x1_0000_0000,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
   }), /unsigned 32-bit integer/);
   assert.throws(() => createExperimentRecord({
     id: "E-x",
     hypothesis: "invalid seed",
     seed: -1,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
   }));
   assert.throws(() => createExperimentRecord({
@@ -78,7 +78,7 @@ test("rejects implicit, invalid, or non-serializable experiment inputs", () => {
     id: "E-x",
     hypothesis: "mismatched model",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
     engineModelVersion: "something-else",
   }), /must match/);
@@ -86,7 +86,7 @@ test("rejects implicit, invalid, or non-serializable experiment inputs", () => {
     id: "E-x",
     hypothesis: "mismatched schema",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
     recipeSchemaVersion: 999,
   }), /Unsupported experiment recipeSchemaVersion/);
@@ -94,14 +94,14 @@ test("rejects implicit, invalid, or non-serializable experiment inputs", () => {
     id: "E-x",
     hypothesis: "unknown fixture schema",
     seed: 1,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
     fixtureManifestVersion: 999,
   }), /Unsupported fixtureManifestVersion/);
 });
 
 test("experiment records deeply freeze a pre-frozen recipe root", () => {
-  const clone = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const clone = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   Object.freeze(clone);
   const record = createExperimentRecord({
     id: "E-deep-freeze",
@@ -117,7 +117,7 @@ test("experiment records deeply freeze a pre-frozen recipe root", () => {
 });
 
 test("experiment records reject a forged built-in recipe identity", () => {
-  const impostor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const impostor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   impostor.density.meanBase = 0.75;
   assert.throws(() => createExperimentRecord({
     id: "E-forged-built-in",
@@ -139,7 +139,7 @@ test("experiment metadata rejects accessors that outlive deep freezing", () => {
     id: "E-accessor-observation",
     hypothesis: "Observation evidence must be immutable plain data.",
     seed: 10,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
     observed,
   }), /result must be an enumerable data property/);
@@ -152,10 +152,10 @@ test("experiment records require their complete schema as own data", () => {
     id: "E-own-data",
     hypothesis: "Checkpoint fields cannot come from a polluted prototype.",
     seed: 11,
-    recipe: ORDINARY_GREEN_RECIPE_R8,
+    recipe: ORDINARY_GREEN_RECIPE_R9,
     surfaceRecipe: PAPER_SURFACE_BALANCED_R1,
   });
-  const missingOwnFields = { recipe: ORDINARY_GREEN_RECIPE_R8 };
+  const missingOwnFields = { recipe: ORDINARY_GREEN_RECIPE_R9 };
   assert.throws(
     () => validateExperimentRecord(missingOwnFields),
     /fixtureManifestVersion must be an enumerable own data property/,

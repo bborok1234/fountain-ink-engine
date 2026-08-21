@@ -1,4 +1,4 @@
-const AXIS_KEYS = Object.freeze([
+const AXIS_KEYS_R1 = Object.freeze([
   "verticalUptake",
   "lateralMobility",
   "dyeAffinity",
@@ -9,7 +9,18 @@ const AXIS_KEYS = Object.freeze([
   "paperReflectance",
 ]);
 
-const KEYBOARD_KEYS = Object.freeze([
+const AXIS_KEYS_R2 = Object.freeze([
+  "depthUptake",
+  "lateralMobility",
+  "dyeAffinity",
+  "surfaceRetention",
+  "filmPreservation",
+  "roughness",
+  "particleCatch",
+  "paperReflectance",
+]);
+
+const KEYBOARD_KEYS_R1 = Object.freeze([
   "stepBase",
   "stepUptakeGain",
   "stepMilliseconds",
@@ -18,6 +29,18 @@ const KEYBOARD_KEYS = Object.freeze([
   "coverageMixExponent",
   "contactRetentionFloor",
 ]);
+
+const KEYBOARD_KEYS_R2 = Object.freeze([
+  "stepBase",
+  "stepMobilityGain",
+  "stepMilliseconds",
+  "normalizationScale",
+  "normalizationReferenceAlpha",
+  "coverageMixExponent",
+  "contactRetentionFloor",
+]);
+
+export const SUPPORTED_SURFACE_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2]);
 
 export const MAX_PAPER_SURFACE_STEPS = 64;
 
@@ -93,16 +116,46 @@ export function validateSurfaceRecipe(recipe) {
   assertString(recipe.id, "surfaceRecipe.id");
   assertInteger(recipe.revision, "surfaceRecipe.revision", 1, Number.MAX_SAFE_INTEGER);
   assertString(recipe.surfaceModelVersion, "surfaceRecipe.surfaceModelVersion");
-  assertInteger(recipe.surfaceRecipeSchemaVersion, "surfaceRecipe.surfaceRecipeSchemaVersion", 1, 1);
+  assertInteger(
+    recipe.surfaceRecipeSchemaVersion,
+    "surfaceRecipe.surfaceRecipeSchemaVersion",
+    1,
+    2,
+  );
+
+  if (!SUPPORTED_SURFACE_RECIPE_SCHEMA_VERSIONS.includes(
+    recipe.surfaceRecipeSchemaVersion,
+  )) {
+    throw new TypeError(
+      `Unsupported surfaceRecipeSchemaVersion: ${recipe.surfaceRecipeSchemaVersion}.`,
+    );
+  }
+
+  const axisKeys = recipe.surfaceRecipeSchemaVersion === 1
+    ? AXIS_KEYS_R1
+    : AXIS_KEYS_R2;
+  const keyboardKeys = recipe.surfaceRecipeSchemaVersion === 1
+    ? KEYBOARD_KEYS_R1
+    : KEYBOARD_KEYS_R2;
 
   assertRecord(recipe.axes, "surfaceRecipe.axes");
-  assertExactKeys(recipe.axes, AXIS_KEYS, "surfaceRecipe.axes");
-  for (const key of AXIS_KEYS) assertNumber(recipe.axes[key], `surfaceRecipe.axes.${key}`);
+  assertExactKeys(recipe.axes, axisKeys, "surfaceRecipe.axes");
+  for (const key of axisKeys) {
+    assertNumber(recipe.axes[key], `surfaceRecipe.axes.${key}`);
+  }
 
   assertRecord(recipe.keyboard, "surfaceRecipe.keyboard");
-  assertExactKeys(recipe.keyboard, KEYBOARD_KEYS, "surfaceRecipe.keyboard");
+  assertExactKeys(recipe.keyboard, keyboardKeys, "surfaceRecipe.keyboard");
   assertInteger(recipe.keyboard.stepBase, "surfaceRecipe.keyboard.stepBase", 0, MAX_PAPER_SURFACE_STEPS);
-  assertNumber(recipe.keyboard.stepUptakeGain, "surfaceRecipe.keyboard.stepUptakeGain", 0, MAX_PAPER_SURFACE_STEPS);
+  const stepGainKey = recipe.surfaceRecipeSchemaVersion === 1
+    ? "stepUptakeGain"
+    : "stepMobilityGain";
+  assertNumber(
+    recipe.keyboard[stepGainKey],
+    `surfaceRecipe.keyboard.${stepGainKey}`,
+    0,
+    MAX_PAPER_SURFACE_STEPS,
+  );
   assertNumber(recipe.keyboard.stepMilliseconds, "surfaceRecipe.keyboard.stepMilliseconds", 0.001, 1000);
   assertNumber(recipe.keyboard.normalizationScale, "surfaceRecipe.keyboard.normalizationScale", 0.001, 10);
   assertInteger(
@@ -113,7 +166,10 @@ export function validateSurfaceRecipe(recipe) {
   );
   assertNumber(recipe.keyboard.coverageMixExponent, "surfaceRecipe.keyboard.coverageMixExponent", 0.001, 10);
   assertNumber(recipe.keyboard.contactRetentionFloor, "surfaceRecipe.keyboard.contactRetentionFloor");
-  if (recipe.keyboard.stepBase + recipe.keyboard.stepUptakeGain > MAX_PAPER_SURFACE_STEPS) {
+  if (
+    recipe.keyboard.stepBase + recipe.keyboard[stepGainKey]
+    > MAX_PAPER_SURFACE_STEPS
+  ) {
     throw new TypeError(`surfaceRecipe keyboard step budget exceeds ${MAX_PAPER_SURFACE_STEPS}.`);
   }
   return true;

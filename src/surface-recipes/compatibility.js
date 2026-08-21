@@ -9,6 +9,8 @@ import {
 import { PAPER_SURFACE_SMOOTH_R1 } from "./paper-smooth-r1.js";
 import { PAPER_SURFACE_BALANCED_R1 } from "./paper-balanced-r1.js";
 import { PAPER_SURFACE_ABSORBENT_R1 } from "./paper-absorbent-r1.js";
+import { PAPER_SURFACE_ABSORBENT_R2 } from "./paper-absorbent-r2.js";
+import { SUPPORTED_SURFACE_RUNTIME_VERSIONS } from "./versions.js";
 import { REGISTERED_SURFACE_RECIPE_SERIALIZATIONS } from "./registered-built-ins.js";
 
 const keyFor = (recipe) => `${recipe.id}@${recipe.revision}`;
@@ -16,6 +18,7 @@ const BUILT_INS = [
   PAPER_SURFACE_SMOOTH_R1,
   PAPER_SURFACE_BALANCED_R1,
   PAPER_SURFACE_ABSORBENT_R1,
+  PAPER_SURFACE_ABSORBENT_R2,
 ];
 const RESERVED_IDS = new Set(
   Object.keys(REGISTERED_SURFACE_RECIPE_SERIALIZATIONS).map((key) =>
@@ -49,14 +52,15 @@ export function assertRegisteredSurfaceRecipeIdentity(recipe) {
 
 export function assertSurfaceRecipeCompatible(recipe) {
   validateSurfaceRecipe(recipe);
-  if (recipe.surfaceModelVersion !== surfaceModelVersion) {
+  const supportedRuntime = SUPPORTED_SURFACE_RUNTIME_VERSIONS.some(
+    (version) => (
+      version.surfaceModelVersion === recipe.surfaceModelVersion
+      && version.surfaceRecipeSchemaVersion === recipe.surfaceRecipeSchemaVersion
+    ),
+  );
+  if (!supportedRuntime) {
     throw new TypeError(
-      `surfaceRecipe.surfaceModelVersion ${recipe.surfaceModelVersion} is incompatible with ${surfaceModelVersion}.`,
-    );
-  }
-  if (recipe.surfaceRecipeSchemaVersion !== surfaceRecipeSchemaVersion) {
-    throw new TypeError(
-      `surfaceRecipe.surfaceRecipeSchemaVersion ${recipe.surfaceRecipeSchemaVersion} is incompatible with ${surfaceRecipeSchemaVersion}.`,
+      `Surface runtime ${recipe.surfaceModelVersion}/schema-${recipe.surfaceRecipeSchemaVersion} is incompatible with ${surfaceModelVersion}/schema-${surfaceRecipeSchemaVersion}.`,
     );
   }
   return assertRegisteredSurfaceRecipeIdentity(recipe);
