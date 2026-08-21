@@ -1330,3 +1330,38 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: use the same workbench family boundary for P5-B only
   after its concentration-thresholded surface-film state and view-dependent
   Optical contract exist in the public engine.
+
+## E-031-bundled-font-contact-scale-contract / A2
+
+- Parent: P4 nib catalog / actual bundled-font matrix
+- Engine/contact model: unchanged (`ordinary-js-r13`, `fountain-nib-catalog-r2`)
+- Package: unchanged (`0.25.0-experimental.1`)
+- Status: passed browser contract after one learned attempt
+- Hypothesis: the authored em geometry and the actual bundled-font raster can
+  be verified without opening nine preview tabs or freezing one browser pixel
+  image as permanent truth.
+- A1 learned: requiring identical CSS stroke width across DPR failed first on
+  18px UEF because one thresholded device pixel becomes 1, 0.5 or 0.333 CSS px.
+  Replacing broad round-nib `strokeText` with separable alpha dilation made the
+  result worse: 28px EB grew to 8.83 CSS px at DPR1 and minimum aperture fell
+  to 14.7%. That operator was discarded and the accepted Contact renderer was
+  restored exactly.
+- A2 contract: the engine unit fixture continues to own the exact em geometry
+  formula. The browser matrix owns final-mask evidence: UEF→EB order inside
+  every cell, nondecreasing stroke width across 18/28/52px, all six reference
+  glyphs present, minimum aperture at least 12%, and SU/CM directionality with
+  one device-pixel raster uncertainty. DPR stroke/aperture differences remain
+  reported observations rather than false pixel-equality gates.
+- Browser evidence: all 9 cells passed. The observed UEF/M/EB widths were
+  DPR1 `2/2/4.83`, `2/2/6.83`, `2/4/8`; DPR2 `1/2/3.83`, `1/2/5`,
+  `2/4/8`; DPR3 `0.67/1.33/3.5`, `0.67/2/4.67`, `1.33/4/8` CSS px for
+  18/28/52px respectively. Minimum aperture was 22.2%. Maximum raw DPR stroke
+  drift was 2.16 CSS px and one-device-pixel-adjusted residual was 0.83 CSS px.
+  Browser console warning/error remained empty.
+- Workbench boundary: one visible button runs the matrix sequentially. Each
+  temporary glyph Canvas becomes unreachable after its cell is summarized;
+  only the numeric table remains. No extra tabs or persistent matrix canvases
+  are created.
+- Next different method: P5-B sheen begins with a separate concentrated
+  surface-film state and view-dependent Optical contract. It must not reuse
+  this Contact metric or the P5-A static color-zone operator.
