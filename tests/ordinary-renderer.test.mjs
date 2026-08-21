@@ -19,6 +19,7 @@ import { EDGE_DYE_COMPONENT_RECIPE_R5 as ACTIVE_DYE_COMPONENT_RECIPE } from "fou
 import { SHEEN_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/sheen-components";
 import { SHIMMER_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/shimmer-components";
 import { PIGMENT_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/pigment-components";
+import { OXIDATION_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/oxidation-components";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -390,6 +391,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
       "paperDepth",
       "dyeComponent",
       "pigmentComponent",
+      "oxidationState",
       "sheenFilm",
       "shimmerParticles",
       "fiberEdgeCoverage",
@@ -422,6 +424,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
   assert.equal(stages.surface.dyeComponent, null);
   assert.equal(stages.surface.pigmentComponent, null);
+  assert.equal(stages.surface.oxidationState, null);
   assert.equal(stages.surface.sheenFilm, null);
   assert.equal(stages.surface.shimmerParticles, null);
   assert.equal(stages.optical.baseCompositeRgba, null);
@@ -446,6 +449,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.equal(result.paperDepth, stages.surface.paperDepth);
   assert.equal(result.dyeComponent, stages.surface.dyeComponent);
   assert.equal(result.pigmentComponent, stages.surface.pigmentComponent);
+  assert.equal(result.oxidationState, stages.surface.oxidationState);
   assert.equal(result.sheenFilm, stages.surface.sheenFilm);
   assert.equal(result.shimmerParticles, stages.surface.shimmerParticles);
   assert.equal(result.fiberEdgeCoverage, stages.surface.fiberEdgeCoverage);
@@ -727,6 +731,60 @@ test("pigment component exposes separate mass while leaving ordinary Optical exa
     pigment.stages.surface.resolvedCoverage.data,
     ordinary.stages.surface.resolvedCoverage.data,
   );
+});
+
+test("oxidation uses explicit commit age while preserving material fields and alpha", () => {
+  const { options } = makeOptions(42, 96, 48);
+  const ordinary = renderOrdinaryInkMaterial(options);
+  const renderAt = (committedAtMilliseconds, observedAtMilliseconds) =>
+    renderOrdinaryInkMaterial({
+      ...options,
+      oxidationComponentRecipe: OXIDATION_COMPONENT_RECIPE_R1,
+      oxidationObservation: {
+        committedAtMilliseconds,
+        observedAtMilliseconds,
+      },
+    });
+  const fresh = renderAt(0, 0);
+  const half = renderAt(0, 90_000);
+  const shiftedHalf = renderAt(1_000_000, 1_090_000);
+  assert.equal(fresh.stages.surface.oxidationState.progress, 0);
+  assert.equal(half.stages.surface.oxidationState.progress, 0.5);
+  assert.deepEqual(half.imageData.data, shiftedHalf.imageData.data);
+  assert.deepEqual(
+    half.stages.optical.baseCompositeRgba.data,
+    ordinary.imageData.data,
+  );
+  assert.deepEqual(
+    half.stages.contact.rgbaMask.data,
+    ordinary.stages.contact.rgbaMask.data,
+  );
+  assert.deepEqual(
+    half.stages.density.normalizedConcentration.data,
+    ordinary.stages.density.normalizedConcentration.data,
+  );
+  assert.deepEqual(
+    half.stages.surface.resolvedCoverage.data,
+    ordinary.stages.surface.resolvedCoverage.data,
+  );
+  let changedFresh = 0;
+  let changedHalf = 0;
+  for (let offset = 0; offset < ordinary.imageData.data.length; offset += 4) {
+    assert.equal(fresh.imageData.data[offset + 3], ordinary.imageData.data[offset + 3]);
+    assert.equal(half.imageData.data[offset + 3], ordinary.imageData.data[offset + 3]);
+    if (
+      fresh.imageData.data[offset] !== ordinary.imageData.data[offset]
+      || fresh.imageData.data[offset + 1] !== ordinary.imageData.data[offset + 1]
+      || fresh.imageData.data[offset + 2] !== ordinary.imageData.data[offset + 2]
+    ) changedFresh += 1;
+    if (
+      half.imageData.data[offset] !== fresh.imageData.data[offset]
+      || half.imageData.data[offset + 1] !== fresh.imageData.data[offset + 1]
+      || half.imageData.data[offset + 2] !== fresh.imageData.data[offset + 2]
+    ) changedHalf += 1;
+  }
+  assert.ok(changedFresh > 0);
+  assert.ok(changedHalf > 0);
 });
 
 test("internal concentration and dye enrichment remain independent diagnostics", () => {

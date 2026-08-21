@@ -38,6 +38,7 @@ Focused entry points are also available:
 - `fountain-ink-engine/sheen-components`
 - `fountain-ink-engine/shimmer-components`
 - `fountain-ink-engine/pigment-components`
+- `fountain-ink-engine/oxidation-components`
 - `fountain-ink-engine/deterministic`
 - `fountain-ink-engine/contact`
 - `fountain-ink-engine/density`
@@ -159,6 +160,33 @@ coverage and final RGBA byte-exact; it establishes state before any pigment
 color, opacity, permanence or elapsed-time claim. Dye and pigment currently
 reuse one exclusive transported-component slot, so clients must not enable
 both in the same solve.
+
+## Optional explicit-age oxidation
+
+Package `0.29.0-experimental.1` adds a calculation that never reads a clock:
+
+```js
+import {
+  OXIDATION_COMPONENT_RECIPE_R1,
+  createOxidationState,
+} from "fountain-ink-engine/oxidation-components";
+
+const oxidationState = createOxidationState({
+  oxidationComponentRecipe: OXIDATION_COMPONENT_RECIPE_R1,
+  oxidationObservation: {
+    committedAtMilliseconds: 0,
+    observedAtMilliseconds: 90_000,
+  },
+});
+```
+
+The recipe authors fresh/settled RGB, a reaction half-life and bounded mixing.
+The observation owns explicit commit and observation timestamps. Shifting both
+timestamps by the same amount produces the same result; current wall-clock,
+device state and animation time are not inputs. Optical changes RGB only inside
+existing ink alpha and leaves Contact, Density, Surface coverage and alpha exact.
+The built-in 90-second half-life is an authored digital study value, not a
+measured claim about a commercial ink.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior

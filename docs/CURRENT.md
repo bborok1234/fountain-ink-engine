@@ -182,8 +182,17 @@ but owns mobile, fixed and optional paper-depth mass with authored mobility and
 retention multipliers. The A1 renderer exposes this state under Surface while
 ordinary water, carrier mass, coverage and RGBA remain exact. The current
 solver has one exclusive optional transported-component slot, so edge dye and
-pigment cannot coexist yet. Pigment Optical color and commit-age oxidation are
-not part of this checkpoint.
+pigment cannot coexist yet. Pigment Optical color is not part of this checkpoint.
+
+Package `0.29.0-experimental.1` adds `oxidation-component-js-r1` and
+`classic-forest-oxidation-study@1`. The recipe owns fresh/settled RGB, reaction
+half-life and bounded concentration-aware mixing. Its observation owns explicit
+`committedAtMilliseconds` and `observedAtMilliseconds`; the engine derives
+elapsed time and never reads the current clock, animation time or device state.
+At one half-life deterministic progress is exactly `0.5`. Optical changes RGB
+only and keeps Contact, Density, Surface coverage and alpha exact. The Workbench
+currently treats its preview text as one material commit; persisted product
+strokes and per-commit replay remain future integration work.
 
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
@@ -287,9 +296,9 @@ matching direct-pad color projection.
 - The Contact-axis extraction covers keyboard/font glyphs only. The direct
   writing pad uses physical pointer contact and flow-dependent liquid deposit
   loads, and is explicitly outside E-005 rather than silently reinterpreted.
-- Ordinary Density-to-RGB/alpha, the opt-in r5 second-dye color zone, sheen and
-  shimmer are the extracted Optical families. Pigment A1 is state-only;
-  pigment color and time-varying oxidation remain unimplemented.
+- Ordinary Density-to-RGB/alpha, the opt-in r5 second-dye color zone, sheen,
+  shimmer and explicit-age oxidation are extracted Optical families. Pigment A1
+  is state-only; dedicated pigment color remains unimplemented.
 - The Surface solver still operates on the current union mask, so nearby wet
   footprints may interact through diffusion, fixing, and signed-density mixing.
   Strict append-after-drying semantics would require incremental state and is
@@ -309,9 +318,9 @@ matching direct-pad color projection.
   a second calculation path.
 - Browser visual equivalence is checked during the migration, but no single
   permanent pixel image is treated as the final artistic truth.
-- Pigment transport state now exists; pigment Optical color and oxidation
-  remain future versioned experiments. Edge-separated color, sheen, shimmer
-  and pigment state are independent optional components.
+- Pigment transport state now exists; pigment Optical color remains a future
+  versioned experiment. Edge-separated color, sheen, shimmer, pigment state
+  and explicit-age oxidation are independent optional components.
 - Serialized keyboard Surface recipes are fail-closed above the bounded
   64-step synchronous calculation budget.
 

@@ -6,12 +6,18 @@ import { assertDensityFieldInputs } from "../density/ordinary-density.js";
 import {
   compositeDyeEdgeOptical,
   compositeOrdinaryOptical,
+  compositeOxidationOptical,
   compositeSheenOptical,
   compositeShimmerOptical,
 } from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
 import { assertPigmentComponentRecipeCompatible } from "../pigment-components/index.js";
+import {
+  assertOxidationComponentRecipeCompatible,
+  createOxidationState,
+  readOxidationObservation,
+} from "../oxidation-components/index.js";
 import {
   assertSheenComponentRecipeCompatible,
   createSheenSurfaceFilm,
@@ -56,6 +62,7 @@ function makeDiagnosticStages({
   paperDepth,
   dyeComponent,
   pigmentComponent,
+  oxidationState,
   sheenFilm,
   shimmerParticles,
   fiberEdgeCoverage,
@@ -77,6 +84,7 @@ function makeDiagnosticStages({
       paperDepth,
       dyeComponent,
       pigmentComponent,
+      oxidationState,
       sheenFilm,
       shimmerParticles,
       fiberEdgeCoverage,
@@ -172,6 +180,8 @@ export function prepareOrdinaryInkCanvasInput({
   surfaceRecipe,
   dyeComponentRecipe = null,
   pigmentComponentRecipe = null,
+  oxidationComponentRecipe = null,
+  oxidationObservation = null,
   sheenComponentRecipe = null,
   sheenObservation = null,
   shimmerComponentRecipe = null,
@@ -191,6 +201,14 @@ export function prepareOrdinaryInkCanvasInput({
   if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
     throw new TypeError(
       "Only one transported dye or pigment component may be active per solve.",
+    );
+  }
+  if (oxidationComponentRecipe !== null) {
+    assertOxidationComponentRecipeCompatible(oxidationComponentRecipe);
+    readOxidationObservation(oxidationObservation);
+  } else if (oxidationObservation !== null) {
+    throw new TypeError(
+      "oxidationObservation requires an oxidationComponentRecipe.",
     );
   }
   if (sheenComponentRecipe !== null) {
@@ -254,6 +272,8 @@ export function beginOrdinaryInkMaterial({
   recipe,
   dyeComponentRecipe = null,
   pigmentComponentRecipe = null,
+  oxidationComponentRecipe = null,
+  oxidationObservation = null,
   sheenComponentRecipe = null,
   sheenObservation = null,
   shimmerComponentRecipe = null,
@@ -275,6 +295,19 @@ export function beginOrdinaryInkMaterial({
       "Only one transported dye or pigment component may be active per solve.",
     );
   }
+  if (oxidationComponentRecipe !== null) {
+    assertOxidationComponentRecipeCompatible(oxidationComponentRecipe);
+  } else if (oxidationObservation !== null) {
+    throw new TypeError(
+      "oxidationObservation requires an oxidationComponentRecipe.",
+    );
+  }
+  const oxidationState = oxidationComponentRecipe === null
+    ? null
+    : createOxidationState({
+      oxidationComponentRecipe,
+      oxidationObservation,
+    });
   if (sheenComponentRecipe !== null) {
     assertSheenComponentRecipeCompatible(sheenComponentRecipe);
   } else if (sheenObservation !== null) {
@@ -356,6 +389,8 @@ export function beginOrdinaryInkMaterial({
     pigmentComponent: surfaceState?.pigmentComponent ?? null,
     dyeComponentRecipe,
     pigmentComponentRecipe,
+    oxidationComponentRecipe,
+    oxidationState,
     sheenComponentRecipe,
     sheenObservation: validatedSheenObservation,
     shimmerComponentRecipe,
@@ -394,6 +429,8 @@ export function completeOrdinaryInkMaterial({
     pigmentComponent,
     dyeComponentRecipe,
     pigmentComponentRecipe,
+    oxidationComponentRecipe,
+    oxidationState,
     sheenComponentRecipe,
     sheenObservation,
     shimmerComponentRecipe,
@@ -437,10 +474,13 @@ export function completeOrdinaryInkMaterial({
   const dyeActive = dyeComponent !== null && dyeComponentRecipe !== null;
   const pigmentActive = pigmentComponent !== null
     && pigmentComponentRecipe !== null;
+  const oxidationActive = oxidationComponentRecipe !== null
+    && oxidationState !== null;
   const sheenActive = sheenComponentRecipe !== null;
   const shimmerActive = shimmerComponentRecipe !== null;
   const baseCompositeRgba = !dyeActive
     && !pigmentActive
+    && !oxidationActive
     && !sheenActive
     && !shimmerActive
     ? null
@@ -461,6 +501,17 @@ export function completeOrdinaryInkMaterial({
       baseRgba: baseCompositeRgba,
       dyeComponent,
       dyeComponentRecipe,
+      output: structuralRgba,
+    });
+  }
+  if (oxidationActive) {
+    compositeOxidationOptical({
+      pixelWidth,
+      pixelHeight,
+      baseRgba: structuralRgba,
+      concentration: normalizedConcentration,
+      oxidationState,
+      oxidationComponentRecipe,
       output: structuralRgba,
     });
   }
@@ -518,6 +569,7 @@ export function completeOrdinaryInkMaterial({
     paperDepth,
     dyeComponent,
     pigmentComponent,
+    oxidationState,
     sheenFilm,
     shimmerParticles,
     fiberEdgeCoverage,
@@ -537,6 +589,7 @@ export function completeOrdinaryInkMaterial({
     paperDepth: stages.surface.paperDepth,
     dyeComponent: stages.surface.dyeComponent,
     pigmentComponent: stages.surface.pigmentComponent,
+    oxidationState: stages.surface.oxidationState,
     sheenFilm: stages.surface.sheenFilm,
     shimmerParticles: stages.surface.shimmerParticles,
     fiberEdgeCoverage: stages.surface.fiberEdgeCoverage,
@@ -570,6 +623,8 @@ export function renderOrdinaryInkMaterial({
   recipe,
   dyeComponentRecipe = null,
   pigmentComponentRecipe = null,
+  oxidationComponentRecipe = null,
+  oxidationObservation = null,
   sheenComponentRecipe = null,
   sheenObservation = null,
   shimmerComponentRecipe = null,
@@ -590,6 +645,14 @@ export function renderOrdinaryInkMaterial({
   if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
     throw new TypeError(
       "Only one transported dye or pigment component may be active per solve.",
+    );
+  }
+  if (oxidationComponentRecipe !== null) {
+    assertOxidationComponentRecipeCompatible(oxidationComponentRecipe);
+    readOxidationObservation(oxidationObservation);
+  } else if (oxidationObservation !== null) {
+    throw new TypeError(
+      "oxidationObservation requires an oxidationComponentRecipe.",
     );
   }
   if (sheenComponentRecipe !== null) {
@@ -625,6 +688,8 @@ export function renderOrdinaryInkMaterial({
     surfaceRecipe,
     dyeComponentRecipe,
     pigmentComponentRecipe,
+    oxidationComponentRecipe,
+    oxidationObservation,
     sheenComponentRecipe,
     sheenObservation,
     shimmerComponentRecipe,
@@ -647,6 +712,8 @@ export function renderOrdinaryInkMaterial({
     recipe,
     dyeComponentRecipe,
     pigmentComponentRecipe,
+    oxidationComponentRecipe,
+    oxidationObservation,
     sheenComponentRecipe,
     sheenObservation,
     shimmerComponentRecipe,
