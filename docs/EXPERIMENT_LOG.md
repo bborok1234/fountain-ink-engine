@@ -1512,3 +1512,61 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: the remaining P5-D boundary is explicit commit-age
   oxidation. It must use authored elapsed time and a versioned curve, never the
   current wall clock or device state.
+
+## E-035-explicit-commit-age-oxidation / A1
+
+- Parent: P5-D pigment and oxidation / deterministic chemistry-time response
+- Ordinary engine/recipe: unchanged (`ordinary-js-r13`, `ordinary-green@12`)
+- Oxidation component model/schema: `oxidation-component-js-r1` / `1`
+- Package: `0.29.0-experimental.1`
+- Fixture manifest: unchanged (`2`)
+- Status: passed engine contract and normal-size/mobile browser observation
+- Hypothesis: an iron-gall/classic-ink-inspired color change can be modeled as
+  a versioned recipe plus explicit commit and observation timestamps, without
+  reading the current clock, animating a stored record, widening alpha, or
+  changing Contact, Density and Surface.
+- Primary evidence: Platinum describes ferrous ions oxidizing to ferric ions
+  and the handwriting color changing and darkening over time in its Classic
+  Ink explanation. Its blue-black FAQ separately describes air oxidation,
+  fading blue dye and remaining iron color. These support a time-dependent
+  chemistry/color state. They do not establish the digital study's 90-second
+  half-life, which is an authored comparison value rather than a measured
+  commercial-ink kinetic claim.
+- Operator: `classic-forest-oxidation-study@1` authors fresh RGB `[86,111,62]`,
+  settled RGB `[28,36,31]`, reaction half-life `90000ms`, progress exponent
+  `1`, maximum mix `0.88` and concentration influence `0.55`. Progress is
+  `(1 - 2^(-elapsed / halfLife))^exponent`; Optical applies a bounded,
+  concentration-aware RGB mix inside existing alpha.
+- Time contract: observation is the strict pair
+  `{committedAtMilliseconds, observedAtMilliseconds}` with non-negative safe
+  integers and observation not earlier than commit. A 0ms observation gives
+  0% progress, one half-life gives exactly 50%, and 600000ms gives 99% at the
+  displayed precision. Shifting both timestamps by the same amount produces
+  exact state and RGBA. Engine and Workbench oxidation authoring paths contain
+  no `Date.now` or `performance.now` input.
+- Rendering contract: an active oxidation component retains the ordinary base
+  RGBA for A/B observation, then changes RGB only. Every alpha byte, Contact,
+  Density and Surface result remains exact. Invalid recipes, timestamps and
+  output shapes fail before output mutation. The built-in identity is pinned
+  independently with SHA-256
+  `7e3fd320b046aa089f11ad37d328ef106816bbfcf8844b834abc6296cc9d51a8`.
+- Workbench evidence: the fresh/half-life/10-minute controls displayed
+  progress `0% / 50% / 99%`. The same 16,813 ink pixels changed RGB at each
+  observation; mean changed-channel deltas relative to the ordinary base were
+  `29.8 / 11.7 / 6.0`, with maxima `48 / 24 / 15`. The direction is not a
+  monotonic distance-from-ordinary claim because the ordinary control color
+  lies between portions of the authored fresh-to-settled curve; the explicit
+  state and final RGB are the contract.
+- UI/memory boundary: the Surface diagnostic adds one immutable scalar state
+  record and no page plane. Expanded diagnostics used 18 canvases; collapsing
+  them left only the final-output canvas. At 390×844 the controls and final
+  output remained usable. A fresh QA interval reported no console warning or
+  error, and only one in-app browser tab was used.
+- A1 limit: the Workbench treats the complete preview text as one commit. This
+  is not a persisted per-stroke age model, a claimed reproduction of one
+  commercial ink, or a live animation. A future product data model must store
+  each material commit time explicitly and pass the observation time chosen by
+  replay/export policy.
+- Next different method: P5 is now complete at its current checklist boundary.
+  Return to the first unchecked P6 checkpoint/version and stable-output work
+  rather than adding another visual material family.

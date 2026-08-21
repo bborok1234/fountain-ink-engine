@@ -243,6 +243,19 @@ component slot is reused by either P5-A dye or P5-D pigment and rejects both at
 once. This exclusive A1 boundary avoids duplicate solver planes but must be
 replaced by a bounded multi-component registry before combined dye+pigment inks.
 
+### Optional explicit-age oxidation component
+
+Oxidation is a chemistry-time state and Optical response, not a Surface blur or
+live animation. The recipe owns fresh/settled RGB, a reaction half-life,
+progress exponent and concentration-aware mix bound. A strict observation owns
+explicit non-negative safe-integer commit and observation timestamps. The
+engine derives elapsed time only from their difference, so shifting both by the
+same offset is exact and no wall clock, device state or animation frame can
+reinterpret a stored result. `surface.oxidationState` exposes the immutable
+elapsed/progress summary; Optical mixes RGB inside existing alpha after ordinary
+color and before optional sheen/shimmer. It changes no Contact, Density,
+resolved coverage or alpha bytes.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -273,11 +286,14 @@ observes the buffers already used by the accepted render path:
   count-sized Float32 arrays; it is absent when the shimmer component is disabled;
 - `surface.pigmentComponent`: nullable grid record with mobile, fixed and
   paper-depth mass plus totals; it has no RGB/alpha meaning in A1;
+- `surface.oxidationState`: nullable immutable commit/observation/elapsed time
+  and normalized progress record; it allocates no page-sized plane;
 - `optical.baseCompositeRgba`: nullable ordinary RGBA retained only when a dye,
-  sheen, shimmer or pigment component is active, for direct diagnostic comparison
+  sheen, shimmer, pigment or oxidation component is active, for direct diagnostic comparison
   with the final;
 - `optical.compositeRgba`: the final ordinary RGBA composite, optionally with
-  the r5 second-dye RGB, view-dependent sheen RGB and/or bounded shimmer RGB
+  the r5 second-dye RGB, explicit-age oxidation RGB, view-dependent sheen RGB
+  and/or bounded shimmer RGB
   mixed inside existing alpha.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
