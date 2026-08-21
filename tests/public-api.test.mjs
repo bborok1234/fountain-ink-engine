@@ -5,6 +5,7 @@ import * as canvas2d from "fountain-ink-engine/canvas2d";
 import * as contact from "fountain-ink-engine/contact";
 import * as contracts from "fountain-ink-engine/contracts";
 import * as density from "fountain-ink-engine/density";
+import * as dyeComponents from "fountain-ink-engine/dye-components";
 import * as deterministic from "fountain-ink-engine/deterministic";
 import * as optical from "fountain-ink-engine/optical";
 import * as recipes from "fountain-ink-engine/recipes";
@@ -19,6 +20,10 @@ test("self-referenced package barrels expose the stable API", () => {
     contact.getGlyphContactGeometry,
   );
   assert.equal(engine.WetInkSimulation, surface.WetInkSimulation);
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R1,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R1,
+  );
   assert.equal(engine.hashString, deterministic.hashString);
   assert.equal(engine.compositeOrdinaryInk, optical.compositeOrdinaryInk);
   assert.equal(

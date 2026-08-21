@@ -34,6 +34,7 @@ Focused entry points are also available:
 
 - `fountain-ink-engine/contracts`
 - `fountain-ink-engine/recipes`
+- `fountain-ink-engine/dye-components`
 - `fountain-ink-engine/deterministic`
 - `fountain-ink-engine/contact`
 - `fountain-ink-engine/density`
@@ -47,6 +48,30 @@ expected to produce the same typed-array state.
 Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
+
+## Optional dye component state
+
+Package `0.20.0-experimental.1` introduces a diagnostic-only second dye:
+
+```js
+import { EDGE_DYE_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/dye-components";
+
+const state = createKeyboardSurfaceState(
+  deposit,
+  surfaceRecipe,
+  surfaceSeed,
+  inkRecipe,
+  densityTransport,
+  EDGE_DYE_COMPONENT_RECIPE_R1,
+);
+
+// state.dyeComponent = { width, height, mobileMass, fixedMass, subsurfaceMass }
+```
+
+It shares the ordinary wet footprint while keeping its own mass, mobility and
+retention. A1 does not composite a second color: ordinary coverage and RGBA are
+unchanged. Pass `null` or omit the final argument to allocate no component
+state and preserve the ordinary path exactly.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior

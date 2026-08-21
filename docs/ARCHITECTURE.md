@@ -179,6 +179,21 @@ read Contact masks, glyph seeds, absorption, flow, fibre state, or density
 variation. `compositeOrdinaryInk` remains a public compatibility wrapper that
 calls the Density and Optical operators in order.
 
+### Optional dye components
+
+Specialty dye state is a separate version axis from the ordinary ink recipe.
+`edge-dye-study@1` shares the ordinary water footprint but owns lazy mobile,
+fixed and optional subsurface mass planes. Its mobility multiplier changes
+transport through the same water/fibre field; its retention multiplier changes
+the fraction fixed from that mobile mass. It cannot change ordinary mass or
+Optical output in A1, and an absent component allocates no component planes.
+
+This is intentionally not an outline or color halo. Different dye interaction
+with a porous matrix can create chromatographic separation, while fountain-pen
+inks can contain multiple dye components. The first implementation therefore
+establishes component state before authoring any visible edge operator. See the
+primary evidence in the E-025 experiment record.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -199,6 +214,8 @@ observes the buffers already used by the accepted render path:
 - `surface.paperDepth`: the nullable solver-grid subsurface pigment and signed
   numerator copied from the r2 depth state. It is `null` for r1 recipes or when
   no depth state was created;
+- `surface.dyeComponent`: nullable mobile/fixed/subsurface mass for one
+  explicitly enabled dye component. It is diagnostic-only in A1;
 - `optical.compositeRgba`: the final ordinary RGBA composite.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
