@@ -17,6 +17,7 @@ import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import { EDGE_DYE_COMPONENT_RECIPE_R5 as ACTIVE_DYE_COMPONENT_RECIPE } from "fountain-ink-engine/dye-components";
 import { SHEEN_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/sheen-components";
+import { SHIMMER_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/shimmer-components";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -388,6 +389,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
       "paperDepth",
       "dyeComponent",
       "sheenFilm",
+      "shimmerParticles",
       "fiberEdgeCoverage",
       "applied",
   ]);
@@ -418,6 +420,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
   assert.equal(stages.surface.dyeComponent, null);
   assert.equal(stages.surface.sheenFilm, null);
+  assert.equal(stages.surface.shimmerParticles, null);
   assert.equal(stages.optical.baseCompositeRgba, null);
   assertRgbaShape(stages.optical.compositeRgba, 18, 14);
 
@@ -440,6 +443,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.equal(result.paperDepth, stages.surface.paperDepth);
   assert.equal(result.dyeComponent, stages.surface.dyeComponent);
   assert.equal(result.sheenFilm, stages.surface.sheenFilm);
+  assert.equal(result.shimmerParticles, stages.surface.shimmerParticles);
   assert.equal(result.fiberEdgeCoverage, stages.surface.fiberEdgeCoverage);
 });
 
@@ -625,6 +629,68 @@ test("sheen keeps ordinary fallback exact and reveals only high-concentration fi
         specular.imageData.data.slice(offset, offset + 4),
         ordinary.imageData.data.slice(offset, offset + 4),
       );
+    }
+  }
+  assert.ok(changedPixels > 0);
+});
+
+test("shimmer keeps a seeded bounded particle list inside ordinary alpha", () => {
+  const { options } = makeOptions(42, 96, 48);
+  const componentOptions = {
+    ...options,
+    nibId: "B",
+    flow: 85,
+    shimmerComponentRecipe: SHIMMER_COMPONENT_RECIPE_R1,
+    shimmerObservation: { lightPhase: 0.25, reduceMotion: true },
+    shimmerSeed: 0x3c6ef372,
+  };
+  const ordinary = renderOrdinaryInkMaterial({
+    ...componentOptions,
+    shimmerComponentRecipe: null,
+    shimmerObservation: null,
+    shimmerSeed: null,
+  });
+  const staticA = renderOrdinaryInkMaterial(componentOptions);
+  const staticB = renderOrdinaryInkMaterial({
+    ...componentOptions,
+    shimmerObservation: { lightPhase: 0.9, reduceMotion: true },
+  });
+  const dynamic = renderOrdinaryInkMaterial({
+    ...componentOptions,
+    shimmerObservation: { lightPhase: 0.9, reduceMotion: false },
+  });
+  assert.ok(staticA.stages.surface.shimmerParticles.count > 0);
+  assert.ok(
+    staticA.stages.surface.shimmerParticles.count
+      <= SHIMMER_COMPONENT_RECIPE_R1.particleBudget,
+  );
+  assert.deepEqual(
+    staticA.stages.surface.shimmerParticles,
+    staticB.stages.surface.shimmerParticles,
+  );
+  assert.deepEqual(staticA.imageData.data, staticB.imageData.data);
+  assert.notDeepEqual(staticA.imageData.data, dynamic.imageData.data);
+  assert.deepEqual(
+    staticA.stages.contact.rgbaMask.data,
+    ordinary.stages.contact.rgbaMask.data,
+  );
+  assert.deepEqual(
+    staticA.stages.density.normalizedConcentration.data,
+    ordinary.stages.density.normalizedConcentration.data,
+  );
+  assert.deepEqual(
+    staticA.stages.surface.resolvedCoverage.data,
+    ordinary.stages.surface.resolvedCoverage.data,
+  );
+  let changedPixels = 0;
+  for (let offset = 0; offset < staticA.imageData.data.length; offset += 4) {
+    assert.equal(staticA.imageData.data[offset + 3], ordinary.imageData.data[offset + 3]);
+    const changed = staticA.imageData.data[offset] !== ordinary.imageData.data[offset]
+      || staticA.imageData.data[offset + 1] !== ordinary.imageData.data[offset + 1]
+      || staticA.imageData.data[offset + 2] !== ordinary.imageData.data[offset + 2];
+    if (changed) {
+      changedPixels += 1;
+      assert.ok(ordinary.imageData.data[offset + 3] > 0);
     }
   }
   assert.ok(changedPixels > 0);

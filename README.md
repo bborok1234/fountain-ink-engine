@@ -36,6 +36,7 @@ Focused entry points are also available:
 - `fountain-ink-engine/recipes`
 - `fountain-ink-engine/dye-components`
 - `fountain-ink-engine/sheen-components`
+- `fountain-ink-engine/shimmer-components`
 - `fountain-ink-engine/deterministic`
 - `fountain-ink-engine/contact`
 - `fountain-ink-engine/density`
@@ -119,6 +120,26 @@ view observation separately. A zero specular alignment returns the ordinary
 RGBA exactly; an active alignment changes RGB only on existing ink alpha where
 the high-concentration film is present. This is neither the static P5-A color
 zone nor a shimmer-particle overlay.
+
+## Optional shimmer component
+
+Package `0.27.0-experimental.1` adds a finite particle component:
+
+```js
+import {
+  SHIMMER_COMPONENT_RECIPE_R1,
+  createShimmerParticleState,
+} from "fountain-ink-engine/shimmer-components";
+import { compositeShimmerOptical } from "fountain-ink-engine/optical";
+```
+
+Particle positions, radii, orientation and strength are selected from the
+actual resolved wet footprint with an explicit uint32 seed and hard budget.
+Density is not an input; the selected paper's `particleCatch` controls the
+population and retained strength. Optical changes RGB only inside existing ink
+alpha. Reduce Motion selects the recipe-authored static light phase and never
+relocates particles. This is neither the P5-A color zone nor the P5-B Surface
+film, and it does not allocate a page-sized particle plane.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior
