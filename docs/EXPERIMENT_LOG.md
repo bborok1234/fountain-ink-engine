@@ -1284,3 +1284,49 @@ they are not automatically promoted to timeless pass/fail truth.
   an effect that the final comparison does not reveal.
 - Next different method: after review/merge, resume P5-B with a separate
   concentration-thresholded surface film and view-dependent Optical layer.
+
+## E-030-engine-workbench-component-authoring / A1
+
+- Parent: `E-029-visible-second-dye-zones / A1`
+- Ordinary engine model: `ordinary-js-r13` (unchanged)
+- Dye component model/schema: `dye-component-js-r5 / 4` (unchanged)
+- Package: `0.25.0-experimental.1`
+- Fixture manifest: `2`
+- Status: passed engine/harness contract; browser visual QA passed
+- Problem: the HTML client still presented itself as an ordinary-ink demo.
+  The edge-dye component was reachable only through query parameters, and its
+  actual mass, mobility, retention, color and visible-zone inputs could not be
+  changed from the UI. Intermediate diagnostics existed, but they were not a
+  usable engine workbench.
+- Engine boundary: registered built-in ids remain canonical and reserved. A
+  recipe on the current model/schema with a nonregistered id is accepted as an
+  explicit experiment recipe. Its complete canonical JSON—not only local
+  `id@revision`—is the portable input. A forged or unknown revision of
+  `edge-dye-study` still fails closed.
+- Harness operator: the default `색 테` workspace authors
+  `workbench-edge-dye@1` through the public `freezeDyeComponentRecipe` API. The
+  controls map directly to mass fraction, mobility, retention, second RGB,
+  mixture response/cap, bounded-zone radius and the four advanced accumulation
+  thresholds. Component off passes `null` and restores the ordinary byte path.
+- Information architecture: the visible pipeline is Input → Contact → Density
+  → Surface → Material component → Optical. Ordinary dye and color edge are
+  selectable; sheen, shimmer and pigment/oxidation are visible disabled backlog
+  families rather than hidden query flags or fake controls. The exact current
+  public component recipe JSON is inspectable beside its controls. Optical A/B
+  appears first in the one-solve diagnostic panel, followed by Contact, Density
+  and Surface fields. Collapsing diagnostics unmounts their full-resolution
+  canvases and stops requesting diagnostic stage delivery instead of merely
+  hiding those buffers.
+- Automated evidence: engine compatibility accepts a frozen nonregistered
+  current recipe while preserving built-in forgery rejection. Harness tests
+  prove color and all exposed numeric controls author a compatible recipe, the
+  preview receives that exact recipe, diagnostics reuse the single material
+  solve, and invalid colors fail before authoring.
+- Browser evidence: default color-edge mode rendered with no console warning or
+  error. Changing the second color to `#2468AC` and maximum mixture to `25%`
+  changed the final workbench readout and produced 17,095 changed RGB pixels in
+  the ordinary/final comparison (mean channel delta 14.3, maximum 33). Switching
+  to ordinary mode removed the component panel and reported Component `없음`.
+- Next different method: use the same workbench family boundary for P5-B only
+  after its concentration-thresholded surface-film state and view-dependent
+  Optical contract exist in the public engine.

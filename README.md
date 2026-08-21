@@ -51,7 +51,7 @@ material composition without adding a React dependency.
 
 ## Optional dye component state
 
-Package `0.24.0-experimental.1` exposes the fifth revision of the dye state
+Package `0.25.0-experimental.1` exposes the fifth revision of the dye state
 and its bounded visible color zones:
 
 ```js
@@ -91,6 +91,14 @@ operator changes RGB only where ordinary alpha already exists and copies alpha
 exactly, so it cannot create a glyph outline, glow or wider footprint. R1–R4
 remain exported for archival round-trip but are incompatible with the active
 r5 calculation.
+
+The engine also accepts current-model, current-schema experiment recipes whose
+`id` is not a registered built-in identity. This is the authoring boundary used
+by visual workbenches: every numeric field remains explicit and canonical JSON
+must be stored with the experiment. Registered ids such as `edge-dye-study`
+remain reserved, so a client cannot silently retune or invent another revision
+of a built-in recipe. An unregistered experiment recipe is not a catalog preset
+and must never be replayed from `id` and `revision` alone.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior

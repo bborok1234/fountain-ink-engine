@@ -10,7 +10,8 @@
 ## Now
 
 This directory is the single reusable calculation source for the Fountain ink
-engine. The existing HTML study is a client and visual comparison harness.
+engine. The HTML Workbench is a client for public recipe authoring, normal-size
+visual comparison and stage diagnostics; it is not another material engine.
 
 The first extraction deliberately keeps the accepted ordinary-ink formulas:
 
@@ -146,6 +147,15 @@ paper calculates this surface-film component while leaving ordinary coverage,
 density transport and paper depth inactive. The diagnostics client hides
 unavailable fields and compares ordinary base with second-dye final directly.
 Alpha, coverage and geometry remain exact.
+
+Package `0.25.0-experimental.1` adds an explicit visual-authoring boundary for
+that component. A current-model/schema recipe with a nonregistered id can be
+rendered and canonically serialized, so a workbench can change component mass,
+mobility, retention, color and bounded-zone parameters without copying engine
+math. Registered ids remain reserved and fingerprinted; `edge-dye-study@5`
+cannot be retuned or extended without a new built-in revision. Experiment
+clients must checkpoint the full canonical recipe because an unregistered
+`id@revision` pair is not a catalog identity.
 
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every

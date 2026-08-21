@@ -85,6 +85,32 @@ test("registered dye component identity rejects silent retuning", () => {
   );
 });
 
+test("current-schema experiment recipes are accepted without weakening built-in identity", () => {
+  const experimentRecipe = Object.freeze({
+    ...EDGE_DYE_COMPONENT_RECIPE_R5,
+    id: "workbench-edge-dye",
+    revision: 1,
+    edgeRed: 174,
+    edgeGreen: 37,
+    edgeBlue: 128,
+    edgeMixMaximum: 0.74,
+  });
+
+  assert.equal(validateDyeComponentRecipe(experimentRecipe), true);
+  assert.equal(assertDyeComponentRecipeCompatible(experimentRecipe), true);
+  assert.match(
+    serializeDyeComponentRecipe(experimentRecipe),
+    /"id":"workbench-edge-dye"/,
+  );
+  assert.throws(
+    () => assertDyeComponentRecipeCompatible({
+      ...EDGE_DYE_COMPONENT_RECIPE_R5,
+      revision: 999,
+    }),
+    /edge-dye-study@999 is not registered/,
+  );
+});
+
 test("dye component recipes reject accessors and invalid transport values", () => {
   let reads = 0;
   const accessor = { ...EDGE_DYE_COMPONENT_RECIPE_R5 };
