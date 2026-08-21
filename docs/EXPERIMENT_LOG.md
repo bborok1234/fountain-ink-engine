@@ -741,3 +741,53 @@ they are not automatically promoted to timeless pass/fail truth.
   DPR1/2/3, 18/28/52px and 320–1440px viewports, then set a browser frame and
   rapid-append backlog budget. Do not tune fibre gains unless normal-size
   evidence shows a concrete visual defect.
+
+## E-019-synchronous-preview-frame-budget / A1
+
+- Parent: `E-018-fibre-edge-dpr-and-frontier-cost / A1`
+- Engine model: `ordinary-js-r12` (observation only; no material change)
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2`
+- Status: learned
+- Hypothesis: the existing synchronous full-material preview can keep the
+  native textarea responsive if redraw requests are coalesced to one latest
+  rAF, even at the current DPR2 production cap.
+- Measurement operator: the HTML harness adds `perf=1`, independent from the
+  four-stage diagnostics UI. It times from preview paint entry through final
+  `putImageData`, excludes diagnostic-card drawing, keeps a bounded 32-sample
+  nearest-rank window, and reports requested/painted/coalesced frames, maximum
+  pending frames, final text length and raster dimensions. The default route
+  passes no timing callback and performs no second solve.
+- Explicit inputs: bundled Nanum Pen Script; ordinary-green@11;
+  paper-absorbent@4; M/18, M/28 and M/52; flow toggled 57/58 for ten settled
+  samples; 788×608 CSS paper; forced DPR1/2/3; current Codex in-app browser.
+- Expected: maximum pending frame is 1, final text/raster reflects the latest
+  input, and main-thread preview p95 is at most 33ms. A one-shot 80-grapheme
+  DPR2 replacement should complete the latest paint without stale output.
+- Observed p50/p95 milliseconds:
+  - 18px: DPR1 44.2/74.4, DPR2 68.9/129.7, DPR3 137.1/175.3.
+  - 28px: DPR1 48.8/84.2, DPR2 79.3/110.0, DPR3 138.7/178.1.
+  - 52px: DPR1 53.9/92.4, DPR2 91.4/147.4, DPR3 157.0/210.1.
+  - 80-grapheme DPR2 replacement: latest paint 164.8ms, final textarea and
+    render length 80, maximum pending frame 1.
+- Why it failed: rAF coalescing prevents an unbounded queue but does not reduce
+  the cost of the one surviving frame. Every committed edit still rebuilds the
+  full-page Contact masks, Density planes, wet Surface solve, resolved coverage,
+  concentration and Optical RGBA synchronously on the main thread. DPR2 p95 is
+  up to 147.4ms, far above the 33ms interactive target.
+- Passed sub-contract: all observed scenarios kept `maximumPendingFrames=1`,
+  the last frame described the latest literal text and dimensions, the
+  performance observer did not create a second solve or React state loop, and
+  browser console warnings/errors were zero.
+- Discarded assumption: latest-only scheduling alone makes a heavy synchronous
+  settled-material renderer interactive, or the final settled image must block
+  the same frame that accepts literal text.
+- Preserved evidence or code: all engine pixels, recipes, seeds, Surface
+  operators, default DPR cap, native textarea/IME ownership, diagnostics, and
+  historical performance measurements. No material version changes.
+- Next different method: split temporal presentation. Render immediate Contact
+  feedback inside a 16.7–33ms main-thread budget, send settled Surface work to a
+  worker/off-main path with latest-result cancellation, and replace the preview
+  only when the result signature still matches. Cache flow-only Optical changes
+  separately because they must not recompute Contact, Density or Surface.
