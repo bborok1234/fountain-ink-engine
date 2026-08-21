@@ -948,3 +948,39 @@ they are not automatically promoted to timeless pass/fail truth.
   nib/ink/Surface matrix for finite fields, valid RGBA, nonblank output and
   explicit allocation lengths. Optional specialty components remain dependent
   on P5 and are not falsely marked complete.
+
+## E-023-active-material-validity-matrix / A1
+
+- Parent: `E-022-deterministic-field-signatures / A1`
+- Engine model: `ordinary-js-r12` (test expansion; no numeric change)
+- Package: `0.18.0-experimental.1`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2`
+- Status: passed checkpoint
+- Hypothesis: every currently selectable ordinary material combination can
+  satisfy the same finite/range/nonblank/retained-memory contract instead of
+  relying on one default M/green/balanced fixture.
+- Matrix: UEF/EF/F/M/B/EB/SU × green/blue-black/burgundy/teal ×
+  smooth/balanced/absorbent × flow 0/58/100, for 252 deterministic renders of
+  one nonblank Contact mask and explicit seeds.
+- Automated evidence: Contact and Optical RGBA, Density variation/count and
+  concentration, resolved Surface coverage, optional candidate/fibre planes,
+  density transport and paper-depth fields all have exact declared lengths.
+  Numeric planes stay finite and within their authored units. Signed numerator
+  magnitude never exceeds its positive pigment carrier. Every case retains
+  visible Contact, resolved coverage and final alpha.
+- Memory boundary: unique buffers retained by the four diagnostic stages must
+  stay within `32 × pagePixels + 16 × maximumSurfaceGridCells`. Existing
+  allocation-before-validation and maximum-grid tests continue to cover peak
+  solver allocation separately.
+- Preserved evidence or code: no runtime source, recipe, version, renderer,
+  harness or pixel changed; this experiment adds a cross-product regression
+  only.
+- P2 status: every calculation-independent invariant is now closed. The one
+  remaining optional-component-off item cannot be evaluated honestly before
+  P5 introduces independent specialty components, so it remains unchecked as
+  an explicit dependency rather than a skipped task.
+- Next different method: return to the unchecked P4 specialty contact work,
+  choose one real Italic/Stub/Music/Architect operator with measurable geometry,
+  then begin P5 specialty ink components in order.
