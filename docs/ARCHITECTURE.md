@@ -29,15 +29,15 @@ implicit migration.
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r10` is the active control and the blue-black, burgundy and teal
-r4 recipes are its ordinary-color peers. They share density bounds, keyboard
+`ordinary-green-r11` is the active control and the blue-black, burgundy and teal
+r5 recipes are its ordinary-color peers. They share density bounds, keyboard
 Surface load, fixed normalization reference, minimum Contact retention and
 alpha endpoints while owning separate Density-to-RGB curves and direct optical
-color coefficients. They select the r11 calculation model and ink schema 6.
+color coefficients. They select the r12 calculation model and ink schema 6.
 Paper policy is a separate versioned Surface recipe. Smooth r1 remains the
 historical crisp endpoint; balanced r2 keeps `paper-surface-js-r1`/schema 1 so
 the accepted candidate and direct-input solver stay exact while its keyboard
-coverage mix is revised; absorbent r3 uses `paper-surface-js-r3`/schema 3 so
+coverage mix is revised; absorbent r4 uses `paper-surface-js-r4`/schema 3 so
 paper-depth uptake cannot be silently reinterpreted as page-plane diffusion.
 Runtime nib, flow, layout, text, and seeds are not recipe fields.
 
@@ -150,10 +150,13 @@ nullable `paperDepth` grid; it does not feed Optical because it represents ink
 below the visible surface. The legacy r1 solver path remains intact for smooth,
 balanced and archived absorbent r1 recipes. Active balanced r2 preserves that
 solver but authors a restrained continuous keyboard coverage mix. Active
-absorbent r3 adds a full-resolution sparse
+absorbent r4 adds a full-resolution sparse
 fibre plane after Contact and coarse Surface calculation; every fibre remains
 connected to Contact, avoids enclosed counters, and is resolved as coverage by
 Surface rather than reconstructed by Optical.
+The operator advances from sparse Contact/frontier indices instead of scanning
+the complete local region for every distance. R4 scales only the first branch
+alpha by raster scale; archived r3 keeps its old device-pixel output exactly.
 
 Surface also owns absorption-dependent Density preservation through
 `getSurfaceDensityRange`. Contact supplies only the selected nib's shading

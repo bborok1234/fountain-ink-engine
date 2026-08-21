@@ -5,6 +5,7 @@ import {
   PAPER_SURFACE_ABSORBENT_R1,
   PAPER_SURFACE_ABSORBENT_R2,
   PAPER_SURFACE_ABSORBENT_R3,
+  PAPER_SURFACE_ABSORBENT_R4,
   PAPER_SURFACE_BALANCED_R1,
   PAPER_SURFACE_BALANCED_R2,
   PAPER_SURFACE_SMOOTH_R1,
@@ -21,6 +22,7 @@ const SURFACES = [
   [PAPER_SURFACE_ABSORBENT_R1, "aa289f94e40264db2325459eeb8fcf29b7c805a093a14cde321c82cd34b7851f"],
   [PAPER_SURFACE_ABSORBENT_R2, "8f4297d3bd38d8598fd0e05d675a2f8cb6c50e8114e7e9c3e2170a66264c862b"],
   [PAPER_SURFACE_ABSORBENT_R3, "d0f6a04bbb584df1a5ae7eb0c05bc450b2e4fe77b2db85347be7c8d481814893"],
+  [PAPER_SURFACE_ABSORBENT_R4, "d24df09aa1d7acb92e2cbc9ef49bec557cebaa76069064886f56e1bdcd0703a0"],
 ];
 
 test("paper Surface recipes are immutable, canonical, and independently pinned", () => {
@@ -98,6 +100,13 @@ test("absorbent r3 authors a sparse high-resolution fibre edge", () => {
   assert.ok(PAPER_SURFACE_ABSORBENT_R3.keyboard.fiberEdgeReachCssPixels > 1);
   assert.ok(PAPER_SURFACE_ABSORBENT_R3.keyboard.fiberEdgeOccupancy < 0.5);
   assert.ok(PAPER_SURFACE_ABSORBENT_R3.keyboard.fiberEdgeStrength < 0.7);
+});
+
+test("absorbent r4 preserves r3 coefficients under a scale-aware fibre runtime", () => {
+  assert.equal(PAPER_SURFACE_ABSORBENT_R4.surfaceRecipeSchemaVersion, 3);
+  assert.equal(PAPER_SURFACE_ABSORBENT_R4.surfaceModelVersion, "paper-surface-js-r4");
+  assert.deepEqual(PAPER_SURFACE_ABSORBENT_R4.axes, PAPER_SURFACE_ABSORBENT_R3.axes);
+  assert.deepEqual(PAPER_SURFACE_ABSORBENT_R4.keyboard, PAPER_SURFACE_ABSORBENT_R3.keyboard);
 });
 
 test("registered Surface identities cannot be silently retuned", () => {

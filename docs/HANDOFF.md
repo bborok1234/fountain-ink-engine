@@ -26,8 +26,10 @@ fountain-ink-engine/canvas2d
 
 Clients must never import `fountain-ink-engine/src/...`.
 
-The active calculation is `ordinary-js-r8` with immutable schema-5
-`ordinary-green@7`, blue-black, burgundy and teal recipes. Keyboard Surface clients may use
+The active calculation is `ordinary-js-r12` with immutable schema-6
+`ordinary-green@11`, blue-black@5, burgundy@5 and teal@5 recipes. Active
+absorbent paper is `paper-absorbent@4` under `paper-surface-js-r4`/schema 3;
+historical Surface revisions remain registered. Keyboard Surface clients may use
 `createKeyboardSurfaceState` for `{ coverage, densityTransport }`; the latter
 is nullable and retains two separate Float32 planes, `signedNumerator` and
 positive `pigmentWeight`. `createMaterialCoverage` remains the coverage-only

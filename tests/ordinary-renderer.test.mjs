@@ -9,16 +9,17 @@ import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R4,
-  ORDINARY_BURGUNDY_RECIPE_R4,
-  ORDINARY_GREEN_RECIPE_R10,
-  ORDINARY_TEAL_RECIPE_R4,
+  ORDINARY_BLUE_BLACK_RECIPE_R5,
+  ORDINARY_BURGUNDY_RECIPE_R5,
+  ORDINARY_GREEN_RECIPE_R11,
+  ORDINARY_TEAL_RECIPE_R5,
 } from "fountain-ink-engine/recipes";
 import { legacySurfaceAt } from "./helpers/material-fixtures.mjs";
 import {
   PAPER_SURFACE_ABSORBENT_R1,
   PAPER_SURFACE_ABSORBENT_R2,
   PAPER_SURFACE_ABSORBENT_R3,
+  PAPER_SURFACE_ABSORBENT_R4,
   PAPER_SURFACE_BALANCED_R1,
   PAPER_SURFACE_BALANCED_R2,
   PAPER_SURFACE_SMOOTH_R1,
@@ -204,7 +205,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R10,
+      recipe: ORDINARY_GREEN_RECIPE_R11,
       createLayer: makeCanvas,
     },
     mask,
@@ -497,7 +498,7 @@ test("active paper ladder increases lateral edge response from balanced to absor
   });
   const absorbent = renderOrdinaryInkMaterial({
     ...options,
-    surfaceRecipe: PAPER_SURFACE_ABSORBENT_R3,
+    surfaceRecipe: PAPER_SURFACE_ABSORBENT_R4,
   });
   assert.ok(
     balanced.stages.surface.resolvedCoverage.materialMix
@@ -549,10 +550,10 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
 
 test("ordinary color recipes change only Optical RGB for the same material solve", () => {
   const recipes = [
-    ORDINARY_GREEN_RECIPE_R10,
-    ORDINARY_BLUE_BLACK_RECIPE_R4,
-    ORDINARY_BURGUNDY_RECIPE_R4,
-    ORDINARY_TEAL_RECIPE_R4,
+    ORDINARY_GREEN_RECIPE_R11,
+    ORDINARY_BLUE_BLACK_RECIPE_R5,
+    ORDINARY_BURGUNDY_RECIPE_R5,
+    ORDINARY_TEAL_RECIPE_R5,
   ];
   const results = recipes.map((recipe) => {
     const { options } = makeOptions(42);
@@ -676,7 +677,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R10,
+    recipe: ORDINARY_GREEN_RECIPE_R11,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -772,7 +773,7 @@ test("a far suffix preserves the complete existing material crop at absorption 4
     flow: 58,
     scale: 1,
     fontSize: 12,
-    recipe: ORDINARY_GREEN_RECIPE_R10,
+    recipe: ORDINARY_GREEN_RECIPE_R11,
     createLayer: makeCanvas,
   };
   const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
@@ -910,7 +911,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R10,
+    recipe: ORDINARY_GREEN_RECIPE_R11,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);
