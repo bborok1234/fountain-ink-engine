@@ -176,6 +176,15 @@ phase and never changes particle positions. The built-in list is capped at 512
 particles and occupies 10,240 bytes of typed-array attributes rather than a
 full-page particle field.
 
+Package `0.28.0-experimental.1` adds `pigment-component-js-r1` and the
+independent `pigment-study@1` recipe. It shares the ordinary water footprint
+but owns mobile, fixed and optional paper-depth mass with authored mobility and
+retention multipliers. The A1 renderer exposes this state under Surface while
+ordinary water, carrier mass, coverage and RGBA remain exact. The current
+solver has one exclusive optional transported-component slot, so edge dye and
+pigment cannot coexist yet. Pigment Optical color and commit-age oxidation are
+not part of this checkpoint.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,
@@ -278,9 +287,9 @@ matching direct-pad color projection.
 - The Contact-axis extraction covers keyboard/font glyphs only. The direct
   writing pad uses physical pointer contact and flow-dependent liquid deposit
   loads, and is explicitly outside E-005 rather than silently reinterpreted.
-- Ordinary Density-to-RGB/alpha and the opt-in r5 second-dye color-zone mix are the
-  extracted composite families. Sheen, particles and time-varying Optical
-  layers remain unimplemented.
+- Ordinary Density-to-RGB/alpha, the opt-in r5 second-dye color zone, sheen and
+  shimmer are the extracted Optical families. Pigment A1 is state-only;
+  pigment color and time-varying oxidation remain unimplemented.
 - The Surface solver still operates on the current union mask, so nearby wet
   footprints may interact through diffusion, fixing, and signed-density mixing.
   Strict append-after-drying semantics would require incremental state and is
@@ -300,8 +309,9 @@ matching direct-pad color projection.
   a second calculation path.
 - Browser visual equivalence is checked during the migration, but no single
   permanent pixel image is treated as the final artistic truth.
-- Pigment and oxidation remain future versioned experiments. Edge-separated
-  color, sheen and shimmer now exist as three independent optional components.
+- Pigment transport state now exists; pigment Optical color and oxidation
+  remain future versioned experiments. Edge-separated color, sheen, shimmer
+  and pigment state are independent optional components.
 - Serialized keyboard Surface recipes are fail-closed above the bounded
   64-step synchronous calculation budget.
 

@@ -18,6 +18,7 @@ import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.
 import { EDGE_DYE_COMPONENT_RECIPE_R5 as ACTIVE_DYE_COMPONENT_RECIPE } from "fountain-ink-engine/dye-components";
 import { SHEEN_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/sheen-components";
 import { SHIMMER_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/shimmer-components";
+import { PIGMENT_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/pigment-components";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -388,6 +389,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
       "densityTransport",
       "paperDepth",
       "dyeComponent",
+      "pigmentComponent",
       "sheenFilm",
       "shimmerParticles",
       "fiberEdgeCoverage",
@@ -419,6 +421,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.ok(stages.surface.densityTransport.signedNumerator instanceof Float32Array);
   assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
   assert.equal(stages.surface.dyeComponent, null);
+  assert.equal(stages.surface.pigmentComponent, null);
   assert.equal(stages.surface.sheenFilm, null);
   assert.equal(stages.surface.shimmerParticles, null);
   assert.equal(stages.optical.baseCompositeRgba, null);
@@ -442,6 +445,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   );
   assert.equal(result.paperDepth, stages.surface.paperDepth);
   assert.equal(result.dyeComponent, stages.surface.dyeComponent);
+  assert.equal(result.pigmentComponent, stages.surface.pigmentComponent);
   assert.equal(result.sheenFilm, stages.surface.sheenFilm);
   assert.equal(result.shimmerParticles, stages.surface.shimmerParticles);
   assert.equal(result.fiberEdgeCoverage, stages.surface.fiberEdgeCoverage);
@@ -694,6 +698,35 @@ test("shimmer keeps a seeded bounded particle list inside ordinary alpha", () =>
     }
   }
   assert.ok(changedPixels > 0);
+});
+
+test("pigment component exposes separate mass while leaving ordinary Optical exact", () => {
+  const { options } = makeOptions(42, 96, 48);
+  const ordinary = renderOrdinaryInkMaterial(options);
+  const pigment = renderOrdinaryInkMaterial({
+    ...options,
+    pigmentComponentRecipe: PIGMENT_COMPONENT_RECIPE_R1,
+  });
+  assert.ok(pigment.stages.surface.pigmentComponent.mobileTotal > 0);
+  assert.ok(pigment.stages.surface.pigmentComponent.fixedTotal > 0);
+  assert.equal(pigment.stages.surface.dyeComponent, null);
+  assert.deepEqual(pigment.imageData.data, ordinary.imageData.data);
+  assert.deepEqual(
+    pigment.stages.optical.baseCompositeRgba.data,
+    ordinary.imageData.data,
+  );
+  assert.deepEqual(
+    pigment.stages.contact.rgbaMask.data,
+    ordinary.stages.contact.rgbaMask.data,
+  );
+  assert.deepEqual(
+    pigment.stages.density.normalizedConcentration.data,
+    ordinary.stages.density.normalizedConcentration.data,
+  );
+  assert.deepEqual(
+    pigment.stages.surface.resolvedCoverage.data,
+    ordinary.stages.surface.resolvedCoverage.data,
+  );
 });
 
 test("internal concentration and dye enrichment remain independent diagnostics", () => {

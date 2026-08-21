@@ -232,6 +232,17 @@ Reduce Motion substitutes the recipe-authored static phase without relocating
 or blinking particles. This is not the dye color-zone operator, the sheen film,
 an outline, a blur, or page-wide random noise.
 
+### Optional pigment component
+
+Pigment A1 is a Surface-owned transported mass state, not an Optical texture.
+It shares the ordinary water footprint while its recipe independently scales
+component mass, lateral mobility and fixing retention. The solver returns
+mobile, fixed and optional paper-depth Float32 planes plus stable totals; it
+does not change ordinary mass, coverage, color or alpha. The internal generic
+component slot is reused by either P5-A dye or P5-D pigment and rejects both at
+once. This exclusive A1 boundary avoids duplicate solver planes but must be
+replaced by a bounded multi-component registry before combined dye+pigment inks.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -260,8 +271,10 @@ observes the buffers already used by the accepted render path:
   derived before Optical; it is absent when the sheen component is disabled;
 - `surface.shimmerParticles`: nullable bounded particle record with five
   count-sized Float32 arrays; it is absent when the shimmer component is disabled;
-- `optical.baseCompositeRgba`: nullable ordinary RGBA retained only when a dye
-  dye, sheen or shimmer component is active, for direct diagnostic comparison
+- `surface.pigmentComponent`: nullable grid record with mobile, fixed and
+  paper-depth mass plus totals; it has no RGB/alpha meaning in A1;
+- `optical.baseCompositeRgba`: nullable ordinary RGBA retained only when a dye,
+  sheen, shimmer or pigment component is active, for direct diagnostic comparison
   with the final;
 - `optical.compositeRgba`: the final ordinary RGBA composite, optionally with
   the r5 second-dye RGB, view-dependent sheen RGB and/or bounded shimmer RGB

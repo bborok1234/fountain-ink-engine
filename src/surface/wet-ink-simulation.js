@@ -4,6 +4,7 @@ import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
 import { assertSurfaceDensityTransportGrid } from "./density-transport.js";
 import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
+import { assertPigmentComponentRecipeCompatible } from "../pigment-components/index.js";
 
 const clamp = (value, minimum = 0, maximum = 1) =>
   Math.min(maximum, Math.max(minimum, value));
@@ -55,14 +56,15 @@ export class WetInkSimulation {
     // path keep their exact seven-plane allocation and arithmetic.
     this.subsurfacePigment = null;
     this.subsurfaceSignedMass = null;
-    // Optional P5 dye component. These planes are absent from ordinary and
-    // direct-writing paths. The component shares water but owns its own mass,
-    // mobility and retention response.
-    this.dyeComponentRecipe = null;
-    this.dyeComponentMobile = null;
-    this.dyeComponentFixed = null;
-    this.nextDyeComponentMobile = null;
-    this.dyeComponentSubsurface = null;
+    // One optional transported P5 material component. These planes are absent
+    // from ordinary/direct paths. Dye and pigment reuse the same slot because
+    // A1 workbench modes are exclusive; public state snapshots stay distinct.
+    this.materialComponentRecipe = null;
+    this.materialComponentKind = null;
+    this.materialComponentMobile = null;
+    this.materialComponentFixed = null;
+    this.nextMaterialComponentMobile = null;
+    this.materialComponentSubsurface = null;
     this.activity = 0;
     this.makeFiberField();
   }
@@ -95,10 +97,10 @@ export class WetInkSimulation {
     this.nextMobileSignedMass?.fill(0);
     this.subsurfacePigment?.fill(0);
     this.subsurfaceSignedMass?.fill(0);
-    this.dyeComponentMobile?.fill(0);
-    this.dyeComponentFixed?.fill(0);
-    this.nextDyeComponentMobile?.fill(0);
-    this.dyeComponentSubsurface?.fill(0);
+    this.materialComponentMobile?.fill(0);
+    this.materialComponentFixed?.fill(0);
+    this.nextMaterialComponentMobile?.fill(0);
+    this.materialComponentSubsurface?.fill(0);
     this.activity = 0;
   }
 
@@ -134,17 +136,39 @@ export class WetInkSimulation {
       "dyeComponentRecipe",
       "options.dyeComponentRecipe",
     ) ?? null;
+    const pigmentComponentRecipe = readOptionalOwnDataProperty(
+      options,
+      "pigmentComponentRecipe",
+      "options.pigmentComponentRecipe",
+    ) ?? null;
+    if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
+      throw new TypeError(
+        "Only one transported dye or pigment component may be active per solve.",
+      );
+    }
     if (dyeComponentRecipe !== null) {
       assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+    }
+    if (pigmentComponentRecipe !== null) {
+      assertPigmentComponentRecipeCompatible(pigmentComponentRecipe);
+    }
+    const materialComponentRecipe = dyeComponentRecipe ?? pigmentComponentRecipe;
+    const materialComponentKind = dyeComponentRecipe !== null
+      ? "dye"
+      : pigmentComponentRecipe !== null
+        ? "pigment"
+        : null;
+    if (materialComponentRecipe !== null) {
       if (
-        this.dyeComponentRecipe !== null
+        this.materialComponentRecipe !== null
         && (
-          this.dyeComponentRecipe.id !== dyeComponentRecipe.id
-          || this.dyeComponentRecipe.revision !== dyeComponentRecipe.revision
+          this.materialComponentKind !== materialComponentKind
+          || this.materialComponentRecipe.id !== materialComponentRecipe.id
+          || this.materialComponentRecipe.revision !== materialComponentRecipe.revision
         )
       ) {
         throw new TypeError(
-          "A WetInkSimulation cannot mix different dye component recipes.",
+          "A WetInkSimulation cannot mix different material component recipes.",
         );
       }
     }
@@ -155,11 +179,12 @@ export class WetInkSimulation {
       this.fixedSignedMass = new Float32Array(this.length);
       this.nextMobileSignedMass = new Float32Array(this.length);
     }
-    if (dyeComponentRecipe !== null && this.dyeComponentMobile === null) {
-      this.dyeComponentRecipe = dyeComponentRecipe;
-      this.dyeComponentMobile = new Float32Array(this.length);
-      this.dyeComponentFixed = new Float32Array(this.length);
-      this.nextDyeComponentMobile = new Float32Array(this.length);
+    if (materialComponentRecipe !== null && this.materialComponentMobile === null) {
+      this.materialComponentKind = materialComponentKind;
+      this.materialComponentRecipe = materialComponentRecipe;
+      this.materialComponentMobile = new Float32Array(this.length);
+      this.materialComponentFixed = new Float32Array(this.length);
+      this.nextMaterialComponentMobile = new Float32Array(this.length);
     }
 
     for (let y = 0; y < this.height; y += 1) {
@@ -209,11 +234,11 @@ export class WetInkSimulation {
             nextMobile,
           );
         }
-        if (dyeComponentRecipe !== null) {
+        if (materialComponentRecipe !== null) {
           const depositedBaseMass = this.mobile[index] - previousMobile;
-          this.dyeComponentMobile[index] = clamp(
-            this.dyeComponentMobile[index]
-              + depositedBaseMass * dyeComponentRecipe.massFraction,
+          this.materialComponentMobile[index] = clamp(
+            this.materialComponentMobile[index]
+              + depositedBaseMass * materialComponentRecipe.massFraction,
             0,
             1.8,
           );
@@ -330,10 +355,10 @@ export class WetInkSimulation {
       this.subsurfaceSignedMass = new Float32Array(this.length);
     }
     if (
-      this.dyeComponentMobile !== null
-      && this.dyeComponentSubsurface === null
+      this.materialComponentMobile !== null
+      && this.materialComponentSubsurface === null
     ) {
-      this.dyeComponentSubsurface = new Float32Array(this.length);
+      this.materialComponentSubsurface = new Float32Array(this.length);
     }
     let activeWater = 0;
 
@@ -439,14 +464,14 @@ export class WetInkSimulation {
             nextSubsurface,
           );
         }
-        if (this.dyeComponentMobile !== null) {
-          const componentMobile = this.dyeComponentMobile[index];
+        if (this.materialComponentMobile !== null) {
+          const componentMobile = this.materialComponentMobile[index];
           const componentMobility = pigmentMobility
-            * this.dyeComponentRecipe.mobilityMultiplier;
+            * this.materialComponentRecipe.mobilityMultiplier;
           const componentLaplacian =
-            (this.dyeComponentMobile[left] + this.dyeComponentMobile[right]
-              + this.dyeComponentMobile[above]
-              + this.dyeComponentMobile[below] - componentMobile * 4)
+            (this.materialComponentMobile[left] + this.materialComponentMobile[right]
+              + this.materialComponentMobile[above]
+              + this.materialComponentMobile[below] - componentMobile * 4)
             * componentMobility * clamp(water * 1.35, 0, 1);
           const componentAfterSpread = Math.max(
             0,
@@ -459,7 +484,7 @@ export class WetInkSimulation {
             : 0;
           const componentFixingFraction = clamp(
             baseFixingFraction
-              * this.dyeComponentRecipe.retentionMultiplier,
+              * this.materialComponentRecipe.retentionMultiplier,
           );
           const componentFixing = componentSurface
             * componentFixingFraction;
@@ -468,18 +493,18 @@ export class WetInkSimulation {
             componentSurface - componentFixing,
           );
           const componentNextFixed = clamp(
-            this.dyeComponentFixed[index] + componentFixing,
+            this.materialComponentFixed[index] + componentFixing,
             0,
             2.1,
           );
           const componentNextSubsurface = clamp(
-            this.dyeComponentSubsurface[index] + componentDepth,
+            this.materialComponentSubsurface[index] + componentDepth,
             0,
             2.1,
           );
-          this.nextDyeComponentMobile[index] = componentNextMobile;
-          this.dyeComponentFixed[index] = componentNextFixed;
-          this.dyeComponentSubsurface[index] = componentNextSubsurface;
+          this.nextMaterialComponentMobile[index] = componentNextMobile;
+          this.materialComponentFixed[index] = componentNextFixed;
+          this.materialComponentSubsurface[index] = componentNextSubsurface;
         }
         activeWater += nextWater;
       }
@@ -493,16 +518,16 @@ export class WetInkSimulation {
         this.mobileSignedMass,
       ];
     }
-    if (this.dyeComponentMobile !== null) {
-      [this.dyeComponentMobile, this.nextDyeComponentMobile] = [
-        this.nextDyeComponentMobile,
-        this.dyeComponentMobile,
+    if (this.materialComponentMobile !== null) {
+      [this.materialComponentMobile, this.nextMaterialComponentMobile] = [
+        this.nextMaterialComponentMobile,
+        this.materialComponentMobile,
       ];
     }
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
     this.nextMobileSignedMass?.fill(0);
-    this.nextDyeComponentMobile?.fill(0);
+    this.nextMaterialComponentMobile?.fill(0);
     this.activity = activeWater / this.length;
   }
 
@@ -601,14 +626,14 @@ export class WetInkSimulation {
             nextFixed,
           );
         }
-        if (this.dyeComponentMobile !== null) {
-          const componentMobile = this.dyeComponentMobile[index];
+        if (this.materialComponentMobile !== null) {
+          const componentMobile = this.materialComponentMobile[index];
           const componentMobility = pigmentMobility
-            * this.dyeComponentRecipe.mobilityMultiplier;
+            * this.materialComponentRecipe.mobilityMultiplier;
           const componentLaplacian =
-            (this.dyeComponentMobile[left] + this.dyeComponentMobile[right]
-              + this.dyeComponentMobile[above]
-              + this.dyeComponentMobile[below] - componentMobile * 4)
+            (this.materialComponentMobile[left] + this.materialComponentMobile[right]
+              + this.materialComponentMobile[above]
+              + this.materialComponentMobile[below] - componentMobile * 4)
             * componentMobility * clamp(water * 1.35, 0, 1);
           const componentAfterDiffusion = Math.max(
             0,
@@ -620,16 +645,16 @@ export class WetInkSimulation {
             : 0;
           const componentFixingFraction = clamp(
             baseFixingFraction
-              * this.dyeComponentRecipe.retentionMultiplier,
+              * this.materialComponentRecipe.retentionMultiplier,
           );
           const componentFixing = componentAfterDiffusion
             * componentFixingFraction;
-          this.nextDyeComponentMobile[index] = Math.max(
+          this.nextMaterialComponentMobile[index] = Math.max(
             0,
             componentAfterDiffusion - componentFixing,
           );
-          this.dyeComponentFixed[index] = clamp(
-            this.dyeComponentFixed[index] + componentFixing,
+          this.materialComponentFixed[index] = clamp(
+            this.materialComponentFixed[index] + componentFixing,
             0,
             2.1,
           );
@@ -646,16 +671,16 @@ export class WetInkSimulation {
         this.mobileSignedMass,
       ];
     }
-    if (this.dyeComponentMobile !== null) {
-      [this.dyeComponentMobile, this.nextDyeComponentMobile] = [
-        this.nextDyeComponentMobile,
-        this.dyeComponentMobile,
+    if (this.materialComponentMobile !== null) {
+      [this.materialComponentMobile, this.nextMaterialComponentMobile] = [
+        this.nextMaterialComponentMobile,
+        this.materialComponentMobile,
       ];
     }
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
     this.nextMobileSignedMass?.fill(0);
-    this.nextDyeComponentMobile?.fill(0);
+    this.nextMaterialComponentMobile?.fill(0);
     this.activity = activeWater / this.length;
   }
 
@@ -703,15 +728,18 @@ export class WetInkSimulation {
   }
 
   createDyeComponentState() {
-    if (this.dyeComponentMobile === null) return null;
-    const expectedFraction = this.dyeComponentRecipe.massFraction
-      / (1 + this.dyeComponentRecipe.massFraction);
+    if (
+      this.materialComponentMobile === null
+      || this.materialComponentKind !== "dye"
+    ) return null;
+    const expectedFraction = this.materialComponentRecipe.massFraction
+      / (1 + this.materialComponentRecipe.massFraction);
     const visibleFraction = new Float32Array(this.length);
     const fractionDelta = new Float32Array(this.length);
     for (let index = 0; index < this.length; index += 1) {
       const baseMass = this.mobile[index] + this.fixed[index];
-      const componentMass = this.dyeComponentMobile[index]
-        + this.dyeComponentFixed[index];
+      const componentMass = this.materialComponentMobile[index]
+        + this.materialComponentFixed[index];
       const totalMass = baseMass + componentMass;
       if (!(totalMass > 0)) continue;
       const fraction = clamp(componentMass / totalMass);
@@ -724,8 +752,8 @@ export class WetInkSimulation {
       for (let x = 1; x < this.width - 1; x += 1) {
         const index = y * this.width + x;
         const delta = fractionDelta[index];
-        const componentMass = this.dyeComponentMobile[index]
-          + this.dyeComponentFixed[index];
+        const componentMass = this.materialComponentMobile[index]
+          + this.materialComponentFixed[index];
         if (!(delta > 0) || !(componentMass > 0)) continue;
         const localBaseMaximum = Math.max(
           this.mobile[index] + this.fixed[index],
@@ -742,12 +770,12 @@ export class WetInkSimulation {
           ? clamp(delta / enrichmentMaximum)
           : 0;
         const massVisibility = 1 - Math.exp(
-          -componentMass * this.dyeComponentRecipe.edgeMassGain,
+          -componentMass * this.materialComponentRecipe.edgeMassGain,
         );
         const candidate = enrichmentStrength
           * (0.25 + exposure * 0.75)
           * massVisibility;
-        if (candidate >= this.dyeComponentRecipe.edgeEnrichmentThreshold) {
+        if (candidate >= this.materialComponentRecipe.edgeEnrichmentThreshold) {
           edgeAccumulation[index] = Math.fround(candidate);
         }
       }
@@ -760,7 +788,7 @@ export class WetInkSimulation {
       for (let x = 1; x < this.width - 1; x += 1) {
         const index = y * this.width + x;
         const delta = fractionDelta[index];
-        if (!(delta >= this.dyeComponentRecipe.edgeZonePeakThreshold)) continue;
+        if (!(delta >= this.materialComponentRecipe.edgeZonePeakThreshold)) continue;
         const isLocalPeak = delta >= fractionDelta[index - 1]
           && delta >= fractionDelta[index + 1]
           && delta >= fractionDelta[index - this.width]
@@ -782,14 +810,14 @@ export class WetInkSimulation {
       }
     }
     const colorZone = new Float32Array(this.length);
-    const zoneRadius = this.dyeComponentRecipe.edgeZoneRadius;
-    const zoneMinimum = this.dyeComponentRecipe.edgeZoneMinimumStrength;
+    const zoneRadius = this.materialComponentRecipe.edgeZoneRadius;
+    const zoneMinimum = this.materialComponentRecipe.edgeZoneMinimumStrength;
     for (let y = 0; y < this.height; y += 1) {
       for (let x = 0; x < this.width; x += 1) {
         const index = y * this.width + x;
         const delta = fractionDelta[index];
-        const componentMass = this.dyeComponentMobile[index]
-          + this.dyeComponentFixed[index];
+        const componentMass = this.materialComponentMobile[index]
+          + this.materialComponentFixed[index];
         if (!(delta > 0) || !(componentMass > 0)) continue;
         let hasCandidateSeed = false;
         for (
@@ -819,21 +847,117 @@ export class WetInkSimulation {
       }
     }
     return Object.freeze({
-      id: this.dyeComponentRecipe.id,
-      revision: this.dyeComponentRecipe.revision,
+      id: this.materialComponentRecipe.id,
+      revision: this.materialComponentRecipe.revision,
       width: this.width,
       height: this.height,
-      mobileMass: new Float32Array(this.dyeComponentMobile),
-      fixedMass: new Float32Array(this.dyeComponentFixed),
-      subsurfaceMass: this.dyeComponentSubsurface === null
+      mobileMass: new Float32Array(this.materialComponentMobile),
+      fixedMass: new Float32Array(this.materialComponentFixed),
+      subsurfaceMass: this.materialComponentSubsurface === null
         ? null
-        : new Float32Array(this.dyeComponentSubsurface),
+        : new Float32Array(this.materialComponentSubsurface),
       expectedFraction,
       visibleFraction,
       fractionDelta,
       edgeAccumulation,
       colorZone,
     });
+  }
+
+  createPigmentComponentState() {
+    if (
+      this.materialComponentMobile === null
+      || this.materialComponentKind !== "pigment"
+    ) return null;
+    const mobileMass = new Float32Array(this.materialComponentMobile);
+    const fixedMass = new Float32Array(this.materialComponentFixed);
+    const subsurfaceMass = this.materialComponentSubsurface === null
+      ? null
+      : new Float32Array(this.materialComponentSubsurface);
+    let mobileTotal = 0;
+    let fixedTotal = 0;
+    let subsurfaceTotal = 0;
+    for (let index = 0; index < this.length; index += 1) {
+      mobileTotal += mobileMass[index];
+      fixedTotal += fixedMass[index];
+      subsurfaceTotal += subsurfaceMass?.[index] ?? 0;
+    }
+    const visibleTotal = mobileTotal + fixedTotal;
+    return Object.freeze({
+      id: this.materialComponentRecipe.id,
+      revision: this.materialComponentRecipe.revision,
+      width: this.width,
+      height: this.height,
+      mobileMass,
+      fixedMass,
+      subsurfaceMass,
+      mobileTotal,
+      fixedTotal,
+      subsurfaceTotal,
+      fixedFraction: visibleTotal > 0 ? fixedTotal / visibleTotal : 0,
+    });
+  }
+
+  // Compatibility views for callers that inspected the earlier dye-specific
+  // solver fields. Pigment has separate names and never appears as dye state.
+  get dyeComponentRecipe() {
+    return this.materialComponentKind === "dye"
+      ? this.materialComponentRecipe
+      : null;
+  }
+
+  get dyeComponentMobile() {
+    return this.materialComponentKind === "dye"
+      ? this.materialComponentMobile
+      : null;
+  }
+
+  get dyeComponentFixed() {
+    return this.materialComponentKind === "dye"
+      ? this.materialComponentFixed
+      : null;
+  }
+
+  get nextDyeComponentMobile() {
+    return this.materialComponentKind === "dye"
+      ? this.nextMaterialComponentMobile
+      : null;
+  }
+
+  get dyeComponentSubsurface() {
+    return this.materialComponentKind === "dye"
+      ? this.materialComponentSubsurface
+      : null;
+  }
+
+  get pigmentComponentRecipe() {
+    return this.materialComponentKind === "pigment"
+      ? this.materialComponentRecipe
+      : null;
+  }
+
+  get pigmentComponentMobile() {
+    return this.materialComponentKind === "pigment"
+      ? this.materialComponentMobile
+      : null;
+  }
+
+  get pigmentComponentFixed() {
+    return this.materialComponentKind === "pigment"
+      ? this.materialComponentFixed
+      : null;
+  }
+
+  get nextPigmentComponentMobile() {
+    return this.materialComponentKind === "pigment"
+      ? this.nextMaterialComponentMobile
+      : null;
+  }
+
+  get pigmentComponentSubsurface() {
+    return this.materialComponentKind === "pigment"
+      ? this.materialComponentSubsurface
+      : null;
   }
 
   render(imageData, recipe, opticalGain = 1) {

@@ -3,6 +3,7 @@ export * from "./recipes/index.js";
 export * from "./dye-components/index.js";
 export * from "./sheen-components/index.js";
 export * from "./shimmer-components/index.js";
+export * from "./pigment-components/index.js";
 export * from "./surface-recipes/index.js";
 export * from "./deterministic/index.js";
 export * from "./contact/index.js";

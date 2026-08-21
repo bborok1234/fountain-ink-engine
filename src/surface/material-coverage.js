@@ -7,6 +7,7 @@ import {
   assertSurfaceRecipeCompatible,
 } from "../surface-recipes/index.js";
 import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
+import { assertPigmentComponentRecipeCompatible } from "../pigment-components/index.js";
 
 export const DEFAULT_SURFACE_SEED = 0x13579bdf;
 
@@ -23,6 +24,7 @@ export const DEFAULT_SURFACE_SEED = 0x13579bdf;
  * @param {{width:number,height:number,signedNumerator:Float32Array,
  *   pigmentWeight:Float32Array}|null} densityTransport
  * @param {Record<string, unknown>|null} dyeComponentRecipe
+ * @param {Record<string, unknown>|null} pigmentComponentRecipe
  */
 export function createKeyboardSurfaceState(
   deposit,
@@ -31,6 +33,7 @@ export function createKeyboardSurfaceState(
   inkRecipe,
   densityTransport = null,
   dyeComponentRecipe = null,
+  pigmentComponentRecipe = null,
 ) {
   assertInkRecipeCompatible(inkRecipe);
   assertSurfaceRecipeCompatible(surfaceRecipe);
@@ -40,6 +43,14 @@ export function createKeyboardSurfaceState(
     : assertSurfaceDensityTransportGrid(densityTransport);
   if (dyeComponentRecipe !== null) {
     assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+  }
+  if (pigmentComponentRecipe !== null) {
+    assertPigmentComponentRecipeCompatible(pigmentComponentRecipe);
+  }
+  if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
+    throw new TypeError(
+      "Only one transported dye or pigment component may be active per solve.",
+    );
   }
   if (
     validatedDensityTransport !== null
@@ -67,6 +78,9 @@ export function createKeyboardSurfaceState(
     ...(dyeComponentRecipe === null
       ? {}
       : { dyeComponentRecipe }),
+    ...(pigmentComponentRecipe === null
+      ? {}
+      : { pigmentComponentRecipe }),
   });
   const stepResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
     ? surfaceRecipe.axes.verticalUptake
@@ -110,6 +124,7 @@ export function createKeyboardSurfaceState(
     densityTransport: simulation.createDensityTransport(inkRecipe),
     paperDepth: simulation.createPaperDepthState(),
     dyeComponent: simulation.createDyeComponentState(),
+    pigmentComponent: simulation.createPigmentComponentState(),
   });
 }
 

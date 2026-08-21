@@ -37,6 +37,7 @@ Focused entry points are also available:
 - `fountain-ink-engine/dye-components`
 - `fountain-ink-engine/sheen-components`
 - `fountain-ink-engine/shimmer-components`
+- `fountain-ink-engine/pigment-components`
 - `fountain-ink-engine/deterministic`
 - `fountain-ink-engine/contact`
 - `fountain-ink-engine/density`
@@ -140,6 +141,24 @@ population and retained strength. Optical changes RGB only inside existing ink
 alpha. Reduce Motion selects the recipe-authored static light phase and never
 relocates particles. This is neither the P5-A color zone nor the P5-B Surface
 film, and it does not allocate a page-sized particle plane.
+
+## Optional pigment component state
+
+Package `0.28.0-experimental.1` adds a non-optical solid-colorant state:
+
+```js
+import {
+  PIGMENT_COMPONENT_RECIPE_R1,
+} from "fountain-ink-engine/pigment-components";
+```
+
+The pigment component shares the ordinary water footprint but owns separate
+mobile, fixed and optional paper-depth mass. Its recipe authors relative mass,
+mobility and retention responses. A1 intentionally leaves ordinary mass,
+coverage and final RGBA byte-exact; it establishes state before any pigment
+color, opacity, permanence or elapsed-time claim. Dye and pigment currently
+reuse one exclusive transported-component slot, so clients must not enable
+both in the same solve.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior
