@@ -194,6 +194,14 @@ only and keeps Contact, Density, Surface coverage and alpha exact. The Workbench
 currently treats its preview text as one material commit; persisted product
 strokes and per-commit replay remain future integration work.
 
+Package `0.30.0-experimental.1` advances only the independent checkpoint axis:
+fixture manifest v3 requires complete specialty `componentInputs` and a strict
+`renderContext`. The context records literal text, actual grapheme segmentation,
+all glyph seeds and derivation ids, Surface seed, geometry/layout/raster facts,
+font file SHA-256 and dependency-lock SHA-256. It changes no engine model,
+recipe schema or rendered byte. Manifest v1/v2 records remain readable without
+inventing the fields they never stored.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,

@@ -1,6 +1,6 @@
 {
   "name": "fountain-ink-engine",
-  "version": "0.29.0-experimental.1",
+  "version": "0.30.0-experimental.1",
   "description": "Deterministic, framework-free material engine for digital fountain-pen ink experiments.",
   "keywords": [
     "fountain-pen",
