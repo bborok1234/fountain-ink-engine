@@ -8,6 +8,7 @@ import {
   geometryExpansion,
   getGlyphContactGeometry,
   getNibGeometry,
+  getPhysicalNibGeometry,
   getNibProfile,
   getScaledNibGeometry,
   morphAlpha,
@@ -15,11 +16,11 @@ import {
 } from "../src/contact/index.js";
 import { getNibDensityRange } from "../src/density/index.js";
 import { hashString, randomFrom } from "../src/deterministic/index.js";
-import { ORDINARY_GREEN_RECIPE_R11 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R12 } from "../src/recipes/index.js";
 import { PAPER_SURFACE_BALANCED_R1 } from "../src/surface-recipes/index.js";
 
 test("preserves the accepted controlled-width nib ladder", () => {
-  assert.deepEqual(NIB_IDS, ["UEF", "EF", "F", "M", "B", "EB", "SU"]);
+  assert.deepEqual(NIB_IDS, ["UEF", "EF", "F", "M", "B", "EB", "SU", "CM"]);
   for (const fontSize of [18, 26, 28, 52]) {
     for (const id of ["UEF", "EF", "F", "M", "B", "EB"]) {
       const mStroke = fontSize * M_STROKE_EM;
@@ -74,6 +75,8 @@ test("glyph contact is deterministic and unknown inputs fail closed", () => {
     () => getGlyphContactGeometry("UNKNOWN", 28, 0x1234abcd),
     /Unknown nibId/,
   );
+  assert.throws(() => getNibGeometry("UNKNOWN", 28), /Unknown nibId/);
+  assert.throws(() => getPhysicalNibGeometry("UNKNOWN"), /Unknown nibId/);
   assert.throws(
     () => getGlyphContactGeometry("M", 0, 0x1234abcd),
     /fontSize must be a finite number/,
@@ -111,19 +114,20 @@ test("broad nibs increase signed density range within the recipe cap", () => {
     B: 0.6116840000000001,
     EB: 0.7356740000000002,
     SU: 0.49596000000000007,
+    CM: 0.5372900000000002,
   };
   for (const nibId of NIB_IDS) {
     assert.ok(
       Math.abs(getNibDensityRange(
         nibId,
         PAPER_SURFACE_BALANCED_R1,
-        ORDINARY_GREEN_RECIPE_R11,
+        ORDINARY_GREEN_RECIPE_R12,
       ) - acceptedRangeAtAbsorption42[nibId]) < 1e-12,
     );
   }
   assert.ok(
-    getNibDensityRange("EB", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R11)
-      > getNibDensityRange("M", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R11),
+    getNibDensityRange("EB", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R12)
+      > getNibDensityRange("M", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R12),
   );
   assert.equal(
     shapeNibDensityVariation("EB", -0.3),
@@ -135,7 +139,7 @@ test("broad nibs increase signed density range within the recipe cap", () => {
     /recipeSchemaVersion must be an enumerable own data property/,
   );
 
-  const nonFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R11));
+  const nonFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R12));
   nonFinite.id = "custom-non-finite-study";
   nonFinite.density.rangeMaximum = Number.NaN;
   assert.throws(
@@ -143,7 +147,7 @@ test("broad nibs increase signed density range within the recipe cap", () => {
     /finite number/,
   );
   assert.throws(
-    () => getNibDensityRange("M", null, ORDINARY_GREEN_RECIPE_R11),
+    () => getNibDensityRange("M", null, ORDINARY_GREEN_RECIPE_R12),
     /surfaceRecipe must be a plain object/,
   );
 });
@@ -159,12 +163,16 @@ test("final Contact masks expose measurable width, components, and counters", ()
   assert.equal(metrics.connectedComponents, 1);
   assert.equal(metrics.counterCount, 1);
   assert.deepEqual(metrics.counterAreas, [9]);
+  assert.equal(metrics.filledPixelCount, 40);
+  assert.equal(metrics.boundingBoxArea, 49);
+  assert.equal(metrics.apertureArea, 9);
+  assert.equal(metrics.apertureRatio, 9 / 49);
   assert.ok(metrics.medianStrokeWidth > 0);
   assert.ok(metrics.medianHorizontalRun > 0);
   assert.ok(metrics.medianVerticalRun > 0);
 });
 
-test("synthetic final-mask ladder is monotonic and SU remains anisotropic", () => {
+test("synthetic final-mask ladder is monotonic and special contacts have opposite signatures", () => {
   const width = 41;
   const height = 41;
   const base = new Uint8ClampedArray(width * height);
@@ -186,5 +194,14 @@ test("synthetic final-mask ladder is monotonic and SU remains anisotropic", () =
   assert.ok(
     su.medianHorizontalRun - baseMetrics.medianHorizontalRun
       > su.medianVerticalRun - baseMetrics.medianVerticalRun,
+  );
+  const crossMusic = analyzeContactAlpha(
+    morphAlpha(base, width, height, 1, 4, "dilate"),
+    width,
+    height,
+  );
+  assert.ok(
+    crossMusic.medianVerticalRun - baseMetrics.medianVerticalRun
+      > crossMusic.medianHorizontalRun - baseMetrics.medianHorizontalRun,
   );
 });

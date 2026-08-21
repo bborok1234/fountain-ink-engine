@@ -1,3 +1,5 @@
+import { SUPPORTED_CONTACT_CATALOG_IDS } from "../contact/nib-profiles.js";
+
 export const SUPPORTED_RECIPE_SCHEMA_VERSIONS = Object.freeze([2, 3, 4, 5, 6]);
 export const MAX_KEYBOARD_SURFACE_STEPS = 64;
 
@@ -154,9 +156,9 @@ export function validateInkRecipe(recipe) {
   assertRecord(recipe.contact, "recipe.contact");
   assertExactKeys(recipe.contact, ["catalogId"], "recipe.contact");
   assertNonEmptyString(recipe.contact.catalogId, "recipe.contact.catalogId");
-  if (recipe.contact.catalogId !== "standard-nib-ladder-r1") {
+  if (!SUPPORTED_CONTACT_CATALOG_IDS.includes(recipe.contact.catalogId)) {
     throw new TypeError(
-      "recipe.contact.catalogId must be standard-nib-ladder-r1.",
+      `recipe.contact.catalogId must be one of ${SUPPORTED_CONTACT_CATALOG_IDS.join(", ")}.`,
     );
   }
 

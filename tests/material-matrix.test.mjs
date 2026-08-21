@@ -3,10 +3,10 @@ import test from "node:test";
 import { renderOrdinaryInkMaterial } from "fountain-ink-engine/canvas2d";
 import { NIB_IDS } from "fountain-ink-engine/contact";
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R5,
-  ORDINARY_BURGUNDY_RECIPE_R5,
-  ORDINARY_GREEN_RECIPE_R11,
-  ORDINARY_TEAL_RECIPE_R5,
+  ORDINARY_BLUE_BLACK_RECIPE_R6,
+  ORDINARY_BURGUNDY_RECIPE_R6,
+  ORDINARY_GREEN_RECIPE_R12,
+  ORDINARY_TEAL_RECIPE_R6,
 } from "fountain-ink-engine/recipes";
 import {
   PAPER_SURFACE_ABSORBENT_R4,
@@ -18,10 +18,10 @@ const WIDTH = 18;
 const HEIGHT = 14;
 const PAGE_PIXELS = WIDTH * HEIGHT;
 const INKS = Object.freeze([
-  ORDINARY_GREEN_RECIPE_R11,
-  ORDINARY_BLUE_BLACK_RECIPE_R5,
-  ORDINARY_BURGUNDY_RECIPE_R5,
-  ORDINARY_TEAL_RECIPE_R5,
+  ORDINARY_GREEN_RECIPE_R12,
+  ORDINARY_BLUE_BLACK_RECIPE_R6,
+  ORDINARY_BURGUNDY_RECIPE_R6,
+  ORDINARY_TEAL_RECIPE_R6,
 ]);
 const SURFACES = Object.freeze([
   PAPER_SURFACE_SMOOTH_R1,
@@ -326,5 +326,5 @@ test("active nib × ink × Surface × flow matrix stays finite, bounded, and non
       }
     }
   }
-  assert.equal(renderedCases, 7 * 4 * 3 * 3);
+  assert.equal(renderedCases, 8 * 4 * 3 * 3);
 });

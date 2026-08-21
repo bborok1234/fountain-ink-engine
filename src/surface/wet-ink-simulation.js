@@ -194,7 +194,12 @@ export class WetInkSimulation {
 
   depositDab(centerX, centerY, options) {
     assertSeed(options?.strokeSeed, "options.strokeSeed");
-    const nibAngle = -Math.PI * 0.22;
+    const nibAngle = options.nibAngle === undefined
+      ? -Math.PI * 0.22
+      : options.nibAngle;
+    if (!Number.isFinite(nibAngle)) {
+      throw new TypeError("options.nibAngle must be a finite number when provided.");
+    }
     const cosine = Math.cos(nibAngle);
     const sine = Math.sin(nibAngle);
     const pressure = clamp(options.pressure, 0.08, 1);

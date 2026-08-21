@@ -1,7 +1,7 @@
 # Current engine state
 
 > Status: Active experimental library
-> Engine model: `ordinary-js-r12`
+> Engine model: `ordinary-js-r13`
 > Ink recipe schema: `6`
 > Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `2`
@@ -14,18 +14,18 @@ engine. The existing HTML study is a client and visual comparison harness.
 The first extraction deliberately keeps the accepted ordinary-ink formulas:
 
 - deterministic FNV-style text hash and seeded PRNG;
-- UEF, EF, F, M, B, EB, and SU contact profiles;
+- UEF, EF, F, M, B, EB, SU, and CM contact profiles;
 - signed glyph-local density variation bounded by calibrated alpha endpoints;
 - water, mobile-pigment, fixed-pigment, and paper-fibre simulation.
 
-Ink constants now live in the immutable active `ordinary-green-r11` control
-recipe and the blue-black, burgundy, and teal r5 ordinary recipes. Paper
+Ink constants now live in the immutable active `ordinary-green-r12` control
+recipe and the blue-black, burgundy, and teal r6 ordinary recipes. Paper
 behavior lives separately in `paper-smooth-r1`, active `paper-balanced-r2`,
 and active `paper-absorbent-r4`; earlier paper revisions remain historical
-evidence. `ordinary-green-r1` through `ordinary-green-r10`
+evidence. `ordinary-green-r1` through `ordinary-green-r11`
 remain registered and structurally readable as archival `ordinary-js-r2`
-through `ordinary-js-r11` checkpoints, but they are not calculation-compatible
-with the active r12 model. Nib, flow, Surface recipe,
+through `ordinary-js-r12` checkpoints, but they are not calculation-compatible
+with the active r13 model. Nib, flow, Surface recipe,
 layout, and seeds remain explicit runtime inputs. Public
 material paths reject a missing or schema-mismatched recipe instead of silently
 inventing one. Structural parse/serialize APIs can preserve a supported schema
@@ -93,8 +93,16 @@ normalized concentration and final Optical signatures. A translation fixture
 also proves that the same explicit seed and phase-relative Contact preserve a
 glyph-local Density signature while the page signature changes with placement.
 
-The final calculation-independent P2 validity matrix renders all 7 active nibs,
-4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 252 cases. Every
+Package `0.19.0-experimental.1` adds `fountain-nib-catalog-r2` and the fixed
+`CM` Cross-Music-inspired Contact. Its x-axis target is F-like while its y-axis
+target is EB-like, producing thin vertical and broad horizontal strokes—the
+opposite orientation of SU—from one final glyph alpha mask. The operator does
+not duplicate, shadow, or scale a glyph, and it does not claim live pressure,
+angle, double-nib feed reserve, or exact Sailor product reproduction. Existing
+seven nib results and all ordinary material coefficients remain unchanged.
+
+The final calculation-independent P2 validity matrix renders all 8 active nibs,
+4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,
 nonblank Contact remains nonblank through resolved coverage and Optical alpha,
 signed Surface/depth numerators stay within their positive carriers, and the

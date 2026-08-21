@@ -2,6 +2,7 @@ import {
   engineModelVersion,
   recipeSchemaVersion,
 } from "../contracts/versions.js";
+import { ACTIVE_CONTACT_CATALOG_ID } from "../contact/nib-profiles.js";
 import {
   serializeInkRecipe,
   validateInkRecipe,
@@ -32,6 +33,10 @@ import { ORDINARY_GREEN_RECIPE_R11 } from "./ordinary-green-r11.js";
 import { ORDINARY_BLUE_BLACK_RECIPE_R5 } from "./ordinary-blue-black-r5.js";
 import { ORDINARY_BURGUNDY_RECIPE_R5 } from "./ordinary-burgundy-r5.js";
 import { ORDINARY_TEAL_RECIPE_R5 } from "./ordinary-teal-r5.js";
+import { ORDINARY_GREEN_RECIPE_R12 } from "./ordinary-green-r12.js";
+import { ORDINARY_BLUE_BLACK_RECIPE_R6 } from "./ordinary-blue-black-r6.js";
+import { ORDINARY_BURGUNDY_RECIPE_R6 } from "./ordinary-burgundy-r6.js";
+import { ORDINARY_TEAL_RECIPE_R6 } from "./ordinary-teal-r6.js";
 import { REGISTERED_BUILT_IN_RECIPE_SERIALIZATIONS } from "./registered-built-ins.js";
 
 const recipeKey = (recipe) => `${recipe.id}@${recipe.revision}`;
@@ -63,6 +68,10 @@ const AUTHORED_BUILT_IN_RECIPES = new Map([
   [recipeKey(ORDINARY_BLUE_BLACK_RECIPE_R5), ORDINARY_BLUE_BLACK_RECIPE_R5],
   [recipeKey(ORDINARY_BURGUNDY_RECIPE_R5), ORDINARY_BURGUNDY_RECIPE_R5],
   [recipeKey(ORDINARY_TEAL_RECIPE_R5), ORDINARY_TEAL_RECIPE_R5],
+  [recipeKey(ORDINARY_GREEN_RECIPE_R12), ORDINARY_GREEN_RECIPE_R12],
+  [recipeKey(ORDINARY_BLUE_BLACK_RECIPE_R6), ORDINARY_BLUE_BLACK_RECIPE_R6],
+  [recipeKey(ORDINARY_BURGUNDY_RECIPE_R6), ORDINARY_BURGUNDY_RECIPE_R6],
+  [recipeKey(ORDINARY_TEAL_RECIPE_R6), ORDINARY_TEAL_RECIPE_R6],
 ]);
 
 const RESERVED_RECIPE_IDS = new Set(
@@ -127,6 +136,11 @@ export function assertInkRecipeCompatible(recipe) {
   if (recipe.recipeSchemaVersion !== recipeSchemaVersion) {
     throw new TypeError(
       `recipe.recipeSchemaVersion ${recipe.recipeSchemaVersion} is incompatible with ${recipeSchemaVersion}.`,
+    );
+  }
+  if (recipe.contact.catalogId !== ACTIVE_CONTACT_CATALOG_ID) {
+    throw new TypeError(
+      `recipe.contact.catalogId ${recipe.contact.catalogId} is incompatible with ${ACTIVE_CONTACT_CATALOG_ID}.`,
     );
   }
   return assertRegisteredInkRecipeIdentity(recipe);

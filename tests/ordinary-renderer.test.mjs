@@ -16,10 +16,10 @@ import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R5,
-  ORDINARY_BURGUNDY_RECIPE_R5,
-  ORDINARY_GREEN_RECIPE_R11,
-  ORDINARY_TEAL_RECIPE_R5,
+  ORDINARY_BLUE_BLACK_RECIPE_R6,
+  ORDINARY_BURGUNDY_RECIPE_R6,
+  ORDINARY_GREEN_RECIPE_R12,
+  ORDINARY_TEAL_RECIPE_R6,
 } from "fountain-ink-engine/recipes";
 import { legacySurfaceAt } from "./helpers/material-fixtures.mjs";
 import {
@@ -212,7 +212,7 @@ function makeOptions(absorption) {
       scale: 1,
       fontSize: 12,
       glyphContacts,
-      recipe: ORDINARY_GREEN_RECIPE_R11,
+      recipe: ORDINARY_GREEN_RECIPE_R12,
       createLayer: makeCanvas,
     },
     mask,
@@ -607,10 +607,10 @@ test("zero absorption records an explicit unapplied Surface stage", () => {
 
 test("ordinary color recipes change only Optical RGB for the same material solve", () => {
   const recipes = [
-    ORDINARY_GREEN_RECIPE_R11,
-    ORDINARY_BLUE_BLACK_RECIPE_R5,
-    ORDINARY_BURGUNDY_RECIPE_R5,
-    ORDINARY_TEAL_RECIPE_R5,
+    ORDINARY_GREEN_RECIPE_R12,
+    ORDINARY_BLUE_BLACK_RECIPE_R6,
+    ORDINARY_BURGUNDY_RECIPE_R6,
+    ORDINARY_TEAL_RECIPE_R6,
   ];
   const results = recipes.map((recipe) => {
     const { options } = makeOptions(42);
@@ -797,7 +797,7 @@ test("a nonoverlapping suffix preserves existing Contact, Density, and Optical p
     flow: 58,
     scale: 1,
     fontSize: 6,
-    recipe: ORDINARY_GREEN_RECIPE_R11,
+    recipe: ORDINARY_GREEN_RECIPE_R12,
     createLayer: makeCanvas,
   };
   const before = renderOrdinaryInkMaterial({
@@ -893,7 +893,7 @@ test("a far suffix preserves the complete existing material crop at absorption 4
     flow: 58,
     scale: 1,
     fontSize: 12,
-    recipe: ORDINARY_GREEN_RECIPE_R11,
+    recipe: ORDINARY_GREEN_RECIPE_R12,
     createLayer: makeCanvas,
   };
   const render = (pixels, glyphContacts) => renderOrdinaryInkMaterial({
@@ -1031,7 +1031,7 @@ test("renderer rejects malformed glyph Contacts before Canvas reads or output al
       baseline: 4,
       seed: 1,
     }],
-    recipe: ORDINARY_GREEN_RECIPE_R11,
+    recipe: ORDINARY_GREEN_RECIPE_R12,
   }), /destinationX must be an integer/);
   assert.equal(maskReads, 0);
   assert.equal(outputAllocations, 0);
