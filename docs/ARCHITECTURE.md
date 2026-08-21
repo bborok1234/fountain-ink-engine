@@ -209,6 +209,21 @@ are observation outputs, not a second calculation path. The normalized
 concentration and final resolved-coverage planes are now explicit outputs of
 their owning operators.
 
+### Staged browser execution
+
+The Canvas2D adapter exposes a byte-exact staged form of the same renderer.
+`prepareOrdinaryInkCanvasInput` owns host Canvas mask reading and Contact-to-grid
+downsampling. `beginOrdinaryInkMaterial` owns deterministic Density, compact
+Surface and fibre calculation. `upsampleKeyboardSurfaceCoverage` returns to the
+same host Canvas presentation boundary, and `completeOrdinaryInkMaterial` owns
+Surface resolution, concentration and final Optical output. The synchronous
+`renderOrdinaryInkMaterial` composes those four calls.
+
+This boundary lets a client keep browser-specific Canvas resampling on its main
+presentation surface while moving typed-array material calculation to a Worker.
+It does not make Worker scheduling, stale-result cancellation, font shaping or
+input policy part of the engine. Those remain harness/product responsibilities.
+
 ## Source distribution
 
 The package publishes standards-based ESM source. There is no transpilation or

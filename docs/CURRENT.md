@@ -62,15 +62,24 @@ benchmark, p50 changed from 10.99/67.71/183.43ms before the sparse frontier to
 2.37/8.98/20.95ms at DPR1/2/3. These are Node measurements, not a browser frame
 budget.
 
-The HTML harness now has an opt-in `perf=1` observer that records preview paint
-duration and rAF coalescing without running a second material solve or retaining
-stage buffers. The default route does not activate it. On the current in-app
-browser, the 23-grapheme absorbent matrix measured maximum p95 of
-92.4/147.4/210.1ms at DPR1/2/3; an 80-grapheme DPR2 paint took 164.8ms. Queueing
-remained latest-only with maximum pending frame 1, but the synchronous full
-material paint fails the 33ms interactive main-thread target. The next model
-must separate immediate Contact feedback from deferred/off-main Surface settle;
-these measurements are not an accepted latency budget.
+Package `0.17.0-experimental.1` adds a byte-exact staged Canvas boundary around
+the unchanged r12 renderer. `prepareOrdinaryInkCanvasInput` keeps the accepted
+HTMLCanvas downsample path, `beginOrdinaryInkMaterial` runs Density/Surface work,
+`upsampleKeyboardSurfaceCoverage` keeps the accepted HTMLCanvas upsample, and
+`completeOrdinaryInkMaterial` resolves coverage, concentration and Optical.
+The original high-level renderer calls those same stages and a regression proves
+the staged and synchronous RGBA/concentration/coverage are exact. No engine,
+recipe, Surface model or fixture version changed.
+
+The HTML harness uses this boundary to draw a contact-colored glyph mask first,
+then settle only the latest request in a Worker. A bounded LRU reuses existing
+glyph Contact masks whose literal/font/geometry inputs are unchanged. In the
+current in-app browser, the 23-grapheme 18/28/52px DPR1/2/3 Contact p95 matrix
+stays at or below 28.5ms; rapid growth to 80 graphemes measured p95 21.0ms with
+maximum pending frame and settle both 1. Typed-array work runs off-main, while
+the exact host-Canvas bridge measured 3.1/11.8/22.3ms at DPR1/2/3. Total settle
+latency was 80.6–196.7ms. A cold one-shot 80-grapheme replacement still takes 58.7ms for Contact,
+and non-Chromium Worker/Canvas behavior remains unverified.
 
 The engine contains no React component, text control, Vite configuration,
 Sites worker, native code, product data model, font, or reference image.

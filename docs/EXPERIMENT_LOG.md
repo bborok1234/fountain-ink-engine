@@ -791,3 +791,78 @@ they are not automatically promoted to timeless pass/fail truth.
   worker/off-main path with latest-result cancellation, and replace the preview
   only when the result signature still matches. Cache flow-only Optical changes
   separately because they must not recompute Contact, Density or Surface.
+
+## E-020-contact-first-worker-settle / A1
+
+- Parent: `E-019-synchronous-preview-frame-budget / A1`
+- Engine model: `ordinary-js-r12` (presentation experiment; no numeric change)
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2`
+- Status: learned
+- Hypothesis: drawing Contact immediately and running the unchanged high-level
+  renderer in one OffscreenCanvas Worker can preserve the final result while
+  moving settled material work off the input thread.
+- Observed: DPR2 M/28 Contact p95 fell to 30.7ms and only one settle remained
+  pending, but the OffscreenCanvas worker path used a different Canvas
+  downsample/upsample implementation boundary from the accepted HTMLCanvas
+  renderer. Its first settle latency was 339.6ms with 296.5ms reported inside
+  the Worker, and browser-region bytes could not be accepted as exact evidence.
+- Why it failed: moving Canvas raster resampling into a Worker also moved a
+  host-dependent presentation operator. That changed more than scheduling and
+  made the liked final pixels harder to prove equivalent.
+- Discarded assumption: HTMLCanvas and OffscreenCanvas resampling are an
+  interchangeable deterministic material operator across the supported browser
+  boundary.
+- Preserved evidence or code: the contact-colored immediate frame, latest-only
+  cancellation, telemetry fields, native textarea/IME ownership, all material
+  recipes and the synchronous renderer.
+- Next different method: keep Canvas downsample and upsample on the main browser
+  surface, expose a staged engine API, and move only deterministic typed-array
+  Density/Surface/Optical calculations into the Worker.
+
+## E-020-contact-first-worker-settle / A2
+
+- Parent: `E-020-contact-first-worker-settle / A1`
+- Engine model: `ordinary-js-r12` (API/scheduling only; no numeric change)
+- Package: `0.17.0-experimental.1`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2`
+- Status: passed checkpoint
+- Hypothesis: the existing renderer can be split at its Canvas/pure-calculation
+  boundaries so Contact appears within 33ms for normal text, the final result is
+  byte-exact, and only the newest settle may replace the preview.
+- Change: `prepareOrdinaryInkCanvasInput` performs the accepted HTMLCanvas mask
+  read/downsample; `beginOrdinaryInkMaterial` computes glyph Density, compact wet
+  Surface state and fibre coverage in the Worker; the main thread performs only
+  the accepted coverage upsample; `completeOrdinaryInkMaterial` resolves Surface,
+  concentration and Optical back in the same Worker. The high-level synchronous
+  renderer calls these same stages. New input terminates the active Worker, and
+  a 192-entry LRU reuses unchanged literal/font/scale/geometry Contact masks.
+- Automated evidence: the staged and synchronous renderer have exact final RGBA,
+  resolved coverage and normalized concentration; all historical material tests
+  remain unchanged. Worker source imports only public package exports, has no
+  OffscreenCanvas/material equation copy, and telemetry proves at most one
+  pending frame and settle. Engine 119/119 and the complete harness gate pass.
+- Browser evidence, 23 graphemes on a 788×608 CSS paper:
+  - 18px Contact p95: 15.7 / 23.7 / 28.5ms at DPR1 / DPR2 / DPR3.
+  - 28px Contact p95: 15.8 / 16.9 / 21.1ms.
+  - 52px Contact p95: 14.6 / 18.9 / 22.9ms.
+  - settle latency across the measured runs: 80.6–196.7ms. Typed-array work ran
+    in the Worker; the exact host-Canvas bridge was 3.1/11.8/22.3ms at DPR1/2/3.
+    Maximum pending frame and settle were both 1.
+  - rapid 20→40→60→80 grapheme growth at DPR3 ended on literal length 80 with
+    Contact p95 21.0ms, one final settle, four cancelled stale settles and no
+    stale result. A cold one-shot 80-grapheme replacement remains 58.7ms.
+- Preserved evidence or code: every r12/ink/Surface recipe and seed, Canvas
+  smoothing order, Contact/Density/Surface/Optical equations, final pixel result,
+  diagnostics sync route, direct-input path and default DPR cap.
+- Known limit: the immediate frame is intentionally contact-colored rather than
+  fully shaded; Chromium is the only Worker/Canvas runtime checked here. A cold
+  maximum-length paste misses 33ms, and the 80–197ms visual settle is not a
+  completed device/browser latency budget.
+- Next different method: validate WebKit/Firefox and cold-paste behavior. If cold
+  paste must meet 33ms, chunk only new Contact rasterization across frames while
+  the native textarea remains immediate; do not weaken material physics or
+  reduce final raster scale to hide the cost.

@@ -108,6 +108,34 @@ glyph mask and pass `glyphContacts` with the exact same rounded placement used
 to draw the page mask. The Canvas2D package remains a presentation adapter; text
 shaping, font selection, wrapping, and placement stay with the client.
 
+## Staged Canvas/Worker boundary
+
+Package `0.17.0-experimental.1` exposes the unchanged keyboard renderer as four
+callable stages for clients that need Contact-first presentation:
+
+```js
+const canvasInput = prepareOrdinaryInkCanvasInput(canvasOptions);
+const prepared = beginOrdinaryInkMaterial({ ...materialInputs, ...canvasInput });
+const materialCoverageCandidate = prepared.surfaceCoverageGrid === null
+  ? null
+  : upsampleKeyboardSurfaceCoverage({
+      coverage: prepared.surfaceCoverageGrid,
+      pixelWidth,
+      pixelHeight,
+    });
+const result = completeOrdinaryInkMaterial({
+  prepared,
+  materialCoverageCandidate,
+});
+```
+
+Canvas mask reading and down/up-sampling remain in the Canvas2D adapter;
+`beginOrdinaryInkMaterial` and `completeOrdinaryInkMaterial` are deterministic
+typed-array stages suitable for a Worker. `renderOrdinaryInkMaterial` calls the
+same stages synchronously. Tests require identical final RGBA, resolved coverage,
+and normalized concentration between the two paths. The split changes package
+API and scheduling only, not the engine model, recipes, seeds, or pixels.
+
 ## Surface normalization
 
 As of package `0.5.0-experimental.1`, keyboard Surface coverage uses the

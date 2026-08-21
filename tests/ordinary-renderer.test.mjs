@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderOrdinaryInkMaterial as renderOrdinaryInkMaterialForSurface } from "fountain-ink-engine/canvas2d";
+import {
+  beginOrdinaryInkMaterial,
+  completeOrdinaryInkMaterial,
+  prepareOrdinaryInkCanvasInput,
+  renderOrdinaryInkMaterial as renderOrdinaryInkMaterialForSurface,
+  upsampleKeyboardSurfaceCoverage,
+} from "fountain-ink-engine/canvas2d";
 import {
   getMeanDensity as getMeanDensityForSurface,
   getNibDensityRange as getNibDensityRangeForSurface,
@@ -220,6 +226,56 @@ function assertRgbaShape(image, width, height) {
   assert.equal(image.data.length, width * height * 4);
   assert.ok(image.data.every((value) => Number.isInteger(value)));
 }
+
+test("staged worker boundary is byte-exact with the synchronous renderer", () => {
+  const { options } = makeOptions(42);
+  const surfaceRecipe = legacySurfaceAt(0.42);
+  const synchronous = renderOrdinaryInkMaterial({
+    ...options,
+    surfaceRecipe,
+  });
+  const canvasInput = prepareOrdinaryInkCanvasInput({
+    mask: options.mask,
+    pixelWidth: options.pixelWidth,
+    pixelHeight: options.pixelHeight,
+    width: options.width,
+    height: options.height,
+    surfaceRecipe,
+    createLayer: makeCanvas,
+  });
+  const prepared = beginOrdinaryInkMaterial({
+    ...options,
+    ...canvasInput,
+    surfaceRecipe,
+  });
+  const materialCoverageCandidate = upsampleKeyboardSurfaceCoverage({
+    coverage: prepared.surfaceCoverageGrid,
+    pixelWidth: options.pixelWidth,
+    pixelHeight: options.pixelHeight,
+    createLayer: makeCanvas,
+  });
+  const staged = completeOrdinaryInkMaterial({
+    prepared,
+    materialCoverageCandidate,
+    output: makeImageData(options.pixelWidth, options.pixelHeight),
+  });
+
+  assert.deepEqual(staged.imageData.data, synchronous.imageData.data);
+  assert.deepEqual(
+    staged.stages.surface.resolvedCoverage.data,
+    synchronous.stages.surface.resolvedCoverage.data,
+  );
+  assert.deepEqual(
+    staged.stages.density.normalizedConcentration.data,
+    synchronous.stages.density.normalizedConcentration.data,
+  );
+});
+
+test("staged completion rejects a forged prepared state", () => {
+  assert.throws(() => completeOrdinaryInkMaterial({
+    prepared: {},
+  }), /opaque result/);
+});
 
 function legacyCompositeBytes(result, options) {
   const { stages } = result;
