@@ -29,13 +29,16 @@ implicit migration.
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r8` is the active control and the blue-black, burgundy and teal
-recipes are its ordinary-color peers. They share density bounds, keyboard
+`ordinary-green-r9` is the active control and the blue-black, burgundy and teal
+r3 recipes are its ordinary-color peers. They share density bounds, keyboard
 Surface load, fixed normalization reference, minimum Contact retention and
 alpha endpoints while owning separate Density-to-RGB curves and direct optical
-color coefficients. They select the r9 calculation model and ink schema 6.
-Paper policy is a separate `paper-surface-js-r1` recipe with its own schema and
-canonical identity. Runtime nib, flow, layout, text, and seeds are not recipe fields.
+color coefficients. They select the r10 calculation model and ink schema 6.
+Paper policy is a separate versioned Surface recipe. Smooth and balanced retain
+`paper-surface-js-r1`/schema 1; absorbent r2 uses
+`paper-surface-js-r2`/schema 2 so paper-depth uptake cannot be silently
+reinterpreted as page-plane diffusion. Runtime nib, flow, layout, text, and
+seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
 compatibility. A supported historical model recipe can be parsed without being
@@ -136,6 +139,16 @@ remains above the `0.54` floor, while maximum absorption retains at least that
 fraction of the original Contact alpha. Optical consumes this resolved plane;
 it no longer knows the Surface mix exponent or Contact-retention policy.
 
+The r2 absorbent path separates paper depth from page-plane spread. Both page
+axes use the authored `lateralMobility`. A local `depthUptake` sink moves water
+and mobile pigment into lazy subsurface pigment state without expanding its
+screen-space footprint. Signed Density mass follows the same proportional
+transfer so the depth diagnostic stays attributable to the deposited pigment.
+`createKeyboardSurfaceState` and renderer diagnostics expose a copied,
+nullable `paperDepth` grid; it does not feed Optical because it represents ink
+below the visible surface. The legacy r1 solver path remains intact for smooth,
+balanced and archived absorbent r1 recipes.
+
 Surface also owns absorption-dependent Density preservation through
 `getSurfaceDensityRange`. Contact supplies only the selected nib's shading
 multiplier; Density combines the two and applies the existing maximum cap.
@@ -174,6 +187,9 @@ observes the buffers already used by the accepted render path:
   after Contact/candidate mixing and the authored Contact-retention floor;
 - `surface.densityTransport`: the nullable solver-grid signed numerator and
   positive pigment carrier. It is `null` when Surface is skipped;
+- `surface.paperDepth`: the nullable solver-grid subsurface pigment and signed
+  numerator copied from the r2 depth state. It is `null` for r1 recipes or when
+  no depth state was created;
 - `optical.compositeRgba`: the final ordinary RGBA composite.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`

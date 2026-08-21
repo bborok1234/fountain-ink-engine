@@ -1,7 +1,5 @@
 import {
   freezeSurfaceRecipe,
-  surfaceModelVersion,
-  surfaceRecipeSchemaVersion,
 } from "../../src/surface-recipes/index.js";
 
 const cache = new Map();
@@ -18,8 +16,8 @@ export function legacySurfaceAt(normalizedAbsorption) {
   const recipe = freezeSurfaceRecipe({
     id: `test-legacy-surface-${key.replace(".", "-")}`,
     revision: 1,
-    surfaceModelVersion,
-    surfaceRecipeSchemaVersion,
+    surfaceModelVersion: "paper-surface-js-r1",
+    surfaceRecipeSchemaVersion: 1,
     axes: {
       verticalUptake: normalizedAbsorption,
       lateralMobility: normalizedAbsorption,

@@ -13,6 +13,10 @@ import {
   ORDINARY_BLUE_BLACK_RECIPE_R2,
   ORDINARY_BURGUNDY_RECIPE_R2,
   ORDINARY_TEAL_RECIPE_R2,
+  ORDINARY_GREEN_RECIPE_R9,
+  ORDINARY_BLUE_BLACK_RECIPE_R3,
+  ORDINARY_BURGUNDY_RECIPE_R3,
+  ORDINARY_TEAL_RECIPE_R3,
   assertInkRecipeCompatible,
   assertRegisteredInkRecipeIdentity,
   freezeInkRecipe,
@@ -31,6 +35,7 @@ test("ordinary-green revisions are deeply immutable and schema-valid", () => {
     ORDINARY_GREEN_RECIPE_R6,
     ORDINARY_GREEN_RECIPE_R7,
     ORDINARY_GREEN_RECIPE_R8,
+    ORDINARY_GREEN_RECIPE_R9,
   ]) {
     assert.equal(validateInkRecipe(recipe), true);
     assert.equal(recipe.id, "ordinary-green");
@@ -49,6 +54,7 @@ test("ordinary-green revisions are deeply immutable and schema-valid", () => {
   assert.equal(ORDINARY_GREEN_RECIPE_R6.revision, 6);
   assert.equal(ORDINARY_GREEN_RECIPE_R7.revision, 7);
   assert.equal(ORDINARY_GREEN_RECIPE_R8.revision, 8);
+  assert.equal(ORDINARY_GREEN_RECIPE_R9.revision, 9);
 });
 
 test("recipe serialization is canonical and round-trips without reinterpretation", () => {
@@ -64,6 +70,10 @@ test("recipe serialization is canonical and round-trips without reinterpretation
     ORDINARY_BLUE_BLACK_RECIPE_R2,
     ORDINARY_BURGUNDY_RECIPE_R2,
     ORDINARY_TEAL_RECIPE_R2,
+    ORDINARY_GREEN_RECIPE_R9,
+    ORDINARY_BLUE_BLACK_RECIPE_R3,
+    ORDINARY_BURGUNDY_RECIPE_R3,
+    ORDINARY_TEAL_RECIPE_R3,
   ]) {
     const serialized = serializeInkRecipe(recipe);
     const parsed = parseInkRecipe(serialized);
@@ -158,13 +168,13 @@ test("ordinary-green@6 has an independent canonical fingerprint", () => {
 });
 
 const ACTIVE_RECIPE_FINGERPRINTS = Object.freeze([
-  [ORDINARY_GREEN_RECIPE_R8, "8a9723d387fc0eccaf5bfcd433b4eba952fd7ea570266cce6a632442102e3826"],
-  [ORDINARY_BLUE_BLACK_RECIPE_R2, "8d92342b136f74236100622a85500951032c5ad85a522caf155705b25515c07b"],
-  [ORDINARY_BURGUNDY_RECIPE_R2, "6c3d0cdb97c7e9ca58f18217fabdeff25979a48192b303aca975224e48e40713"],
-  [ORDINARY_TEAL_RECIPE_R2, "88dca5b6d064e945d5b2160719c28ad5dfdc356a92041ef2d6a5332e2ea857d2"],
+  [ORDINARY_GREEN_RECIPE_R9, "e936f12bb8f0990648f2b00127e57f178e7fe0ee53cee2ccaf35c4f7648bb5cd"],
+  [ORDINARY_BLUE_BLACK_RECIPE_R3, "ce6e1ab3bf00d3b26d8fe6361b09a05f030c6adefc6dc756379b476f5a11c400"],
+  [ORDINARY_BURGUNDY_RECIPE_R3, "d4f241f2e2889517a7af46a5423b7370bb502f27caffadd15bcd80008e64b845"],
+  [ORDINARY_TEAL_RECIPE_R3, "f7cd94bfca90c3bd0b9791f193433556fe913084e63b19e68a17dbb6067f1872"],
 ]);
 
-test("r9 ordinary color recipes have independent canonical fingerprints", () => {
+test("r10 ordinary color recipes have independent canonical fingerprints", () => {
   for (const [recipe, expectedFingerprint] of ACTIVE_RECIPE_FINGERPRINTS) {
     const fingerprint = createHash("sha256")
       .update(serializeInkRecipe(recipe), "utf8")
@@ -224,31 +234,31 @@ test("archived coefficients stay exact and r6 adds only Contact retention", () =
 });
 
 test("invalid and mismatched recipes fail closed", () => {
-  const invalid = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const invalid = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   invalid.optical.maximumAlpha = 2;
   assert.throws(() => validateInkRecipe(invalid), /maximumAlpha/);
 
-  const wrongSchema = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const wrongSchema = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   wrongSchema.recipeSchemaVersion = 1;
   assert.throws(() => validateInkRecipe(wrongSchema), /invalid keys/);
 
-  const unknown = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const unknown = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   unknown.unrecognized = undefined;
   assert.throws(() => validateInkRecipe(unknown), /invalid keys/);
 
-  const wrongCatalog = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const wrongCatalog = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   wrongCatalog.contact.catalogId = "not-a-real-catalog";
   assert.throws(() => validateInkRecipe(wrongCatalog), /standard-nib-ladder-r1/);
 
-  const notFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const notFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   notFinite.density.rangeMaximum = Number.NaN;
   assert.throws(() => validateInkRecipe(notFinite), /finite number/);
 
-  const infinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const infinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   infinite.density.flowGain = Number.POSITIVE_INFINITY;
   assert.throws(() => validateInkRecipe(infinite), /finite number/);
 
-  const reversedRange = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const reversedRange = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   reversedRange.density.meanMinimum = 0.8;
   reversedRange.density.meanMaximum = 0.5;
   assert.throws(() => validateInkRecipe(reversedRange), /mean bounds are reversed/);
@@ -280,23 +290,23 @@ test("invalid and mismatched recipes fail closed", () => {
       /minimumContactRetention must be a finite number in 0\.\.\.1/,
     );
   }
-  const missingCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const missingCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   delete missingCurve.optical.densityColorCurve;
   assert.throws(() => validateInkRecipe(missingCurve), /invalid keys/);
-  const shortCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const shortCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   shortCurve.optical.densityColorCurve.pop();
   assert.throws(() => validateInkRecipe(shortCurve), /3\.\.\.5 points/);
-  const reversedCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const reversedCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   reversedCurve.optical.densityColorCurve[1].density = 0;
   assert.throws(() => validateInkRecipe(reversedCurve), /strictly increasing/);
-  const incompleteCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const incompleteCurve = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   incompleteCurve.optical.densityColorCurve[2].density = 0.9;
   assert.throws(() => validateInkRecipe(incompleteCurve), /begin at 0 and end at 1/);
   assert.throws(() => parseInkRecipe("{broken"), SyntaxError);
 });
 
 test("registered recipe identity cannot be reused for different calculations", () => {
-  const impostor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const impostor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   impostor.density.meanBase = 0.75;
   assert.equal(validateInkRecipe(impostor), true);
   assert.throws(
@@ -309,15 +319,15 @@ test("registered recipe identity cannot be reused for different calculations", (
   custom.id = "custom-green-study";
   assert.equal(assertInkRecipeCompatible(custom), true);
 
-  const unknownRevision = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
-  unknownRevision.revision = 9;
+  const unknownRevision = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
+  unknownRevision.revision = 10;
   assert.throws(
     () => assertRegisteredInkRecipeIdentity(unknownRevision),
     /reserved but not registered/,
   );
 });
 
-test("r1 through r7 stay archival while r8 and color recipes are compatible", () => {
+test("r1 through r9 predecessors stay archival while r10 recipes are compatible", () => {
   for (const archivedRecipe of [
     ORDINARY_GREEN_RECIPE_R1,
     ORDINARY_GREEN_RECIPE_R2,
@@ -326,6 +336,10 @@ test("r1 through r7 stay archival while r8 and color recipes are compatible", ()
     ORDINARY_GREEN_RECIPE_R5,
     ORDINARY_GREEN_RECIPE_R6,
     ORDINARY_GREEN_RECIPE_R7,
+    ORDINARY_GREEN_RECIPE_R8,
+    ORDINARY_BLUE_BLACK_RECIPE_R2,
+    ORDINARY_BURGUNDY_RECIPE_R2,
+    ORDINARY_TEAL_RECIPE_R2,
   ]) {
     assert.equal(validateInkRecipe(archivedRecipe), true);
     const archived = parseInkRecipe(serializeInkRecipe(archivedRecipe));
@@ -333,17 +347,17 @@ test("r1 through r7 stay archival while r8 and color recipes are compatible", ()
     assert.throws(() => assertInkRecipeCompatible(archived), /incompatible/);
   }
   for (const recipe of [
-    ORDINARY_GREEN_RECIPE_R8,
-    ORDINARY_BLUE_BLACK_RECIPE_R2,
-    ORDINARY_BURGUNDY_RECIPE_R2,
-    ORDINARY_TEAL_RECIPE_R2,
+    ORDINARY_GREEN_RECIPE_R9,
+    ORDINARY_BLUE_BLACK_RECIPE_R3,
+    ORDINARY_BURGUNDY_RECIPE_R3,
+    ORDINARY_TEAL_RECIPE_R3,
   ]) {
     assert.equal(assertInkRecipeCompatible(recipe), true);
   }
 });
 
 test("deep freezing traverses children even when the root is already frozen", () => {
-  const clone = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const clone = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   Object.freeze(clone);
   const frozen = freezeInkRecipe(clone);
   assert.ok(Object.isFrozen(frozen));
@@ -356,7 +370,7 @@ test("deep freezing traverses children even when the root is already frozen", ()
 
 test("recipe schemas reject accessors that could change after freezing", () => {
   let externalMean = 0.18;
-  const accessorRecipe = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const accessorRecipe = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   Object.defineProperty(accessorRecipe.density, "meanBase", {
     enumerable: true,
     get: () => externalMean,
@@ -368,7 +382,7 @@ test("recipe schemas reject accessors that could change after freezing", () => {
   externalMean = 0.75;
   assert.equal(accessorRecipe.density.meanBase, 0.75);
 
-  const retentionAccessor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const retentionAccessor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   Object.defineProperty(
     retentionAccessor.direct.optical,
     "fixedWeight",
@@ -382,7 +396,7 @@ test("recipe schemas reject accessors that could change after freezing", () => {
     /fixedWeight must be an enumerable own data property/,
   );
 
-  const curveAccessor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R8));
+  const curveAccessor = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
   Object.defineProperty(curveAccessor.optical.densityColorCurve[1], "density", {
     enumerable: true,
     get: () => 0.5,

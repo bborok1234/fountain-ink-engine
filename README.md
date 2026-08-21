@@ -21,7 +21,7 @@ or mobile integration.
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R7,
+  ORDINARY_GREEN_RECIPE_R9,
   WetInkSimulation,
   createDensityField,
   getGlyphContactGeometry,
@@ -48,26 +48,25 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r8` is the active immutable, serializable r9/schema-6 control.
-Blue-black, burgundy and teal r2 are active ordinary-color peers. Paper behavior
+`ordinary-green-r9` is the active immutable, serializable r10/schema-6 control.
+Blue-black, burgundy and teal r3 are active ordinary-color peers. Paper behavior
 is selected independently from `./surface-recipes`: smooth, balanced, or
 absorbent. Earlier ink revisions remain exported as archival checkpoints:
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R8,
+  ORDINARY_GREEN_RECIPE_R9,
   parseInkRecipe,
   serializeInkRecipe,
 } from "fountain-ink-engine/recipes";
 
-const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R7);
+const checkpoint = serializeInkRecipe(ORDINARY_GREEN_RECIPE_R8);
 const restoredRecipe = parseInkRecipe(checkpoint);
 ```
 
 Structural recipe APIs preserve supported historical model records for archival
 round trips. Material calculation additionally requires the active engine
-model/schema. Reserved built-in identities
-identities must match their registered canonical definitions;
+model/schema. Reserved built-in identities must match their registered canonical definitions;
 changed parameters require a new revision or custom id.
 
 ## Glyph-local Density input
@@ -252,6 +251,21 @@ Contact and broad shading; balanced paper preserves the accepted absorption-42
 calculation exactly; absorbent paper increases vertical uptake while keeping
 lateral mobility bounded. This prevents “more absorption” from being
 synonymous with “more blur.” Fixture manifest v2 records both identities.
+
+Package `0.14.0-experimental.1` corrects that first absorbent model without
+retuning smooth or balanced paper. `paper-absorbent@1` is retained as a learned
+checkpoint: its `verticalUptake` increased page-Y diffusion and made small text
+look uniformly blurred. The active `paper-absorbent@2` uses Surface model r2
+and schema 2. `depthUptake` transfers water and mobile pigment into a local
+subsurface state, while `lateralMobility` alone controls page-plane spread.
+
+The Canvas2D diagnostic record exposes this state at
+`stages.surface.paperDepth`; its `pigment` and optional `signedNumerator` are
+solver-grid Float32 arrays. The state describes ink stored below the visible
+paper surface, so Optical does not composite it as an extra shadow or blur.
+At B/20px and the absorbent preset, the authored Contact floor remains legible
+and the coarse Surface halo is bounded. Smooth and balanced r1 calculations
+remain on their historical solver path.
 
 ## Development
 

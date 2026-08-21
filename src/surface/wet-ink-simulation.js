@@ -34,6 +34,11 @@ export class WetInkSimulation {
     this.mobileSignedMass = null;
     this.fixedSignedMass = null;
     this.nextMobileSignedMass = null;
+    // R2 paper-depth state is allocated only for an explicit depth-uptake
+    // Surface. Legacy R1 surfaces and the scalar direct-input compatibility
+    // path keep their exact seven-plane allocation and arithmetic.
+    this.subsurfacePigment = null;
+    this.subsurfaceSignedMass = null;
     this.activity = 0;
     this.makeFiberField();
   }
@@ -64,6 +69,8 @@ export class WetInkSimulation {
     this.mobileSignedMass?.fill(0);
     this.fixedSignedMass?.fill(0);
     this.nextMobileSignedMass?.fill(0);
+    this.subsurfacePigment?.fill(0);
+    this.subsurfaceSignedMass?.fill(0);
     this.activity = 0;
   }
 
@@ -240,7 +247,157 @@ export class WetInkSimulation {
 
   stepSurface(deltaMilliseconds, surfaceRecipe) {
     assertSurfaceRecipeCompatible(surfaceRecipe);
+    if (surfaceRecipe.surfaceModelVersion === "paper-surface-js-r2") {
+      return this.#stepDepthSurface(deltaMilliseconds, surfaceRecipe.axes);
+    }
     return this.#stepWithSurface(deltaMilliseconds, surfaceRecipe.axes);
+  }
+
+  #stepDepthSurface(deltaMilliseconds, axes) {
+    assertFiniteRange(
+      deltaMilliseconds,
+      "deltaMilliseconds",
+      0,
+      Number.MAX_VALUE,
+    );
+    const frame = clamp(deltaMilliseconds / 16.667, 0.25, 2.5);
+    const depthUptake = clamp(axes.depthUptake);
+    const lateralMobility = clamp(axes.lateralMobility);
+    const dyeAffinity = clamp(axes.dyeAffinity);
+    const roughness = clamp(axes.roughness);
+    const horizontalDiffusion = (0.038 + lateralMobility * 0.102) * frame;
+    const verticalDiffusion = (0.034 + lateralMobility * 0.088) * frame;
+    const pigmentMobility = (0.008 + lateralMobility * 0.032) * frame;
+    const evaporation = (0.0028 + depthUptake * 0.0032) * frame;
+    if (this.subsurfacePigment === null) {
+      this.subsurfacePigment = new Float32Array(this.length);
+    }
+    if (
+      this.mobileSignedMass !== null
+      && this.subsurfaceSignedMass === null
+    ) {
+      this.subsurfaceSignedMass = new Float32Array(this.length);
+    }
+    let activeWater = 0;
+
+    for (let y = 1; y < this.height - 1; y += 1) {
+      for (let x = 1; x < this.width - 1; x += 1) {
+        const index = y * this.width + x;
+        const left = index - 1;
+        const right = index + 1;
+        const above = index - this.width;
+        const below = index + this.width;
+        const water = this.water[index];
+        const mobile = this.mobile[index];
+        const fiberHorizontal = 1 - roughness * 0.28
+          + Math.abs(this.fiberX[index]) * 0.7 * roughness;
+        const fiberVertical = 1 - roughness * 0.28
+          + Math.abs(this.fiberY[index]) * 0.7 * roughness;
+        const waterLaplacian =
+          (this.water[left] + this.water[right] - water * 2)
+            * horizontalDiffusion * fiberHorizontal
+          + (this.water[above] + this.water[below] - water * 2)
+            * verticalDiffusion * fiberVertical;
+        const paperTooth = 1 - roughness * 0.28
+          + coordinateNoise(x, y, this.seed ^ 0xa511e9b3)
+            * 0.56 * roughness;
+        const waterAfterSpread = clamp(water + waterLaplacian, 0, 1.4);
+        const depthWaterSink = Math.min(
+          waterAfterSpread,
+          (0.002 + depthUptake * 0.009) * paperTooth * frame,
+        );
+        const nextWater = clamp(
+          waterAfterSpread - depthWaterSink - evaporation,
+          0,
+          1.4,
+        );
+
+        const mobileLaplacian =
+          (this.mobile[left] + this.mobile[right]
+            + this.mobile[above] + this.mobile[below] - mobile * 4)
+          * pigmentMobility * clamp(water * 1.35, 0, 1);
+        const mobileAfterSpread = Math.max(0, mobile + mobileLaplacian);
+        const depthFraction = clamp(
+          depthUptake * 0.018 * paperTooth * frame,
+          0,
+          0.2,
+        );
+        const depthPigment = mobileAfterSpread * depthFraction;
+        const surfaceMobile = Math.max(0, mobileAfterSpread - depthPigment);
+        const edgeDryness = clamp(1 - nextWater * 1.15, 0, 1);
+        const fixing = Math.min(
+          surfaceMobile,
+          (0.0035 + edgeDryness * 0.026 + dyeAffinity * 0.004)
+            * paperTooth * frame,
+        );
+        const nextMobile = Math.max(0, surfaceMobile - fixing);
+        const previousFixed = this.fixed[index];
+        const nextFixed = clamp(previousFixed + fixing, 0, 2.1);
+        const previousSubsurface = this.subsurfacePigment[index];
+        const nextSubsurface = clamp(
+          previousSubsurface + depthPigment,
+          0,
+          2.1,
+        );
+
+        this.nextWater[index] = nextWater;
+        this.nextMobile[index] = nextMobile;
+        this.fixed[index] = nextFixed;
+        this.subsurfacePigment[index] = nextSubsurface;
+
+        if (this.mobileSignedMass !== null) {
+          const signedMobile = this.mobileSignedMass[index];
+          const signedMobileLaplacian =
+            (this.mobileSignedMass[left] + this.mobileSignedMass[right]
+              + this.mobileSignedMass[above]
+              + this.mobileSignedMass[below] - signedMobile * 4)
+            * pigmentMobility * clamp(water * 1.35, 0, 1);
+          const signedAfterSpread = clamp(
+            signedMobile + signedMobileLaplacian,
+            -mobileAfterSpread,
+            mobileAfterSpread,
+          );
+          const signedDepth = signedAfterSpread * depthFraction;
+          const signedSurface = signedAfterSpread - signedDepth;
+          const removedFraction = surfaceMobile > 0
+            ? clamp(fixing / surfaceMobile)
+            : 0;
+          const storedFixedFraction = surfaceMobile > 0
+            ? clamp((nextFixed - previousFixed) / surfaceMobile)
+            : 0;
+          this.nextMobileSignedMass[index] = clamp(
+            signedSurface * (1 - removedFraction),
+            -nextMobile,
+            nextMobile,
+          );
+          this.fixedSignedMass[index] = clamp(
+            this.fixedSignedMass[index]
+              + signedSurface * storedFixedFraction,
+            -nextFixed,
+            nextFixed,
+          );
+          this.subsurfaceSignedMass[index] = clamp(
+            this.subsurfaceSignedMass[index] + signedDepth,
+            -nextSubsurface,
+            nextSubsurface,
+          );
+        }
+        activeWater += nextWater;
+      }
+    }
+
+    [this.water, this.nextWater] = [this.nextWater, this.water];
+    [this.mobile, this.nextMobile] = [this.nextMobile, this.mobile];
+    if (this.mobileSignedMass !== null) {
+      [this.mobileSignedMass, this.nextMobileSignedMass] = [
+        this.nextMobileSignedMass,
+        this.mobileSignedMass,
+      ];
+    }
+    this.nextWater.fill(0);
+    this.nextMobile.fill(0);
+    this.nextMobileSignedMass?.fill(0);
+    this.activity = activeWater / this.length;
   }
 
   #stepWithSurface(deltaMilliseconds, axes) {
@@ -384,6 +541,18 @@ export class WetInkSimulation {
       height: this.height,
       signedNumerator,
       pigmentWeight,
+    });
+  }
+
+  createPaperDepthState() {
+    if (this.subsurfacePigment === null) return null;
+    return Object.freeze({
+      width: this.width,
+      height: this.height,
+      pigment: new Float32Array(this.subsurfacePigment),
+      signedNumerator: this.subsurfaceSignedMass === null
+        ? null
+        : new Float32Array(this.subsurfaceSignedMass),
     });
   }
 

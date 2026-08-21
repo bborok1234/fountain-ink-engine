@@ -59,10 +59,13 @@ export function createKeyboardSurfaceState(
       ? {}
       : { densityTransport: validatedDensityTransport }),
   });
+  const stepResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
+    ? surfaceRecipe.axes.verticalUptake
+      * surfaceRecipe.keyboard.stepUptakeGain
+    : surfaceRecipe.axes.lateralMobility
+      * surfaceRecipe.keyboard.stepMobilityGain;
   const steps = Math.round(
-    surfaceRecipe.keyboard.stepBase
-      + surfaceRecipe.axes.verticalUptake
-        * surfaceRecipe.keyboard.stepUptakeGain,
+    surfaceRecipe.keyboard.stepBase + stepResponse,
   );
   if (steps < 0 || steps > MAX_PAPER_SURFACE_STEPS) {
     throw new RangeError(
@@ -96,6 +99,7 @@ export function createKeyboardSurfaceState(
   return Object.freeze({
     coverage: material,
     densityTransport: simulation.createDensityTransport(inkRecipe),
+    paperDepth: simulation.createPaperDepthState(),
   });
 }
 

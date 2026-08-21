@@ -67,20 +67,20 @@ test("self-referenced package barrels expose the stable API", () => {
     recipes.ORDINARY_GREEN_RECIPE_R6,
   );
   assert.equal(
-    engine.ORDINARY_GREEN_RECIPE_R8,
-    recipes.ORDINARY_GREEN_RECIPE_R8,
+    engine.ORDINARY_GREEN_RECIPE_R9,
+    recipes.ORDINARY_GREEN_RECIPE_R9,
   );
   assert.equal(
-    engine.ORDINARY_BLUE_BLACK_RECIPE_R2,
-    recipes.ORDINARY_BLUE_BLACK_RECIPE_R2,
+    engine.ORDINARY_BLUE_BLACK_RECIPE_R3,
+    recipes.ORDINARY_BLUE_BLACK_RECIPE_R3,
   );
   assert.equal(
-    engine.ORDINARY_BURGUNDY_RECIPE_R2,
-    recipes.ORDINARY_BURGUNDY_RECIPE_R2,
+    engine.ORDINARY_BURGUNDY_RECIPE_R3,
+    recipes.ORDINARY_BURGUNDY_RECIPE_R3,
   );
   assert.equal(
-    engine.ORDINARY_TEAL_RECIPE_R2,
-    recipes.ORDINARY_TEAL_RECIPE_R2,
+    engine.ORDINARY_TEAL_RECIPE_R3,
+    recipes.ORDINARY_TEAL_RECIPE_R3,
   );
   assert.equal(
     engine.createKeyboardSurfaceState,
@@ -94,6 +94,10 @@ test("self-referenced package barrels expose the stable API", () => {
     engine.PAPER_SURFACE_BALANCED_R1,
     surfaceRecipes.PAPER_SURFACE_BALANCED_R1,
   );
+  assert.equal(
+    engine.PAPER_SURFACE_ABSORBENT_R2,
+    surfaceRecipes.PAPER_SURFACE_ABSORBENT_R2,
+  );
   assert.equal(canvas2d.makeKeyboardSurfaceState, undefined);
   assert.equal(typeof canvas2d.renderOrdinaryInkMaterial, "function");
 });
@@ -105,11 +109,11 @@ test("importing the Canvas adapter does not touch browser globals", () => {
 
 test("Canvas material adapters reject invalid units before browser allocation", () => {
   assert.throws(() => canvas2d.makeMaterialCoverage({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R8,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R9,
     surfaceSeed: 0,
   }), /surfaceRecipe/);
   assert.throws(() => canvas2d.renderOrdinaryInkMaterial({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R8,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R9,
     flow: 58,
     surfaceSeed: 0,
   }), /surfaceRecipe/);

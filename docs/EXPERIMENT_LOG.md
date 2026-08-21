@@ -555,3 +555,83 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: measure the three papers across nib/size/DPR and tune
   only a new Surface revision if a concrete normal-size defect appears. Do not
   restore a scalar absorption slider or add blur/shadow passes.
+
+## E-015-absorbent-paper-visual-audit / A1
+
+- Parent: `E-014-independent-paper-surface-recipes / A1`
+- Engine model: `ordinary-js-r9` (observation only; no calculation change)
+- Surface model/schema: `paper-surface-js-r1 / 1`
+- Status: learned
+- Hypothesis: separating `verticalUptake` from `lateralMobility` and retaining
+  60% of Contact is sufficient for `paper-absorbent@1` to read as real
+  absorbent paper instead of a blurred glyph at normal text sizes.
+- Evidence: real fountain-pen examples show a wider core plus uneven woolly
+  edges or sparse fibre-connected feathers, while depth penetration separately
+  lowers surface optical density and may bleed through. The 20px B harness
+  result instead reads as a uniformly defocused small glyph.
+- Observed calculation: a 40-device-pixel glyph becomes about 8.1 cells on the
+  capped 320-wide Surface grid, runs 16 steps, then is enlarged about 4.93x.
+  `verticalUptake=0.86` also raises page-Y water diffusion rather than moving
+  liquid into a paper-depth state. Surface mix is about 87.0% before the 60%
+  retained-Contact floor.
+- Why it failed: depth absorption and page-plane diffusion are not independent
+  states in r1. Coarse downsample/diffuse/upsample produces low-frequency blur
+  before the page-anchored fibre field can read as a sparse edge phenomenon.
+- Discarded assumption: a different scalar on page-X versus page-Y diffusion
+  is enough to represent lateral mobility versus vertical paper uptake.
+- Preserved evidence or code: `paper-smooth@1`, byte-equivalent
+  `paper-balanced@1`, all registered pins, ink recipes, nib geometry, literal
+  text and the explicit ink/Surface identity split remain valid.
+- Next different method: do not gain-tune r1. Add a versioned paper-depth sink
+  or subsurface state, keep page-plane mobility in both screen axes, and derive
+  bounded sparse connected feathering at Contact edges. Gate core acutance,
+  line-width gain, feather reach and counter survival separately at
+  18/20/28/52px.
+
+## E-016-absorbent-paper-depth-uptake / A1
+
+- Parent: `E-015-absorbent-paper-visual-audit / A1`
+- Engine model: `ordinary-js-r10`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r2 / 2`
+- Fixture manifest: `2`
+- Status: passed checkpoint
+- Hypothesis: high paper uptake should remove water and mobile pigment into a
+  local paper-depth state, while a separate low lateral mobility controls both
+  page-plane axes. That separation should preserve a readable Contact core at
+  B/20px without making depth uptake look like a whole-glyph blur.
+- Explicit inputs and seed: `ordinary-green@9`, `paper-absorbent@2`, B/20px and
+  B/48px, flow 58, Surface seed `0x13579bdf`, bundled Nanum Pen Script and DPR2;
+  desktop and 390×844 mobile harness; direct-input M/flow58 absorbent smoke.
+- Expected at normal size: the 20px Korean sentence remains legible; the 48px
+  result keeps a solid center and only restrained edge softness. Increasing
+  depth uptake without changing lateral mobility must not enlarge page-plane
+  geometry. Smooth and balanced r1 recipes must retain their legacy path.
+- Observed: Surface r2 replaces `verticalUptake` with `depthUptake` and stores
+  removed pigment in a lazy subsurface Float32 plane. Both screen axes now use
+  `lateralMobility`; coverage resolution uses lateral mobility rather than depth.
+  The renderer exposes 414 occupied depth-grid pixels and total subsurface
+  pigment 3.05 for the B/20 fixture. At normal desktop and 390px mobile size,
+  the sentence stays readable and no longer appears uniformly defocused; B/48
+  retains a firm core. Direct writing accepted the same r2 recipe and produced a
+  nonblank stroke with zero browser warnings/errors.
+- Automated evidence: r2 geometry is invariant when only depth changes; local
+  depth uptake creates no extra page spread; paper-depth state is finite and
+  bounded; the renderer keeps Contact and confines the coarse Surface candidate.
+  Engine 104/104, 59 source modules, 10 public entry points, 72-file package and
+  the complete HTML harness gate pass.
+- Why it failed, if applicable: not applicable for A1. The prior r1 failure was
+  caused by treating depth uptake as page-Y diffusion on an approximately
+  eight-cell-small glyph.
+- Discarded assumption: high absorption must be represented by stronger 2D
+  diffusion or a softer whole-glyph coverage field.
+- Preserved evidence or code: `paper-smooth@1`, `paper-balanced@1`, historical
+  `paper-absorbent@1`, all their pins, ink r1-r8 recipes, Contact geometry,
+  Density/Optical equations, Surface seed, fixed normalization, minimum Contact
+  retention and literal text ownership. No blur, shadow or duplicate pass was
+  added.
+- Next different method: keep this checkpoint unless normal-size evidence shows
+  the remaining edge is too uniform. If it does, add a high-resolution sparse
+  fibre-edge operator whose reach and occupancy are measured separately; do not
+  increase r2 coarse-grid diffusion. Reverse-side bleed-through and layered
+  paper depth remain separate future states.
