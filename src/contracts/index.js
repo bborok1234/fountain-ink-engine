@@ -9,3 +9,7 @@ export {
   createExperimentRecord,
   validateExperimentRecord,
 } from "./experiments.js";
+export {
+  FIELD_SIGNATURE_ALGORITHM,
+  createFieldSignature,
+} from "./field-signature.js";

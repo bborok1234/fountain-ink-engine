@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createFieldSignature } from "../src/contracts/index.js";
 import {
   createOrdinaryConcentrationField as createOrdinaryConcentrationFieldForSurface,
   createDensityField,
@@ -205,6 +206,77 @@ test("density is deterministic and exists only on actual Contact alpha support",
     baseline: contact.baseline,
     seed: contact.seed,
   }, originalFacts);
+});
+
+test("translating a Contact preserves its seed and glyph-local Density signature", () => {
+  const supportedPixels = [[0, 0], [1, 0], [2, 0]];
+  const base = makeContact({
+    maskWidth: 3,
+    supportedPixels,
+    destinationX: 2,
+    destinationY: 3,
+    x: 2.25,
+    baseline: 11.5,
+    seed: 0x10203040,
+  });
+  const translated = makeContact({
+    maskWidth: 3,
+    supportedPixels,
+    destinationX: 7,
+    destinationY: 5,
+    x: 7.25,
+    baseline: 13.5,
+    seed: base.seed,
+  });
+  const options = {
+    pixelWidth: 14,
+    pixelHeight: 10,
+    scale: 1,
+    fontSize: 12,
+  };
+  const first = createDensityField({ ...options, glyphContacts: [base] });
+  const second = createDensityField({
+    ...options,
+    glyphContacts: [translated],
+  });
+  const localValues = (result, contact) => new Float32Array(
+    supportedPixels.map(([localX, localY]) => result.densityField[
+      (contact.destinationY + localY) * options.pixelWidth
+        + contact.destinationX + localX
+    ]),
+  );
+  const firstLocal = createFieldSignature({
+    domain: "density.glyph-local-variation",
+    width: 3,
+    height: 1,
+    channels: 1,
+    data: localValues(first, base),
+  });
+  const secondLocal = createFieldSignature({
+    domain: "density.glyph-local-variation",
+    width: 3,
+    height: 1,
+    channels: 1,
+    data: localValues(second, translated),
+  });
+  const firstPage = createFieldSignature({
+    domain: "density.page-variation",
+    width: options.pixelWidth,
+    height: options.pixelHeight,
+    channels: 1,
+    data: first.densityField,
+  });
+  const secondPage = createFieldSignature({
+    domain: "density.page-variation",
+    width: options.pixelWidth,
+    height: options.pixelHeight,
+    channels: 1,
+    data: second.densityField,
+  });
+
+  assert.equal(base.seed, translated.seed);
+  assert.deepEqual(firstLocal, secondLocal);
+  assert.notEqual(firstPage.hash, secondPage.hash);
 });
 
 test("fractional phase anchors stay exact across scale and clipped Contact overhang", () => {

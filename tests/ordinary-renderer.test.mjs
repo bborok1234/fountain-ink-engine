@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createFieldSignature } from "fountain-ink-engine/contracts";
 import {
   beginOrdinaryInkMaterial,
   completeOrdinaryInkMaterial,
@@ -669,6 +670,69 @@ test("stage diagnostics are deterministic and do not mutate renderer inputs", ()
   );
   assert.deepEqual(firstFixture.mask.snapshot(), originalMask);
   assert.deepEqual(firstFixture.glyphContacts, originalContacts);
+});
+
+test("the active ordinary checkpoint has stable named field signatures", () => {
+  const first = renderOrdinaryInkMaterial(makeOptions(42).options);
+  const second = renderOrdinaryInkMaterial(makeOptions(42).options);
+  const signatures = (result) => Object.freeze({
+    contact: createFieldSignature({
+      domain: "contact.rgba-mask",
+      width: result.stages.contact.rgbaMask.width,
+      height: result.stages.contact.rgbaMask.height,
+      channels: 4,
+      data: result.stages.contact.rgbaMask.data,
+    }),
+    density: createFieldSignature({
+      domain: "density.accumulated-variation",
+      width: 18,
+      height: 14,
+      channels: 1,
+      data: result.stages.density.accumulatedVariation,
+    }),
+    samples: createFieldSignature({
+      domain: "density.sample-count",
+      width: 18,
+      height: 14,
+      channels: 1,
+      data: result.stages.density.sampleCount,
+    }),
+    coverage: createFieldSignature({
+      domain: "surface.resolved-coverage",
+      width: 18,
+      height: 14,
+      channels: 1,
+      data: result.stages.surface.resolvedCoverage.data,
+    }),
+    concentration: createFieldSignature({
+      domain: "density.normalized-concentration",
+      width: 18,
+      height: 14,
+      channels: 1,
+      data: result.stages.density.normalizedConcentration.data,
+    }),
+    optical: createFieldSignature({
+      domain: "optical.composite-rgba",
+      width: result.imageData.width,
+      height: result.imageData.height,
+      channels: 4,
+      data: result.imageData.data,
+    }),
+  });
+  assert.deepEqual(signatures(first), signatures(second));
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(signatures(first)).map(
+      ([name, signature]) => [name, signature.hash],
+    )),
+    {
+      contact: "992bda01b1d165b2",
+      density: "838bf8cd73b9a7ff",
+      samples: "a59a04e5edb1e707",
+      coverage: "27e893b169caec6f",
+      concentration: "73c9ab35c0b5decf",
+      optical: "bdeadcc44a08086a",
+    },
+  );
 });
 
 test("density transport never changes Contact-owned Optical pixels", () => {
