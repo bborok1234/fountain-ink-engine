@@ -704,6 +704,20 @@ export class WetInkSimulation {
 
   createDyeComponentState() {
     if (this.dyeComponentMobile === null) return null;
+    const expectedFraction = this.dyeComponentRecipe.massFraction
+      / (1 + this.dyeComponentRecipe.massFraction);
+    const visibleFraction = new Float32Array(this.length);
+    const fractionDelta = new Float32Array(this.length);
+    for (let index = 0; index < this.length; index += 1) {
+      const baseMass = this.mobile[index] + this.fixed[index];
+      const componentMass = this.dyeComponentMobile[index]
+        + this.dyeComponentFixed[index];
+      const totalMass = baseMass + componentMass;
+      if (!(totalMass > 0)) continue;
+      const fraction = clamp(componentMass / totalMass);
+      visibleFraction[index] = Math.fround(fraction);
+      fractionDelta[index] = Math.fround(fraction - expectedFraction);
+    }
     return Object.freeze({
       id: this.dyeComponentRecipe.id,
       revision: this.dyeComponentRecipe.revision,
@@ -714,6 +728,9 @@ export class WetInkSimulation {
       subsurfaceMass: this.dyeComponentSubsurface === null
         ? null
         : new Float32Array(this.dyeComponentSubsurface),
+      expectedFraction,
+      visibleFraction,
+      fractionDelta,
     });
   }
 

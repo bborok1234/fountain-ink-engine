@@ -194,6 +194,13 @@ inks can contain multiple dye components. The first implementation therefore
 establishes component state before authoring any visible edge operator. See the
 primary evidence in the E-025 experiment record.
 
+R2 derives a bounded visible fraction from component mass divided by total
+visible base-plus-component mass. It also records the signed difference from
+the authored initial fraction `massFraction / (1 + massFraction)`. Empty cells
+remain unsupported rather than inventing enrichment. This diagnostic is
+independent from Density's normalized concentration and is not an Optical
+color or edge mask.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -215,7 +222,8 @@ observes the buffers already used by the accepted render path:
   numerator copied from the r2 depth state. It is `null` for r1 recipes or when
   no depth state was created;
 - `surface.dyeComponent`: nullable mobile/fixed/subsurface mass for one
-  explicitly enabled dye component. It is diagnostic-only in A1;
+  explicitly enabled dye component, plus R2 visible fraction and signed
+  fraction delta. It is diagnostic-only;
 - `optical.compositeRgba`: the final ordinary RGBA composite.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`

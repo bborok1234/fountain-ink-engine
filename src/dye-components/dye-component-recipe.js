@@ -1,4 +1,4 @@
-export const dyeComponentModelVersion = "dye-component-js-r1";
+export const dyeComponentModelVersion = "dye-component-js-r2";
 export const dyeComponentRecipeSchemaVersion = 1;
 export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1]);
 

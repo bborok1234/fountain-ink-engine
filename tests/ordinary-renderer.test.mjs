@@ -15,7 +15,7 @@ import {
 import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain-ink-engine/optical";
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
-import { EDGE_DYE_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/dye-components";
+import { EDGE_DYE_COMPONENT_RECIPE_R2 } from "fountain-ink-engine/dye-components";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -442,7 +442,7 @@ test("diagnostic dye state does not alter ordinary renderer output", () => {
   const ordinary = renderOrdinaryInkMaterial(options);
   const component = renderOrdinaryInkMaterial({
     ...options,
-    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R1,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R2,
   });
   assert.deepEqual(component.imageData.data, ordinary.imageData.data);
   assert.deepEqual(
@@ -466,6 +466,36 @@ test("diagnostic dye state does not alter ordinary renderer output", () => {
     component.stages.surface.dyeComponent.mobileMass.some(
       (value) => value > 0,
     ),
+  );
+});
+
+test("internal concentration and dye enrichment remain independent diagnostics", () => {
+  const { options } = makeOptions(42);
+  const dry = renderOrdinaryInkMaterial({
+    ...options,
+    flow: 0,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R2,
+  });
+  const wet = renderOrdinaryInkMaterial({
+    ...options,
+    flow: 100,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R2,
+  });
+  assert.deepEqual(
+    dry.stages.surface.dyeComponent.visibleFraction,
+    wet.stages.surface.dyeComponent.visibleFraction,
+  );
+  assert.deepEqual(
+    dry.stages.surface.dyeComponent.fractionDelta,
+    wet.stages.surface.dyeComponent.fractionDelta,
+  );
+  assert.notDeepEqual(
+    dry.stages.density.normalizedConcentration.data,
+    wet.stages.density.normalizedConcentration.data,
+  );
+  assert.notDeepEqual(
+    dry.stages.optical.compositeRgba.data,
+    wet.stages.optical.compositeRgba.data,
   );
 });
 

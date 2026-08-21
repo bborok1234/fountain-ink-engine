@@ -1093,3 +1093,43 @@ they are not automatically promoted to timeless pass/fail truth.
   enrichment diagnostics from base/component mass ratios. Only after those
   fields are stable should an Optical color curve be authored; never color the
   complete glyph boundary as a uniform outline.
+
+## E-026-dye-enrichment-diagnostics / A1
+
+- Parent: `E-025-independent-dye-component-state / A1`
+- Ordinary engine model: `ordinary-js-r13` (unchanged)
+- Dye component model/schema: `dye-component-js-r2 / 1`
+- Package: `0.21.0-experimental.1`
+- Fixture manifest: `2`
+- Status: passed diagnostic checkpoint
+- Hypothesis: internal ink Density and chromatographic component enrichment
+  must be inspectable as different fields before any second color is authored.
+  Edge character should arise from a changed component share, not from
+  repainting the geometric glyph boundary.
+- Operator: for every solver cell with visible base or component mass,
+  `visibleFraction = component / (base + component)`. The authored initial
+  mixture is `massFraction / (1 + massFraction)`, and `fractionDelta` stores the
+  signed difference. The fraction is bounded 0...1, the delta is bounded by
+  that initial fraction, and unsupported empty cells remain zero. No page
+  maximum, threshold, glyph outline or Optical RGB enters this calculation.
+- Automated evidence: deterministic balanced and absorbent fixtures contain
+  both enriched and depleted cells after transport. Every fraction/delta is
+  finite and bounded. Reversing the complete signed glyph Density payload from
+  +0.8 to -0.8 changes transported ordinary Density but leaves both enrichment
+  planes exact. Flow 0 versus 100 changes normalized concentration and final
+  ordinary alpha while the component fraction/delta remain exact. R1 canonical
+  bytes remain archival; r2 has an independent registered identity.
+- Harness evidence: the opt-in Surface card now displays mobile/fixed mass and
+  relative enrichment on separate canvases, while the Density card continues
+  to display normalized concentration. Both are passive views of one solve.
+- Memory boundary: at the maximum 320×240 compact grid, four lazy component
+  solver planes occupy 1,228,800 bytes. The copied mobile/fixed/depth plus two
+  enrichment planes retain 1,536,000 bytes, for a component-specific peak of
+  2,764,800 bytes while the state is created. Component off remains zero.
+- Preserved result: ordinary water/pigment/coverage/concentration/RGBA, Surface
+  recipes, contact geometry and direct writing are unchanged. There is still no
+  second Optical color.
+- Next different method: define an edge-accumulation candidate from positive
+  fraction delta plus actual Surface support and local mass. The gate must
+  reject a continuous glyph outline and require discontinuous, material-driven
+  occupied segments before Optical color is attempted.
