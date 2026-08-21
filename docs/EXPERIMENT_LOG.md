@@ -1174,3 +1174,58 @@ they are not automatically promoted to timeless pass/fail truth.
   Optical operator that consumes only this candidate, preserves the base ink
   and remains readable at normal size. Do not fall back to a full outline,
   shifted duplicate glyph or page-normalized halo.
+
+## E-028-second-dye-optical-color / A1
+
+- Parent: `E-027-discontinuous-edge-accumulation / A1`
+- Ordinary engine model: `ordinary-js-r13` (unchanged)
+- Dye component model/schema: `dye-component-js-r4 / 3`
+- Package: `0.23.0-experimental.1`
+- Fixture manifest: `2`
+- Status: passed normal-size checkpoint
+- Hypothesis: a separately transported dye can become a visible second color
+  without turning the material candidate into a geometric outline. The
+  component fraction should own color amount; the discontinuous candidate
+  should only gate where that amount is visible.
+- Real-ink evidence: Sailor describes
+  [Yurameku](https://en.sailor.co.jp/topics/yurameku-ink-2nd-edition/) as showing
+  different colors in shades and streaks that change with paper and time. Its
+  [Ink Studio 123 comparison](https://withink.sailor.co.jp/report/1885/) shows
+  purple, green and pink proportions changing across four papers, including
+  green that is easier to see at some painted edges. Independent
+  [Troublemaker Abalone samples](https://mountainofink.com/blog/troublemaker-abalone)
+  show dark blue shading to purple and additional green in large swabs. These
+  establish irregular color regions and paper/nib dependence, not Fountain's
+  authored exact RGB values.
+- Operator: `edge-dye-study@4` authors second-dye RGB `[138,46,78]`. At each
+  existing ordinary-alpha pixel, positive `fractionDelta` is normalized by the
+  remaining possible component fraction and multiplied by `edgeMixGain = 12`,
+  capped at `0.72`. The R3 `edgeAccumulation` candidate contributes only a
+  bounded activation gate. Candidate-only or depleted cells keep the base RGB.
+  Existing alpha is copied exactly.
+- Automated evidence: the public Optical operator validates complete RGBA and
+  component state before mutation. It changes RGB only inside nonzero ordinary
+  alpha, preserves every alpha byte, leaves Contact/Density/Surface states
+  exact, and is deterministic. The component-off renderer remains the accepted
+  ordinary path. R1–R3 canonical recipes remain archival and r4 has its own
+  registered schema-3 identity.
+- Normal-size browser evidence: M/28 balanced remains predominantly the
+  ordinary green with restrained second-color zones. B/48 balanced makes the
+  discontinuous burgundy shift easier to see; B/48 absorbent follows its
+  different transport/candidate distribution without adding a halo. The page,
+  controls and diagnostics remained nonblank and the browser produced no
+  warning/error. An equal-viewport screenshot comparison used only as a tuning
+  aid measured the B/48 maximum screen-channel change at about 21/255 for gain
+  6 and about 28/255 for the accepted gain 12; it is not a permanent golden.
+- Separation boundary: Sailor defines sheen as metallic reflection at edges or
+  pooled ink that changes with viewing angle. E-028 is static front-view dye
+  color only and deliberately contains no view vector, film reflection,
+  sparkle or particle state.
+- Learned: candidate magnitude is a poor direct color control: it reads like a
+  thin effect mask and made the true component fraction irrelevant. Using the
+  candidate as activation and fraction delta as mixture produces a more honest
+  dual-dye relationship while preserving the sparse spatial signature.
+- Next different method: begin P5-B with a separate high-concentration surface
+  film threshold and view-dependent Optical layer. Its static fallback must
+  preserve the base/dual-dye writing and must not reuse E-028's burgundy RGB as
+  a fake metallic outline.

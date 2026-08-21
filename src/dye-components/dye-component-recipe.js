@@ -1,6 +1,6 @@
-export const dyeComponentModelVersion = "dye-component-js-r3";
-export const dyeComponentRecipeSchemaVersion = 2;
-export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2]);
+export const dyeComponentModelVersion = "dye-component-js-r4";
+export const dyeComponentRecipeSchemaVersion = 3;
+export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3]);
 
 const RECIPE_KEYS_V1 = Object.freeze([
   "id",
@@ -15,6 +15,14 @@ const RECIPE_KEYS_V2 = Object.freeze([
   ...RECIPE_KEYS_V1,
   "edgeEnrichmentThreshold",
   "edgeMassGain",
+]);
+const RECIPE_KEYS_V3 = Object.freeze([
+  ...RECIPE_KEYS_V2,
+  "edgeRed",
+  "edgeGreen",
+  "edgeBlue",
+  "edgeMixGain",
+  "edgeMixMaximum",
 ]);
 
 function assertPlainRecord(value, path) {
@@ -79,7 +87,11 @@ export function validateDyeComponentRecipe(recipe) {
       `dyeComponentRecipe.componentRecipeSchemaVersion ${String(schema)} is not supported.`,
     );
   }
-  const recipeKeys = schema === 1 ? RECIPE_KEYS_V1 : RECIPE_KEYS_V2;
+  const recipeKeys = schema === 1
+    ? RECIPE_KEYS_V1
+    : schema === 2
+      ? RECIPE_KEYS_V2
+      : RECIPE_KEYS_V3;
   assertExactDataProperties(recipe, recipeKeys, "dyeComponentRecipe");
   assertString(recipe.id, "dyeComponentRecipe.id");
   if (!Number.isSafeInteger(recipe.revision) || recipe.revision < 1) {
@@ -112,6 +124,31 @@ export function validateDyeComponentRecipe(recipe) {
       200,
     );
   }
+  if (schema >= 3) {
+    for (const channel of ["edgeRed", "edgeGreen", "edgeBlue"]) {
+      if (
+        !Number.isInteger(recipe[channel])
+        || recipe[channel] < 0
+        || recipe[channel] > 255
+      ) {
+        throw new TypeError(
+          `dyeComponentRecipe.${channel} must be an integer in 0...255.`,
+        );
+      }
+    }
+    assertNumber(
+      recipe.edgeMixGain,
+      "dyeComponentRecipe.edgeMixGain",
+      0.001,
+      20,
+    );
+    assertNumber(
+      recipe.edgeMixMaximum,
+      "dyeComponentRecipe.edgeMixMaximum",
+      0,
+      1,
+    );
+  }
   assertNumber(
     recipe.retentionMultiplier,
     "dyeComponentRecipe.retentionMultiplier",
@@ -125,7 +162,9 @@ export function serializeDyeComponentRecipe(recipe) {
   validateDyeComponentRecipe(recipe);
   const recipeKeys = recipe.componentRecipeSchemaVersion === 1
     ? RECIPE_KEYS_V1
-    : RECIPE_KEYS_V2;
+    : recipe.componentRecipeSchemaVersion === 2
+      ? RECIPE_KEYS_V2
+      : RECIPE_KEYS_V3;
   return JSON.stringify(Object.fromEntries(
     [...recipeKeys].sort().map((key) => [key, recipe[key]]),
   ));

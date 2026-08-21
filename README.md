@@ -51,11 +51,11 @@ material composition without adding a React dependency.
 
 ## Optional dye component state
 
-Package `0.22.0-experimental.1` exposes the third revision of the
-diagnostic-only dye state:
+Package `0.23.0-experimental.1` exposes the fourth revision of the dye state
+and its first Optical second color:
 
 ```js
-import { EDGE_DYE_COMPONENT_RECIPE_R3 } from "fountain-ink-engine/dye-components";
+import { EDGE_DYE_COMPONENT_RECIPE_R4 } from "fountain-ink-engine/dye-components";
 
 const state = createKeyboardSurfaceState(
   deposit,
@@ -63,7 +63,7 @@ const state = createKeyboardSurfaceState(
   surfaceSeed,
   inkRecipe,
   densityTransport,
-  EDGE_DYE_COMPONENT_RECIPE_R3,
+  EDGE_DYE_COMPONENT_RECIPE_R4,
 );
 
 // state.dyeComponent = {
@@ -73,17 +73,18 @@ const state = createKeyboardSurfaceState(
 ```
 
 It shares the ordinary wet footprint while keeping its own mass, mobility and
-retention. A1 does not composite a second color: ordinary coverage and RGBA are
-unchanged. Pass `null` or omit the final argument to allocate no component
+retention. Pass `null` or omit the final argument to allocate no component
 state and preserve the ordinary path exactly.
 
 `visibleFraction` is the bounded component share of visible base-plus-component
 mass. `fractionDelta` compares it with the authored initial mixture without
-reading ordinary Density or flow. These are diagnostics, not a rendered color
-edge. `edgeAccumulation` keeps only positive enrichment with sufficient visible
-component mass and local Surface exposure. It is a sparse diagnostic candidate,
-not a glyph outline and not an Optical second color. R1 and R2 remain exported
-for archival round-trip but are incompatible with the active r3 calculation.
+reading ordinary Density or flow. `edgeAccumulation` keeps only positive
+enrichment with sufficient visible component mass and local Surface exposure.
+The Optical operator uses that sparse candidate as an activation gate and the
+positive fraction delta as the actual color mixture. It changes RGB only where
+ordinary alpha already exists and copies alpha exactly, so it cannot create a
+glyph outline, glow or wider footprint. R1–R3 remain exported for archival
+round-trip but are incompatible with the active r4 calculation.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior

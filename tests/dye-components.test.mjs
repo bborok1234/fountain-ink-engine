@@ -4,6 +4,7 @@ import {
   EDGE_DYE_COMPONENT_RECIPE_R1,
   EDGE_DYE_COMPONENT_RECIPE_R2,
   EDGE_DYE_COMPONENT_RECIPE_R3,
+  EDGE_DYE_COMPONENT_RECIPE_R4,
   assertDyeComponentRecipeCompatible,
   dyeComponentModelVersion,
   dyeComponentRecipeSchemaVersion,
@@ -13,8 +14,8 @@ import {
 } from "../src/dye-components/index.js";
 
 test("edge dye component revisions have independent canonical identities", () => {
-  assert.equal(dyeComponentModelVersion, "dye-component-js-r3");
-  assert.equal(dyeComponentRecipeSchemaVersion, 2);
+  assert.equal(dyeComponentModelVersion, "dye-component-js-r4");
+  assert.equal(dyeComponentRecipeSchemaVersion, 3);
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.id, "edge-dye-study");
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.revision, 1);
   assert.equal(validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R1), true);
@@ -32,7 +33,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R2.revision, 2);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R1),
-    /incompatible with dye-component-js-r3/,
+    /incompatible with dye-component-js-r4/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R2),
@@ -40,22 +41,31 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R2),
-    /incompatible with dye-component-js-r3/,
+    /incompatible with dye-component-js-r4/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R3.revision, 3);
   assert.equal(
-    assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R3),
+    serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R3),
+    "{\"componentModelVersion\":\"dye-component-js-r3\",\"componentRecipeSchemaVersion\":2,\"edgeEnrichmentThreshold\":0.02,\"edgeMassGain\":200,\"id\":\"edge-dye-study\",\"massFraction\":0.32,\"mobilityMultiplier\":1.45,\"retentionMultiplier\":0.62,\"revision\":3}",
+  );
+  assert.throws(
+    () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R3),
+    /incompatible with dye-component-js-r4/,
+  );
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R4.revision, 4);
+  assert.equal(
+    assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R4),
     true,
   );
   assert.equal(
-    serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R3),
-    "{\"componentModelVersion\":\"dye-component-js-r3\",\"componentRecipeSchemaVersion\":2,\"edgeEnrichmentThreshold\":0.02,\"edgeMassGain\":200,\"id\":\"edge-dye-study\",\"massFraction\":0.32,\"mobilityMultiplier\":1.45,\"retentionMultiplier\":0.62,\"revision\":3}",
+    serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R4),
+    "{\"componentModelVersion\":\"dye-component-js-r4\",\"componentRecipeSchemaVersion\":3,\"edgeBlue\":78,\"edgeEnrichmentThreshold\":0.02,\"edgeGreen\":46,\"edgeMassGain\":200,\"edgeMixGain\":12,\"edgeMixMaximum\":0.72,\"edgeRed\":138,\"id\":\"edge-dye-study\",\"massFraction\":0.32,\"mobilityMultiplier\":1.45,\"retentionMultiplier\":0.62,\"revision\":4}",
   );
 });
 
 test("registered dye component identity rejects silent retuning", () => {
   const impostor = {
-    ...EDGE_DYE_COMPONENT_RECIPE_R3,
+    ...EDGE_DYE_COMPONENT_RECIPE_R4,
     mobilityMultiplier: 1.8,
   };
   assert.equal(validateDyeComponentRecipe(impostor), true);
@@ -67,7 +77,7 @@ test("registered dye component identity rejects silent retuning", () => {
 
 test("dye component recipes reject accessors and invalid transport values", () => {
   let reads = 0;
-  const accessor = { ...EDGE_DYE_COMPONENT_RECIPE_R3 };
+  const accessor = { ...EDGE_DYE_COMPONENT_RECIPE_R4 };
   Object.defineProperty(accessor, "massFraction", {
     enumerable: true,
     get() {
@@ -87,10 +97,13 @@ test("dye component recipes reject accessors and invalid transport values", () =
     ["retentionMultiplier", 2.01],
     ["edgeEnrichmentThreshold", 1.01],
     ["edgeMassGain", Number.POSITIVE_INFINITY],
+    ["edgeRed", 256],
+    ["edgeMixGain", 0],
+    ["edgeMixMaximum", 1.01],
   ]) {
     assert.throws(
       () => validateDyeComponentRecipe({
-        ...EDGE_DYE_COMPONENT_RECIPE_R3,
+        ...EDGE_DYE_COMPONENT_RECIPE_R4,
         [key]: value,
       }),
       new RegExp(key),

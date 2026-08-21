@@ -3,7 +3,7 @@
 > Status: Active experimental library
 > Engine model: `ordinary-js-r13`
 > Ink recipe schema: `6`
-> Dye component model/schema: `dye-component-js-r3 / 2`
+> Dye component model/schema: `dye-component-js-r4 / 3`
 > Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `2`
 
@@ -126,6 +126,17 @@ boundary. The candidate changes with the Surface solve but remains independent
 from flow and signed glyph Density. It is diagnostic-only; the ordinary
 Optical RGBA still contains no second color. R1 and R2 remain archival.
 
+Package `0.23.0-experimental.1` adds schema-3 `edge-dye-study@4` and an Optical
+second-dye operator. Positive component fraction delta determines the authored
+burgundy color mixture while the discontinuous R3 candidate only gates where
+that mixture may appear. The operator changes RGB only inside existing ordinary
+alpha; Contact, Density, Surface coverage, glyph geometry and every alpha byte
+remain unchanged. Candidate-only cells without positive enrichment remain the
+base color, so the result cannot fall back to a uniform outline. Sailor
+Yurameku/Ink Studio examples and Troublemaker Abalone writing samples establish
+the visual target of irregular color zones that vary with paper and broadness;
+angle-dependent metallic sheen remains a separate P5-B layer.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,
@@ -228,7 +239,9 @@ matching direct-pad color projection.
 - The Contact-axis extraction covers keyboard/font glyphs only. The direct
   writing pad uses physical pointer contact and flow-dependent liquid deposit
   loads, and is explicitly outside E-005 rather than silently reinterpreted.
-- Ordinary Density-to-RGB/alpha is the only extracted composite family.
+- Ordinary Density-to-RGB/alpha and the opt-in r4 second-dye RGB mix are the
+  extracted composite families. Sheen, particles and time-varying Optical
+  layers remain unimplemented.
 - The Surface solver still operates on the current union mask, so nearby wet
   footprints may interact through diffusion, fixing, and signed-density mixing.
   Strict append-after-drying semantics would require incremental state and is
