@@ -984,3 +984,63 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: return to the unchecked P4 specialty contact work,
   choose one real Italic/Stub/Music/Architect operator with measurable geometry,
   then begin P5 specialty ink components in order.
+
+## E-024-cross-music-contact / A1
+
+- Parent: `E-023-active-material-validity-matrix / A1`
+- Engine model: `ordinary-js-r13`
+- Package: `0.19.0-experimental.1`
+- Ink recipe schema: `6`
+- Contact catalog: `fountain-nib-catalog-r2`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2`
+- Status: passed checkpoint
+- Hypothesis: one fixed inverse-anisotropic Contact can create a recognizably
+  different special-nib signature for typed Korean without duplicating a glyph,
+  inventing pressure, or calling ordinary blur a nib effect.
+- Physical direction evidence: Sailor describes its official
+  [Cross Music](https://sailor.co.jp/product/10-7721/) as a broad double-layer
+  nib that writes thin vertical and broad horizontal lines. Montblanc's
+  [Curved nib service description](https://www.montblanc.com/en-us/customer-service-rna/care-services/writing-instruments.html?ecid=sem_G_Writing+Instruments_+montblanc+pens)
+  independently documents the same horizontal-broad/vertical-thin direction
+  at one held angle. Fountain uses only that causal direction, not either
+  product's identity or full mechanics.
+- Authored operator: `CM` is explicitly Cross-Music-inspired. Its fixed
+  keyboard Contact uses an F-like x-axis target and EB-like y-axis target, the
+  inverse of SU. Both run signed anisotropic morphology over one final glyph
+  alpha mask. There is no shifted pass, duplicate shadow, glyph scaling,
+  inferred stroke order, pressure, or live hold angle. The direct physics lab
+  uses one fixed virtual contact angle perpendicular to SU; it does not model
+  the real double nib or feed reserve.
+- Version boundary: catalog r1 and every r12 recipe remain registered archival
+  bytes. Active green@12, blue-black@6, burgundy@6 and teal@6 preserve all
+  material coefficients while selecting catalog r2. Existing seven nib
+  geometries and the default M field signatures remain unchanged.
+- Automated evidence: the bundled-font Contact contract includes CM at
+  18/28/52px; its vertical-run gain over M must exceed its horizontal-run gain.
+  All six reference glyphs must remain nonblank and retain at least 12% empty
+  aperture inside their thresholded ink bounds. This replaces the invalid old
+  assumption that every handwritten Korean aperture is a topologically closed
+  counter. Synthetic tests prove CM and SU have opposite
+  anisotropic signatures, and a Canvas adapter fixture proves both special nibs
+  call `fillText` exactly once and never call the round-nib `strokeText` pass.
+  CM joins the full 8 nib × 4 ink × 3 Surface × 3 flow
+  matrix for 288 finite, bounded, nonblank renders. Recipe fingerprints,
+  historical compatibility, flow independence, endpoint bounds and the
+  existing direct no-angle fallback remain gated.
+- Browser evidence: the HTML harness exposes CM as an eighth 44px-minimum
+  control with an explicit inspired label. Desktop 48px SU/CM and mobile
+  390×844 at 28px showed distinct axis character, readable Korean, a nonblank
+  Canvas and zero console warnings/errors. This is named normal-size visual
+  evidence, not a claim of exact real-pen reproduction or a permanent pixel
+  golden.
+- Learned: SU already covered ordinary stub-like vertical emphasis; adding a
+  second stub or generic Music label would not add a new causal signature.
+  Cross Music supplied a documented opposite direction that the current
+  single-mask Contact layer can express honestly. Angle-dependent Zoom/Fude,
+  pressure-dependent Flex and feed-reserve behavior remain separate future
+  operators rather than hidden CM effects.
+- Next different method: begin P5-A with one independent dye-component state
+  for color separation/edge concentration. First prove that disabling the new
+  component preserves the selected ordinary recipe exactly; then close the
+  remaining P2 optional-component-off invariant.

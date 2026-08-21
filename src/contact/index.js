@@ -1,9 +1,11 @@
 export {
+  ACTIVE_CONTACT_CATALOG_ID,
   M_RADIUS,
   M_STROKE_EM,
   NIB_IDS,
   NIB_PROFILES,
   ROUND_NIB_RATIOS,
+  SUPPORTED_CONTACT_CATALOG_IDS,
   getNibGeometry,
   getNibProfile,
   getPhysicalNibGeometry,

@@ -48,7 +48,7 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r11` is the active immutable, serializable r12/schema-6 control.
+`ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior
 is selected independently from `./surface-recipes`: smooth, balanced, or
 absorbent. Earlier ink revisions remain exported as archival checkpoints:
@@ -261,9 +261,11 @@ base range with Contact's nib multiplier without changing the accepted values.
 Package `0.11.0-experimental.1` adds `analyzeContactAlpha` for final-mask
 contracts. It thresholds antialiasing, measures stroke width from a chamfer
 distance field, counts connected components and enclosed counters, and reports
-counter areas. The HTML harness applies it to the bundled Korean font at
-18/28/52px; small-size raster ties are allowed, width reversals and lost
-counters are not.
+filled pixels plus empty aperture inside the thresholded ink bounds. The HTML
+harness applies it to the bundled Korean font at 18/28/52px; small-size raster
+ties are allowed, width reversals, empty glyphs and collapsed aperture are not.
+The aperture ratio is used because handwritten Korean openings are not always
+topologically closed counters.
 
 ## Ordinary Density-to-color curves
 
@@ -276,10 +278,10 @@ The active catalog exports:
 
 ```js
 import {
-  ORDINARY_BLUE_BLACK_RECIPE_R5,
-  ORDINARY_BURGUNDY_RECIPE_R5,
-  ORDINARY_GREEN_RECIPE_R11,
-  ORDINARY_TEAL_RECIPE_R5,
+  ORDINARY_BLUE_BLACK_RECIPE_R6,
+  ORDINARY_BURGUNDY_RECIPE_R6,
+  ORDINARY_GREEN_RECIPE_R12,
+  ORDINARY_TEAL_RECIPE_R6,
 } from "fountain-ink-engine/recipes";
 ```
 
@@ -290,9 +292,16 @@ coverage and alpha; only Optical RGB differs. The green control repeats
 green projection. These are ordinary dyes, not dual shading, sheen, shimmer or
 edge-outline recipes.
 
-Migration from `0.15.x`: select a schema-6 r12 recipe explicitly. Historical
+Package `0.19.0-experimental.1` adds `fountain-nib-catalog-r2` and the `CM`
+Cross-Music-inspired fixed Contact. CM uses the opposite anisotropic axes from
+SU—thin vertical strokes and broad horizontal strokes—from one glyph alpha
+mask. It does not emulate live pressure, writing angle, or a double-nib feed.
+
+Migration from `0.18.x`: select a schema-6 r13 recipe explicitly. Historical
 schema-2 through schema-6 recipes still parse and round-trip but do not enter
-the r12 calculation without a new authored revision.
+the r13 calculation without a new authored revision. Existing nib results and
+ordinary material coefficients are unchanged; only the active Contact catalog
+adds CM.
 
 ## Independent paper Surface recipes
 

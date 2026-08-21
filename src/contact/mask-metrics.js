@@ -33,8 +33,21 @@ export function analyzeContactAlpha(alpha, width, height, threshold = 128) {
     throw new TypeError("threshold must be an integer in 1...255.");
   }
   const filled = new Uint8Array(alpha.length);
+  let filledPixelCount = 0;
+  let minimumX = width;
+  let minimumY = height;
+  let maximumX = -1;
+  let maximumY = -1;
   for (let index = 0; index < alpha.length; index += 1) {
     filled[index] = alpha[index] >= threshold ? 1 : 0;
+    if (!filled[index]) continue;
+    filledPixelCount += 1;
+    const x = index % width;
+    const y = Math.floor(index / width);
+    minimumX = Math.min(minimumX, x);
+    minimumY = Math.min(minimumY, y);
+    maximumX = Math.max(maximumX, x);
+    maximumY = Math.max(maximumY, y);
   }
   const visited = new Uint8Array(alpha.length);
   const holes = [];
@@ -114,8 +127,16 @@ export function analyzeContactAlpha(alpha, width, height, threshold = 128) {
       if (localMaximum) centerDiameters.push(value * 2);
     }
   }
+  const boundingBoxArea = filledPixelCount === 0
+    ? 0
+    : (maximumX - minimumX + 1) * (maximumY - minimumY + 1);
+  const apertureArea = Math.max(0, boundingBoxArea - filledPixelCount);
   return Object.freeze({
     alphaThreshold: threshold,
+    filledPixelCount,
+    boundingBoxArea,
+    apertureArea,
+    apertureRatio: boundingBoxArea === 0 ? 0 : apertureArea / boundingBoxArea,
     connectedComponents: components,
     counterCount: holes.length,
     counterAreas: Object.freeze(holes.sort((a, b) => a - b)),

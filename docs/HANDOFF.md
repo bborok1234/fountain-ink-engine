@@ -26,8 +26,11 @@ fountain-ink-engine/canvas2d
 
 Clients must never import `fountain-ink-engine/src/...`.
 
-The active calculation is `ordinary-js-r12` with immutable schema-6
-`ordinary-green@11`, blue-black@5, burgundy@5 and teal@5 recipes. Active
+The active calculation is `ordinary-js-r13` with immutable schema-6
+`ordinary-green@12`, blue-black@6, burgundy@6 and teal@6 recipes. Their
+`fountain-nib-catalog-r2` Contact catalog adds CM as a fixed
+Cross-Music-inspired inverse anisotropy beside SU; historical catalog r1 and
+r12 recipes remain archival. Active
 absorbent paper is `paper-absorbent@4` under `paper-surface-js-r4`/schema 3;
 historical Surface revisions remain registered. Keyboard Surface clients may use
 `createKeyboardSurfaceState` for `{ coverage, densityTransport }`; the latter

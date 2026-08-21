@@ -6,6 +6,12 @@ export const M_RADIUS = 3.35;
 // Nanum Pen Script's median M-like core stroke at the 26–28px reference anchor.
 export const M_STROKE_EM = 0.09;
 
+export const ACTIVE_CONTACT_CATALOG_ID = "fountain-nib-catalog-r2";
+export const SUPPORTED_CONTACT_CATALOG_IDS = Object.freeze([
+  "standard-nib-ladder-r1",
+  ACTIVE_CONTACT_CATALOG_ID,
+]);
+
 export const ROUND_NIB_RATIOS = Object.freeze({
   UEF: 0.54,
   EF: 0.67,
@@ -16,6 +22,7 @@ export const ROUND_NIB_RATIOS = Object.freeze({
 });
 
 const ROUND_CONTACT_ASPECT = 0.62;
+const DEFAULT_PHYSICAL_NIB_ANGLE = -Math.PI * 0.22;
 
 export const NIB_PROFILES = Object.freeze({
   UEF: Object.freeze({
@@ -83,6 +90,20 @@ export const NIB_PROFILES = Object.freeze({
     verticalRatio: ROUND_NIB_RATIOS.F,
     physicalRatio: 1.45,
     physicalAspect: 0.28,
+    physicalAngle: DEFAULT_PHYSICAL_NIB_ANGLE,
+  }),
+  CM: Object.freeze({
+    id: "CM",
+    geometry: "cross-music-inspired",
+    flowOffset: 0.065,
+    shadingMultiplier: 1.3,
+    shadingExponent: 0.9,
+    widthVariation: 0.025,
+    horizontalRatio: ROUND_NIB_RATIOS.F,
+    verticalRatio: ROUND_NIB_RATIOS.EB,
+    physicalRatio: 1.55,
+    physicalAspect: 0.28,
+    physicalAngle: DEFAULT_PHYSICAL_NIB_ANGLE + Math.PI / 2,
   }),
 });
 
@@ -90,7 +111,10 @@ export const NIB_IDS = Object.freeze(Object.keys(NIB_PROFILES));
 
 /** @param {string} nibId */
 export function getNibProfile(nibId) {
-  return NIB_PROFILES[nibId] ?? NIB_PROFILES.M;
+  if (typeof nibId !== "string" || !Object.hasOwn(NIB_PROFILES, nibId)) {
+    throw new TypeError(`Unknown nibId: ${String(nibId)}.`);
+  }
+  return NIB_PROFILES[nibId];
 }
 
 /**
@@ -136,14 +160,16 @@ export function getNibGeometry(nibId, fontSize) {
 /** @param {string} nibId */
 export function getPhysicalNibGeometry(nibId) {
   const profile = getNibProfile(nibId);
-  if (profile.geometry === "stub") {
+  if (profile.geometry === "stub" || profile.geometry === "cross-music-inspired") {
     return Object.freeze({
       radius: M_RADIUS * profile.physicalRatio,
       aspect: profile.physicalAspect,
+      angle: profile.physicalAngle,
     });
   }
   return Object.freeze({
     radius: M_RADIUS * profile.ratio,
     aspect: ROUND_CONTACT_ASPECT,
+    angle: DEFAULT_PHYSICAL_NIB_ANGLE,
   });
 }
