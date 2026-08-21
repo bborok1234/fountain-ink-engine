@@ -866,3 +866,45 @@ they are not automatically promoted to timeless pass/fail truth.
   paste must meet 33ms, chunk only new Contact rasterization across frames while
   the native textarea remains immediate; do not weaken material physics or
   reduce final raster scale to hide the cost.
+
+## E-021-cold-paste-contact-budget / A1
+
+- Parent: `E-020-contact-first-worker-settle / A2`
+- Engine model: `ordinary-js-r12` (presentation experiment; no numeric change)
+- Package: `0.17.0-experimental.1`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2`
+- Status: passed checkpoint
+- Hypothesis: cold maximum-length paste can keep every main-thread Contact frame
+  below 33ms by yielding only new glyph rasterization across animation frames,
+  while preserving the same final Contact order and the one latest-only Worker
+  settle.
+- Measurement before change: for 80 distinct bundled-font Hangul graphemes at
+  DPR1/2/3, one synchronous Contact build took 50.8/54.0/126.0ms. New glyph
+  rasterization alone took 45.6/46.1/112.3ms; layout was at most 1.4ms. A
+  14-grapheme repeating 80-character input already took only 12.2/16.3/21.2ms
+  because the accepted Contact cache reused 66 masks.
+- Change: the HTML client keeps layout, literal textarea ownership and the same
+  glyph order, but processes uncached Contact entries until an authored 8ms
+  frame budget is reached. It paints the accumulated Contact mask, yields with
+  `requestAnimationFrame`, and starts the existing staged Worker settle only
+  after every glyph Contact is present. A new input cancels the pending chunk
+  generation before it can start a stale settle. No engine equation, recipe,
+  seed, raster scale or Worker material stage changed.
+- Browser evidence: 80 distinct graphemes produced DPR1/2/3 Contact frame p95
+  12.2/16.8/18.5ms. Full Contact completion took 116.6/107.4/121.6ms, after
+  which the unchanged settle completed. A DPR3 A→B 80-grapheme replacement
+  kept frame p95 at 20.0ms, completed only B, reported one pending frame/build/
+  settle maximum, cancelled the stale work and produced one final settle. The
+  native textarea and accessible canvas description held the final literal 80
+  graphemes. Chromium visual inspection showed a readable settled result.
+- Known limit: the page Contact appears progressively during a cold paste; full
+  completion is not a 33ms promise. WebKit, Firefox and physical-device timing
+  remain unmeasured because those runtimes are not installed in this workspace.
+- Roadmap correction: E-019–E-021 were cross-cutting input blockers discovered
+  during the HTML benchmark, not evidence that P5 was completed or that P6 may
+  continue out of order.
+- Next different method: stop browser-performance expansion here and return to
+  the unchecked P2 layer/version invariants before P4/P5 work. Preserve the
+  WebKit/Firefox/device matrix as an explicit later P6 backlog.
