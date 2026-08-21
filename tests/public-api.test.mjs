@@ -24,6 +24,10 @@ test("self-referenced package barrels expose the stable API", () => {
     engine.EDGE_DYE_COMPONENT_RECIPE_R4,
     dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R4,
   );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R5,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R5,
+  );
   assert.equal(engine.hashString, deterministic.hashString);
   assert.equal(engine.compositeOrdinaryInk, optical.compositeOrdinaryInk);
   assert.equal(

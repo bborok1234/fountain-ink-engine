@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EDGE_DYE_COMPONENT_RECIPE_R4 as ACTIVE_DYE_COMPONENT_RECIPE } from "../src/dye-components/index.js";
+import { EDGE_DYE_COMPONENT_RECIPE_R5 as ACTIVE_DYE_COMPONENT_RECIPE } from "../src/dye-components/index.js";
 import { ORDINARY_GREEN_RECIPE_R12 } from "../src/recipes/index.js";
 import {
   PAPER_SURFACE_BALANCED_R2,
@@ -99,7 +99,7 @@ test("edge dye has deterministic separate mobile, fixed and depth mass", () => {
   ).createDyeComponentState();
   assert.deepEqual(second, first);
   assert.equal(first.id, "edge-dye-study");
-  assert.equal(first.revision, 4);
+  assert.equal(first.revision, 5);
   assert.ok(first.mobileMass instanceof Float32Array);
   assert.ok(first.fixedMass instanceof Float32Array);
   assert.ok(first.subsurfaceMass instanceof Float32Array);
@@ -125,8 +125,10 @@ test("visible fraction isolates component enrichment from ordinary internal dens
   assert.equal(component.expectedFraction, expected);
   assert.ok(component.visibleFraction instanceof Float32Array);
   assert.ok(component.fractionDelta instanceof Float32Array);
+  assert.ok(component.colorZone instanceof Float32Array);
   assert.equal(component.visibleFraction.length, component.width * component.height);
   assert.equal(component.fractionDelta.length, component.visibleFraction.length);
+  assert.equal(component.colorZone.length, component.visibleFraction.length);
   let enriched = 0;
   let depleted = 0;
   for (let index = 0; index < component.visibleFraction.length; index += 1) {
@@ -145,7 +147,7 @@ test("visible fraction isolates component enrichment from ordinary internal dens
   assert.ok(depleted > 0);
 });
 
-test("edge accumulation is sparse, enriched and Surface-driven", () => {
+test("edge accumulation seeds bounded visible color zones inside enrichment", () => {
   const deposit = makeDeposit();
   const balanced = runSimulation(
     ACTIVE_DYE_COMPONENT_RECIPE,
@@ -160,6 +162,7 @@ test("edge accumulation is sparse, enriched and Surface-driven", () => {
   let accumulatedOutsideContact = 0;
   let contactBoundary = 0;
   let accumulatedContactBoundary = 0;
+  let zoned = 0;
   for (let y = 0; y < balanced.height; y += 1) {
     for (let x = 0; x < balanced.width; x += 1) {
       const index = y * balanced.width + x;
@@ -171,6 +174,12 @@ test("edge accumulation is sparse, enriched and Surface-driven", () => {
         assert.ok(balanced.fractionDelta[index] > 0);
         assert.ok(balanced.visibleFraction[index] > balanced.expectedFraction);
         assert.ok(balanced.edgeAccumulation[index] <= 1);
+      }
+      if (balanced.colorZone[index] > 0) {
+        zoned += 1;
+        assert.ok(balanced.fractionDelta[index] > 0);
+        assert.ok(balanced.colorZone[index] >= ACTIVE_DYE_COMPONENT_RECIPE.edgeZoneMinimumStrength);
+        assert.ok(balanced.colorZone[index] <= 1);
       }
       if (!contact) continue;
       const boundary = x === 0 || y === 0
@@ -188,10 +197,21 @@ test("edge accumulation is sparse, enriched and Surface-driven", () => {
     }
   }
   assert.ok(accumulated > 0);
-  assert.ok(accumulated < enriched / 2);
+  assert.ok(accumulated < enriched);
+  assert.ok(zoned > accumulated);
+  assert.ok(zoned <= enriched);
   assert.ok(accumulatedOutsideContact > 0);
   assert.ok(accumulatedContactBoundary < contactBoundary / 2);
-  assert.ok(absorbent.edgeAccumulation.every((value) => value === 0));
+  const absorbentAccumulated = absorbent.edgeAccumulation.reduce(
+    (count, value) => count + (value > 0 ? 1 : 0),
+    0,
+  );
+  const absorbentZoned = absorbent.colorZone.reduce(
+    (count, value) => count + (value > 0 ? 1 : 0),
+    0,
+  );
+  assert.ok(absorbentAccumulated < accumulated);
+  assert.ok(absorbentZoned < zoned);
   assert.notDeepEqual(
     balanced.edgeAccumulation,
     absorbent.edgeAccumulation,
@@ -345,8 +365,9 @@ test("maximum-grid enrichment has an explicit component memory bound", () => {
     state.visibleFraction,
     state.fractionDelta,
     state.edgeAccumulation,
+    state.colorZone,
   ].reduce((total, plane) => total + plane.byteLength, 0);
   assert.equal(solverBytes, 1_228_800);
-  assert.equal(retainedBytes, 1_843_200);
-  assert.equal(solverBytes + retainedBytes, 3_072_000);
+  assert.equal(retainedBytes, 2_150_400);
+  assert.equal(solverBytes + retainedBytes, 3_379_200);
 });

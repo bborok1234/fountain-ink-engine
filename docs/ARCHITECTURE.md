@@ -231,10 +231,12 @@ observes the buffers already used by the accepted render path:
   no depth state was created;
 - `surface.dyeComponent`: nullable mobile/fixed/subsurface mass for one
   explicitly enabled dye component, plus visible fraction, signed fraction
-  delta and the R3 bounded edge-accumulation candidate. The state remains a
+  delta, bounded edge-accumulation seeds and the r5 `colorZone`. The state remains a
   Surface diagnostic even when an Optical component consumes it;
+- `optical.baseCompositeRgba`: nullable ordinary RGBA retained only when a dye
+  component is active, for direct diagnostic comparison with the final;
 - `optical.compositeRgba`: the final ordinary RGBA composite, optionally with
-  the r4 second-dye RGB mixed inside existing alpha.
+  the r5 second-dye RGB mixed inside existing alpha.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
 return fields remain same-reference aliases; `surfaceDensityTransport` is the

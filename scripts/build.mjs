@@ -97,6 +97,7 @@ const requiredExports = [
   "EDGE_DYE_COMPONENT_RECIPE_R2",
   "EDGE_DYE_COMPONENT_RECIPE_R3",
   "EDGE_DYE_COMPONENT_RECIPE_R4",
+  "EDGE_DYE_COMPONENT_RECIPE_R5",
   "compositeDyeEdgeOptical",
   "assertDyeComponentRecipeCompatible",
   "parseDyeComponentRecipe",

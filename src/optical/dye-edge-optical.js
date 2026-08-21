@@ -44,77 +44,38 @@ function assertDyeComponentState(value, recipe) {
   );
   const id = readOwnData(value, "id", "dyeComponent");
   const revision = readOwnData(value, "revision", "dyeComponent");
-  const edgeAccumulation = readOwnData(
+  const colorZone = readOwnData(
     value,
-    "edgeAccumulation",
-    "dyeComponent",
-  );
-  const expectedFraction = readOwnData(
-    value,
-    "expectedFraction",
-    "dyeComponent",
-  );
-  const fractionDelta = readOwnData(
-    value,
-    "fractionDelta",
+    "colorZone",
     "dyeComponent",
   );
   if (id !== recipe.id || revision !== recipe.revision) {
     throw new TypeError("dyeComponent identity must match dyeComponentRecipe.");
   }
   if (
-    !(edgeAccumulation instanceof Float32Array)
-    || edgeAccumulation.length !== width * height
+    !(colorZone instanceof Float32Array)
+    || colorZone.length !== width * height
   ) {
     throw new TypeError(
-      "dyeComponent.edgeAccumulation must be a width * height Float32Array.",
+      "dyeComponent.colorZone must be a width * height Float32Array.",
     );
   }
-  for (let index = 0; index < edgeAccumulation.length; index += 1) {
-    const valueAtIndex = edgeAccumulation[index];
+  for (let index = 0; index < colorZone.length; index += 1) {
+    const valueAtIndex = colorZone[index];
     if (
       !Number.isFinite(valueAtIndex)
       || valueAtIndex < 0
       || valueAtIndex > 1
     ) {
       throw new TypeError(
-        "dyeComponent.edgeAccumulation values must be finite in 0...1.",
-      );
-    }
-  }
-  if (
-    !Number.isFinite(expectedFraction)
-    || expectedFraction < 0
-    || expectedFraction >= 1
-  ) {
-    throw new TypeError("dyeComponent.expectedFraction must be finite in 0...1.");
-  }
-  if (
-    !(fractionDelta instanceof Float32Array)
-    || fractionDelta.length !== width * height
-  ) {
-    throw new TypeError(
-      "dyeComponent.fractionDelta must be a width * height Float32Array.",
-    );
-  }
-  for (let index = 0; index < fractionDelta.length; index += 1) {
-    const valueAtIndex = fractionDelta[index];
-    if (
-      !Number.isFinite(valueAtIndex)
-      || valueAtIndex < -expectedFraction
-      || valueAtIndex > 1 - expectedFraction
-    ) {
-      throw new TypeError(
-        "dyeComponent.fractionDelta values must stay within the authored fraction bounds.",
+        "dyeComponent.colorZone values must be finite in 0...1.",
       );
     }
   }
   return {
     width,
     height,
-    edgeAccumulation,
-    expectedFraction,
-    fractionDelta,
+    colorZone,
   };
 }
 
@@ -133,7 +94,7 @@ function bilinearSample(plane, width, height, x, y) {
 }
 
 /**
- * Apply a Surface-owned discontinuous dye candidate as an Optical RGB mix.
+ * Apply a Surface-owned discontinuous dye color zone as an Optical RGB mix.
  * Existing alpha is copied exactly, so this operator cannot add coverage,
  * halos, shadows, or a duplicate glyph pass.
  */
@@ -174,36 +135,18 @@ export function compositeDyeEdgeOptical({
           (x + 0.5) * component.width / width - 0.5,
         ),
       );
-      const candidate = bilinearSample(
-        component.edgeAccumulation,
+      const colorZone = bilinearSample(
+        component.colorZone,
         component.width,
         component.height,
         mappedX,
         mappedY,
       );
-      if (!(candidate > 0)) continue;
-      const fractionDelta = bilinearSample(
-        component.fractionDelta,
-        component.width,
-        component.height,
-        mappedX,
-        mappedY,
-      );
-      if (!(fractionDelta > 0)) continue;
-      const enrichmentMaximum = 1 - component.expectedFraction;
-      const enrichment = enrichmentMaximum > 0
-        ? Math.max(0, Math.min(1, fractionDelta / enrichmentMaximum))
-        : 0;
-      const activation = dyeComponentRecipe.edgeEnrichmentThreshold > 0
-        ? Math.min(
-          1,
-          candidate / dyeComponentRecipe.edgeEnrichmentThreshold,
-        )
-        : 1;
+      if (!(colorZone > 0)) continue;
       const mix = Math.min(
         dyeComponentRecipe.edgeMixMaximum,
-        enrichment * dyeComponentRecipe.edgeMixGain,
-      ) * activation;
+        colorZone * dyeComponentRecipe.edgeMixGain,
+      );
       if (!(mix > 0)) continue;
       const keep = 1 - mix;
       result[offset] = Math.round(

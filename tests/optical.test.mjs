@@ -4,7 +4,7 @@ import {
   compositeDyeEdgeOptical,
   compositeOrdinaryOptical,
 } from "../src/optical/index.js";
-import { EDGE_DYE_COMPONENT_RECIPE_R4 } from "../src/dye-components/index.js";
+import { EDGE_DYE_COMPONENT_RECIPE_R5 } from "../src/dye-components/index.js";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -120,18 +120,16 @@ test("dye edge Optical mixes RGB in place without changing alpha or coverage", (
     baseRgba: base,
     dyeComponent: {
       id: "edge-dye-study",
-      revision: 4,
+      revision: 5,
       width: 3,
       height: 1,
-      edgeAccumulation: new Float32Array([0.1, 0.1, 0.1]),
-      expectedFraction: 0.25,
-      fractionDelta: new Float32Array([0.3, 0, 0.3]),
+      colorZone: new Float32Array([0.5, 0, 0.5]),
     },
-    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R4,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R5,
   });
   assert.equal(result, base);
   assert.deepEqual(Array.from(result.data), [
-    107, 49, 67, 200,
+    135, 30, 105, 200,
     29, 55, 40, 200,
     29, 55, 40, 0,
   ]);
@@ -154,15 +152,13 @@ test("dye edge Optical validates the complete candidate before output mutation",
     baseRgba: base,
     dyeComponent: {
       id: "edge-dye-study",
-      revision: 4,
+      revision: 5,
       width: 1,
       height: 1,
-      edgeAccumulation: new Float32Array([Number.NaN]),
-      expectedFraction: 0.25,
-      fractionDelta: new Float32Array([0.3]),
+      colorZone: new Float32Array([Number.NaN]),
     },
-    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R4,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R5,
     output,
-  }), /edgeAccumulation values must be finite/);
+  }), /colorZone values must be finite/);
   assert.deepEqual(Array.from(output.data), [9, 8, 7, 6]);
 });

@@ -3,7 +3,7 @@
 > Status: Active experimental library
 > Engine model: `ordinary-js-r13`
 > Ink recipe schema: `6`
-> Dye component model/schema: `dye-component-js-r4 / 3`
+> Dye component model/schema: `dye-component-js-r5 / 4`
 > Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `2`
 
@@ -137,6 +137,16 @@ Yurameku/Ink Studio examples and Troublemaker Abalone writing samples establish
 the visual target of irregular color zones that vary with paper and broadness;
 angle-dependent metallic sheen remains a separate P5-B layer.
 
+E-028/A1 did not pass perception: the changed bytes were hidden in ordinary
+shading, and smooth paper skipped the component along with its inactive
+physical Surface candidate. Package `0.24.0-experimental.1` adds schema-4
+`edge-dye-study@5`. Discontinuous accumulation and local enrichment maxima seed
+one-grid-cell `colorZone` regions clipped to positive component support. Smooth
+paper calculates this surface-film component while leaving ordinary coverage,
+density transport and paper depth inactive. The diagnostics client hides
+unavailable fields and compares ordinary base with second-dye final directly.
+Alpha, coverage and geometry remain exact.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,
@@ -239,7 +249,7 @@ matching direct-pad color projection.
 - The Contact-axis extraction covers keyboard/font glyphs only. The direct
   writing pad uses physical pointer contact and flow-dependent liquid deposit
   loads, and is explicitly outside E-005 rather than silently reinterpreted.
-- Ordinary Density-to-RGB/alpha and the opt-in r4 second-dye RGB mix are the
+- Ordinary Density-to-RGB/alpha and the opt-in r5 second-dye color-zone mix are the
   extracted composite families. Sheen, particles and time-varying Optical
   layers remain unimplemented.
 - The Surface solver still operates on the current union mask, so nearby wet
