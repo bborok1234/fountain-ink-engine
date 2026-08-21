@@ -19,6 +19,9 @@ const REGISTERED_RECIPES = Object.freeze({
 });
 
 const keyFor = (recipe) => `${recipe.id}@${recipe.revision}`;
+const REGISTERED_RECIPE_IDS = new Set(
+  Object.keys(REGISTERED_RECIPES).map((key) => key.split("@")[0]),
+);
 
 if (
   serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R1)
@@ -82,7 +85,10 @@ export function assertDyeComponentRecipeCompatible(recipe) {
   const key = keyFor(recipe);
   const registered = REGISTERED_RECIPES[key];
   if (registered === undefined) {
-    throw new TypeError(`dye component identity ${key} is not registered.`);
+    if (REGISTERED_RECIPE_IDS.has(recipe.id)) {
+      throw new TypeError(`dye component identity ${key} is not registered.`);
+    }
+    return true;
   }
   if (serializeDyeComponentRecipe(recipe) !== registered) {
     throw new TypeError(

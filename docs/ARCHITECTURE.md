@@ -277,6 +277,12 @@ An authored recipe additionally has an `id` and `revision`. Changing its result
 requires a new revision; changing the serialized field shape requires a new
 `recipeSchemaVersion`.
 
+Registered built-in ids are reserved and their canonical bytes are pinned.
+Current-model/schema recipes with a different id may be used for explicit
+experiments, but the experiment must store the complete canonical recipe and
+must not treat its local `id@revision` as a portable catalog identity. This lets
+workbenches author real engine inputs without weakening built-in replay.
+
 Package SemVer describes library/API compatibility. It does not replace any of
 these replay and experiment contracts.
 
