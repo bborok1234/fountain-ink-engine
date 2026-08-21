@@ -11,6 +11,7 @@ import {
 } from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
+import { assertPigmentComponentRecipeCompatible } from "../pigment-components/index.js";
 import {
   assertSheenComponentRecipeCompatible,
   createSheenSurfaceFilm,
@@ -54,6 +55,7 @@ function makeDiagnosticStages({
   densityTransport,
   paperDepth,
   dyeComponent,
+  pigmentComponent,
   sheenFilm,
   shimmerParticles,
   fiberEdgeCoverage,
@@ -74,6 +76,7 @@ function makeDiagnosticStages({
       densityTransport,
       paperDepth,
       dyeComponent,
+      pigmentComponent,
       sheenFilm,
       shimmerParticles,
       fiberEdgeCoverage,
@@ -168,6 +171,7 @@ export function prepareOrdinaryInkCanvasInput({
   height,
   surfaceRecipe,
   dyeComponentRecipe = null,
+  pigmentComponentRecipe = null,
   sheenComponentRecipe = null,
   sheenObservation = null,
   shimmerComponentRecipe = null,
@@ -180,6 +184,14 @@ export function prepareOrdinaryInkCanvasInput({
     // Compatibility is asserted again at the calculation boundary; this early
     // check prevents a forged component from causing a Canvas allocation.
     assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+  }
+  if (pigmentComponentRecipe !== null) {
+    assertPigmentComponentRecipeCompatible(pigmentComponentRecipe);
+  }
+  if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
+    throw new TypeError(
+      "Only one transported dye or pigment component may be active per solve.",
+    );
   }
   if (sheenComponentRecipe !== null) {
     assertSheenComponentRecipeCompatible(sheenComponentRecipe);
@@ -213,7 +225,9 @@ export function prepareOrdinaryInkCanvasInput({
   const surfaceApplied = surfaceResponse > 0.002;
   return Object.freeze({
     maskPixels,
-    surfaceDeposit: surfaceApplied || dyeComponentRecipe !== null
+    surfaceDeposit: surfaceApplied
+      || dyeComponentRecipe !== null
+      || pigmentComponentRecipe !== null
       ? makeKeyboardSurfaceDeposit({
         mask,
         width,
@@ -239,6 +253,7 @@ export function beginOrdinaryInkMaterial({
   glyphContacts,
   recipe,
   dyeComponentRecipe = null,
+  pigmentComponentRecipe = null,
   sheenComponentRecipe = null,
   sheenObservation = null,
   shimmerComponentRecipe = null,
@@ -249,6 +264,17 @@ export function beginOrdinaryInkMaterial({
   assertSurfaceRecipeCompatible(surfaceRecipe);
   assertPercent(flow, "flow");
   assertSurfaceSeed(surfaceSeed);
+  if (dyeComponentRecipe !== null) {
+    assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+  }
+  if (pigmentComponentRecipe !== null) {
+    assertPigmentComponentRecipeCompatible(pigmentComponentRecipe);
+  }
+  if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
+    throw new TypeError(
+      "Only one transported dye or pigment component may be active per solve.",
+    );
+  }
   if (sheenComponentRecipe !== null) {
     assertSheenComponentRecipeCompatible(sheenComponentRecipe);
   } else if (sheenObservation !== null) {
@@ -305,6 +331,7 @@ export function beginOrdinaryInkMaterial({
         })
         : null,
       dyeComponentRecipe,
+      pigmentComponentRecipe,
     );
   const fiberEdgeCoverage = createPaperFiberEdge({
     width: pixelWidth,
@@ -326,7 +353,9 @@ export function beginOrdinaryInkMaterial({
       : null,
     paperDepth: surfaceApplied ? surfaceState?.paperDepth ?? null : null,
     dyeComponent: surfaceState?.dyeComponent ?? null,
+    pigmentComponent: surfaceState?.pigmentComponent ?? null,
     dyeComponentRecipe,
+    pigmentComponentRecipe,
     sheenComponentRecipe,
     sheenObservation: validatedSheenObservation,
     shimmerComponentRecipe,
@@ -362,7 +391,9 @@ export function completeOrdinaryInkMaterial({
     surfaceDensityTransport,
     paperDepth,
     dyeComponent,
+    pigmentComponent,
     dyeComponentRecipe,
+    pigmentComponentRecipe,
     sheenComponentRecipe,
     sheenObservation,
     shimmerComponentRecipe,
@@ -404,9 +435,14 @@ export function completeOrdinaryInkMaterial({
     output,
   });
   const dyeActive = dyeComponent !== null && dyeComponentRecipe !== null;
+  const pigmentActive = pigmentComponent !== null
+    && pigmentComponentRecipe !== null;
   const sheenActive = sheenComponentRecipe !== null;
   const shimmerActive = shimmerComponentRecipe !== null;
-  const baseCompositeRgba = !dyeActive && !sheenActive && !shimmerActive
+  const baseCompositeRgba = !dyeActive
+    && !pigmentActive
+    && !sheenActive
+    && !shimmerActive
     ? null
     : Object.freeze({
       width: pixelWidth,
@@ -481,6 +517,7 @@ export function completeOrdinaryInkMaterial({
     densityTransport: surfaceDensityTransport,
     paperDepth,
     dyeComponent,
+    pigmentComponent,
     sheenFilm,
     shimmerParticles,
     fiberEdgeCoverage,
@@ -499,6 +536,7 @@ export function completeOrdinaryInkMaterial({
     surfaceDensityTransport: stages.surface.densityTransport,
     paperDepth: stages.surface.paperDepth,
     dyeComponent: stages.surface.dyeComponent,
+    pigmentComponent: stages.surface.pigmentComponent,
     sheenFilm: stages.surface.sheenFilm,
     shimmerParticles: stages.surface.shimmerParticles,
     fiberEdgeCoverage: stages.surface.fiberEdgeCoverage,
@@ -531,6 +569,7 @@ export function renderOrdinaryInkMaterial({
   glyphContacts,
   recipe,
   dyeComponentRecipe = null,
+  pigmentComponentRecipe = null,
   sheenComponentRecipe = null,
   sheenObservation = null,
   shimmerComponentRecipe = null,
@@ -542,6 +581,17 @@ export function renderOrdinaryInkMaterial({
   assertSurfaceRecipeCompatible(surfaceRecipe);
   assertPercent(flow, "flow");
   assertSurfaceSeed(surfaceSeed);
+  if (dyeComponentRecipe !== null) {
+    assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+  }
+  if (pigmentComponentRecipe !== null) {
+    assertPigmentComponentRecipeCompatible(pigmentComponentRecipe);
+  }
+  if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
+    throw new TypeError(
+      "Only one transported dye or pigment component may be active per solve.",
+    );
+  }
   if (sheenComponentRecipe !== null) {
     assertSheenComponentRecipeCompatible(sheenComponentRecipe);
     readSheenObservation(sheenObservation);
@@ -574,6 +624,7 @@ export function renderOrdinaryInkMaterial({
     height,
     surfaceRecipe,
     dyeComponentRecipe,
+    pigmentComponentRecipe,
     sheenComponentRecipe,
     sheenObservation,
     shimmerComponentRecipe,
@@ -595,6 +646,7 @@ export function renderOrdinaryInkMaterial({
     glyphContacts,
     recipe,
     dyeComponentRecipe,
+    pigmentComponentRecipe,
     sheenComponentRecipe,
     sheenObservation,
     shimmerComponentRecipe,

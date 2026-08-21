@@ -1462,3 +1462,53 @@ they are not automatically promoted to timeless pass/fail truth.
   particles and long-term settling remain separate future experiments.
 - Next different method: return to the next unchecked roadmap boundary rather
   than combining P5-D pigment/oxidation into this particle state.
+
+## E-034-separate-pigment-mobility-and-retention-state / A1
+
+- Parent: P5-D pigment and oxidation / transported solid colorant state
+- Ordinary engine/recipe: unchanged (`ordinary-js-r13`, `ordinary-green@12`)
+- Pigment component model/schema: `pigment-component-js-r1` / `1`
+- Package: `0.28.0-experimental.1`
+- Fixture manifest: unchanged (`2`)
+- Status: passed engine contract and normal-size browser observation
+- Hypothesis: fountain-pen pigment can begin as a separate mobile/fixed/depth
+  mass carried by the same water footprint, with lower lateral mobility and
+  higher fixing retention than the ordinary carrier, before claiming any
+  pigment color, opacity, waterproofness, permanence or oxidation behavior.
+- Primary evidence: Rohrer & Klingner describes nano-pigmented sketchINK as
+  waterproof and lightfast while warning about clotting and cleaning. Platinum
+  Chou Kuro instructs users to redisperse pigment by shaking and to clean with
+  purified water. Hagan & Maitland's 111-ink light-ageing study found the
+  document/pigmented group notably lightfast. These support a separate solid
+  colorant state, not a retuned ordinary RGB curve.
+- Operator: `pigment-study@1` shares the ordinary deposit water and authors
+  `massFraction 0.85`, `mobilityMultiplier 0.35` and
+  `retentionMultiplier 1.8`. It owns lazy mobile, fixed, next-mobile and
+  paper-depth Float32 planes. The current generic transported-component slot
+  is exclusive: a dye and pigment recipe in one solve fail before mutation or
+  component allocation.
+- Contract: enabling pigment leaves ordinary water, mobile/fixed carrier,
+  paper-depth state, resolved coverage and final RGBA exact. More mobility
+  moves more component mass outside Contact; more retention raises the fixed
+  share; absorbent paper produces deterministic component depth. Registered
+  identity is independently pinned and custom workbench recipes remain
+  explicit.
+- Workbench evidence: M/28 balanced paper at the built-in values reported
+  mobile `0.47`, fixed `122.27`, depth `0.00` and fixed share rounded to 100%.
+  Raising mobility to `1.2` and lowering retention to `0.5` changed that state
+  to mobile `8.55`, fixed `49.92` and fixed share `85%`. Absorbent paper at the
+  built-in values reported depth `3.29`. All three views reported zero changed
+  final RGB pixels, which is the intended A1 boundary rather than a missing
+  render path.
+- Memory boundary: disabled and direct-writing paths allocate no component
+  planes. At the maximum 320×240 keyboard grid, four internal Float32 planes
+  occupy `1,228,800` bytes and the three copied diagnostic planes retain
+  `921,600` bytes; peak component-specific typed-array storage is
+  `2,150,400` bytes. There is no full-resolution pigment plane.
+- A1 limit: the exclusive transported slot is not enough for a combined
+  dye-plus-pigment ink. It must become a bounded multi-component registry
+  before such recipes. The RGB remains ordinary and no digital waterproofness
+  is claimed.
+- Next different method: the remaining P5-D boundary is explicit commit-age
+  oxidation. It must use authored elapsed time and a versioned curve, never the
+  current wall clock or device state.

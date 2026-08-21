@@ -8,6 +8,7 @@ import * as density from "fountain-ink-engine/density";
 import * as dyeComponents from "fountain-ink-engine/dye-components";
 import * as deterministic from "fountain-ink-engine/deterministic";
 import * as optical from "fountain-ink-engine/optical";
+import * as pigmentComponents from "fountain-ink-engine/pigment-components";
 import * as recipes from "fountain-ink-engine/recipes";
 import * as sheenComponents from "fountain-ink-engine/sheen-components";
 import * as shimmerComponents from "fountain-ink-engine/shimmer-components";
@@ -73,6 +74,14 @@ test("self-referenced package barrels expose the stable API", () => {
   assert.equal(
     engine.compositeShimmerOptical,
     optical.compositeShimmerOptical,
+  );
+  assert.equal(
+    engine.PIGMENT_COMPONENT_RECIPE_R1,
+    pigmentComponents.PIGMENT_COMPONENT_RECIPE_R1,
+  );
+  assert.equal(
+    engine.assertPigmentComponentRecipeCompatible,
+    pigmentComponents.assertPigmentComponentRecipeCompatible,
   );
   assert.equal(engine.MAX_GLYPH_CONTACTS, density.MAX_GLYPH_CONTACTS);
   assert.equal(engine.MAX_GLYPH_CONTACTS, 0xffff);
