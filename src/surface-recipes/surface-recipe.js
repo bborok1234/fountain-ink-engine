@@ -40,7 +40,14 @@ const KEYBOARD_KEYS_R2 = Object.freeze([
   "contactRetentionFloor",
 ]);
 
-export const SUPPORTED_SURFACE_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2]);
+const KEYBOARD_KEYS_R3 = Object.freeze([
+  ...KEYBOARD_KEYS_R2,
+  "fiberEdgeReachCssPixels",
+  "fiberEdgeOccupancy",
+  "fiberEdgeStrength",
+]);
+
+export const SUPPORTED_SURFACE_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2, 3]);
 
 export const MAX_PAPER_SURFACE_STEPS = 64;
 
@@ -120,7 +127,7 @@ export function validateSurfaceRecipe(recipe) {
     recipe.surfaceRecipeSchemaVersion,
     "surfaceRecipe.surfaceRecipeSchemaVersion",
     1,
-    2,
+    3,
   );
 
   if (!SUPPORTED_SURFACE_RECIPE_SCHEMA_VERSIONS.includes(
@@ -136,7 +143,9 @@ export function validateSurfaceRecipe(recipe) {
     : AXIS_KEYS_R2;
   const keyboardKeys = recipe.surfaceRecipeSchemaVersion === 1
     ? KEYBOARD_KEYS_R1
-    : KEYBOARD_KEYS_R2;
+    : recipe.surfaceRecipeSchemaVersion === 2
+      ? KEYBOARD_KEYS_R2
+      : KEYBOARD_KEYS_R3;
 
   assertRecord(recipe.axes, "surfaceRecipe.axes");
   assertExactKeys(recipe.axes, axisKeys, "surfaceRecipe.axes");
@@ -166,6 +175,22 @@ export function validateSurfaceRecipe(recipe) {
   );
   assertNumber(recipe.keyboard.coverageMixExponent, "surfaceRecipe.keyboard.coverageMixExponent", 0.001, 10);
   assertNumber(recipe.keyboard.contactRetentionFloor, "surfaceRecipe.keyboard.contactRetentionFloor");
+  if (recipe.surfaceRecipeSchemaVersion >= 3) {
+    assertNumber(
+      recipe.keyboard.fiberEdgeReachCssPixels,
+      "surfaceRecipe.keyboard.fiberEdgeReachCssPixels",
+      0.25,
+      4,
+    );
+    assertNumber(
+      recipe.keyboard.fiberEdgeOccupancy,
+      "surfaceRecipe.keyboard.fiberEdgeOccupancy",
+    );
+    assertNumber(
+      recipe.keyboard.fiberEdgeStrength,
+      "surfaceRecipe.keyboard.fiberEdgeStrength",
+    );
+  }
   if (
     recipe.keyboard.stepBase + recipe.keyboard[stepGainKey]
     > MAX_PAPER_SURFACE_STEPS

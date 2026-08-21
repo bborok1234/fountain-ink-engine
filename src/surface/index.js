@@ -7,3 +7,4 @@ export {
 } from "./material-coverage.js";
 export { resolveKeyboardSurfaceCoverage } from "./coverage-resolver.js";
 export { getSurfaceDensityRange } from "./density-preservation.js";
+export { createPaperFiberEdge } from "./fiber-edge.js";

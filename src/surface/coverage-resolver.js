@@ -35,6 +35,27 @@ function assertRgbaPlane(value, expectedLength, path) {
   return data;
 }
 
+function assertAlphaPlane(value, expectedLength, path) {
+  if (
+    value === null
+    || typeof value !== "object"
+    || (Object.getPrototypeOf(value) !== Object.prototype
+      && Object.getPrototypeOf(value) !== null)
+  ) {
+    throw new TypeError(`${path} must be a plain object.`);
+  }
+  const width = ownDataValue(value, "width", path);
+  const height = ownDataValue(value, "height", path);
+  const data = ownDataValue(value, "data", path);
+  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height)) {
+    throw new TypeError(`${path} dimensions must be safe integers.`);
+  }
+  if (!(data instanceof Uint8Array) || data.length !== expectedLength) {
+    throw new TypeError(`${path}.data must be an exact-length Uint8Array.`);
+  }
+  return { width, height, data };
+}
+
 /**
  * Surface-owned resolution of deposited Contact and the physical coverage
  * candidate. The Float32 result preserves the accepted unquantized equation;
@@ -66,6 +87,19 @@ export function resolveKeyboardSurfaceCoverage(options) {
     );
   }
   const materialCoverageCandidate = candidateDescriptor?.value ?? null;
+  const fiberDescriptor = Object.getOwnPropertyDescriptor(
+    options,
+    "fiberEdgeCoverage",
+  );
+  if (
+    fiberDescriptor
+    && (!("value" in fiberDescriptor) || !fiberDescriptor.enumerable)
+  ) {
+    throw new TypeError(
+      "options.fiberEdgeCoverage must be an enumerable own data property.",
+    );
+  }
+  const fiberEdgeCoverage = fiberDescriptor?.value ?? null;
   assertSurfaceRecipeCompatible(surfaceRecipe);
   const pixelCount = assertDimensions(width, height);
   const contactData = assertRgbaPlane(contactMask, pixelCount, "contactMask");
@@ -76,6 +110,15 @@ export function resolveKeyboardSurfaceCoverage(options) {
       pixelCount,
       "materialCoverageCandidate",
     );
+  const fiberPlane = fiberEdgeCoverage === null
+    ? null
+    : assertAlphaPlane(fiberEdgeCoverage, pixelCount, "fiberEdgeCoverage");
+  if (
+    fiberPlane !== null
+    && (fiberPlane.width !== width || fiberPlane.height !== height)
+  ) {
+    throw new TypeError("fiberEdgeCoverage dimensions must match width and height.");
+  }
   const geometryResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
     ? surfaceRecipe.axes.verticalUptake
     : surfaceRecipe.axes.lateralMobility;
@@ -93,7 +136,12 @@ export function resolveKeyboardSurfaceCoverage(options) {
       + surfaceAlpha * materialMix;
     const retainedContact = contactAlpha
       * surfaceRecipe.keyboard.contactRetentionFloor;
-    resolvedCoverage[index] = Math.max(mixedCoverage, retainedContact);
+    const fibreCoverage = (fiberPlane?.data[index] ?? 0) / 255;
+    resolvedCoverage[index] = Math.max(
+      mixedCoverage,
+      retainedContact,
+      fibreCoverage,
+    );
   }
 
   return Object.freeze({

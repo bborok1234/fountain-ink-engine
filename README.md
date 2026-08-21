@@ -48,8 +48,8 @@ Browser text shaping and authored layout remain client responsibilities. The
 optional `canvas2d` adapter owns glyph-mask rasterization and presentation-time
 material composition without adding a React dependency.
 
-`ordinary-green-r9` is the active immutable, serializable r10/schema-6 control.
-Blue-black, burgundy and teal r3 are active ordinary-color peers. Paper behavior
+`ordinary-green-r10` is the active immutable, serializable r11/schema-6 control.
+Blue-black, burgundy and teal r4 are active ordinary-color peers. Paper behavior
 is selected independently from `./surface-recipes`: smooth, balanced, or
 absorbent. Earlier ink revisions remain exported as archival checkpoints:
 
@@ -259,13 +259,21 @@ look uniformly blurred. The active `paper-absorbent@2` uses Surface model r2
 and schema 2. `depthUptake` transfers water and mobile pigment into a local
 subsurface state, while `lateralMobility` alone controls page-plane spread.
 
+Package `0.15.0-experimental.1` closes the remaining paper-order inversion.
+The active `paper-balanced@2` keeps the accepted r1 candidate and direct-input
+state exact but reduces how strongly that continuous candidate enters keyboard
+coverage. `paper-absorbent@3` keeps a strong readable Contact core and adds a
+deterministic, Contact-connected, counter-safe sparse fibre edge at full raster
+resolution. Absorbent paper now has more visible exterior feathering than
+balanced paper without dilating or blurring the complete glyph.
+
 The Canvas2D diagnostic record exposes this state at
 `stages.surface.paperDepth`; its `pigment` and optional `signedNumerator` are
 solver-grid Float32 arrays. The state describes ink stored below the visible
 paper surface, so Optical does not composite it as an extra shadow or blur.
 At B/20px and the absorbent preset, the authored Contact floor remains legible
-and the coarse Surface halo is bounded. Smooth and balanced r1 calculations
-remain on their historical solver path.
+and the coarse Surface halo is bounded. Smooth r1, balanced r1 and absorbent
+r1/r2 remain registered historical checkpoints.
 
 ## Development
 
