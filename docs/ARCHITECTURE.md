@@ -242,3 +242,20 @@ requires a new revision; changing the serialized field shape requires a new
 
 Package SemVer describes library/API compatibility. It does not replace any of
 these replay and experiment contracts.
+
+## Field signatures and spatial identity
+
+`createFieldSignature` produces an observation-only signature from an explicit
+domain, typed-array type, width, height, channel count and values. Multi-byte
+values are encoded in little-endian order before the versioned `fnv1a64-le-v1`
+change detector is applied. The signature is deterministic but is not a
+cryptographic integrity primitive and does not replace the fixture manifest.
+
+Spatial identity has two levels. A committed glyph keeps its literal grapheme
+and explicit uint32 seed when layout, origin or font-size controls change.
+Moving or resizing it intentionally creates a different page Contact field, so
+the page signature may change. When the same final Contact support and phase
+anchor are translated together, its glyph-local Density signature remains the
+same while the page-field signature records the new placement. Clients must
+record font and layout facts separately rather than treating a page hash as a
+glyph ID.

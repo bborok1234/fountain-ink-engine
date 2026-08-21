@@ -908,3 +908,43 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: stop browser-performance expansion here and return to
   the unchecked P2 layer/version invariants before P4/P5 work. Preserve the
   WebKit/Firefox/device matrix as an explicit later P6 backlog.
+
+## E-022-deterministic-field-signatures / A1
+
+- Parent: `E-021-cold-paste-contact-budget / A1`
+- Engine model: `ordinary-js-r12` (observation API only; no numeric change)
+- Package: `0.18.0-experimental.1`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r4 / 3`
+- Fixture manifest: `2` (shape unchanged)
+- Status: passed checkpoint
+- Hypothesis: identical versioned material inputs can produce portable named
+  field signatures without pretending that a translated page field is the same
+  thing as a glyph identity.
+- Change: `createFieldSignature` accepts one exact plain field record with a
+  domain, typed-array type, dimensions and channel count. It streams canonical
+  little-endian bytes into the versioned `fnv1a64-le-v1` change detector and
+  returns immutable JSON-safe metadata. The helper rejects accessors,
+  unsupported arrays, invalid lengths and non-finite Float32 values. It is not
+  a cryptographic authenticity hash and is not called on the live render path.
+- Automated evidence: two independent active r12 renders pin identical hashes
+  for Contact `992bda01b1d165b2`, Density variation `838bf8cd73b9a7ff`, sample
+  count `a59a04e5edb1e707`, resolved Surface `27e893b169caec6f`, normalized
+  concentration `73c9ab35c0b5decf` and Optical RGBA `bdeadcc44a08086a`. Type,
+  shape, domain or one changed value changes the signature. Equivalent
+  typed-array views match without input mutation.
+- Spatial contract: translating the same Contact support, seed and CSS phase
+  anchor together preserves the glyph-local Density signature. Its full page
+  signature intentionally changes because placement is a material input.
+  Font-size changes may alter Contact geometry but must not invent a new
+  committed cadence seed.
+- Preserved evidence or code: all r12 calculations, ink/Surface recipes,
+  renderer order, harness presentation and fixture-manifest shape. No visual or
+  numeric output changed.
+- Known limit: fixture-manifest v2 still does not structurally require font
+  identity, segmented graphemes, per-glyph seeds, layout facts or these
+  signatures; that broader replay manifest remains a later hardening item.
+- Next different method: finish the last reachable P2 invariant with a bounded
+  nib/ink/Surface matrix for finite fields, valid RGBA, nonblank output and
+  explicit allocation lengths. Optional specialty components remain dependent
+  on P5 and are not falsely marked complete.

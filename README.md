@@ -136,6 +136,29 @@ same stages synchronously. Tests require identical final RGBA, resolved coverage
 and normalized concentration between the two paths. The split changes package
 API and scheduling only, not the engine model, recipes, seeds, or pixels.
 
+## Deterministic field signatures
+
+Package `0.18.0-experimental.1` adds an observation-only checkpoint helper:
+
+```js
+import { createFieldSignature } from "fountain-ink-engine/contracts";
+
+const signature = createFieldSignature({
+  domain: "optical.composite-rgba",
+  width: image.width,
+  height: image.height,
+  channels: 4,
+  data: image.data,
+});
+```
+
+The returned frozen record includes the domain, typed-array kind, dimensions,
+channel count and a canonical little-endian `fnv1a64-le-v1` hash. It is a
+portable regression/change detector, not a cryptographic authenticity proof.
+Use it for explicit experiment checkpoints rather than on every live frame.
+The helper rejects accessors, unsupported arrays, invalid dimensions and
+non-finite Float32 values without changing the material calculation.
+
 ## Surface normalization
 
 As of package `0.5.0-experimental.1`, keyboard Surface coverage uses the

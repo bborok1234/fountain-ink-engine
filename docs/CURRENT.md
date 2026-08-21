@@ -78,8 +78,20 @@ current in-app browser, the 23-grapheme 18/28/52px DPR1/2/3 Contact p95 matrix
 stays at or below 28.5ms; rapid growth to 80 graphemes measured p95 21.0ms with
 maximum pending frame and settle both 1. Typed-array work runs off-main, while
 the exact host-Canvas bridge measured 3.1/11.8/22.3ms at DPR1/2/3. Total settle
-latency was 80.6–196.7ms. A cold one-shot 80-grapheme replacement still takes 58.7ms for Contact,
-and non-Chromium Worker/Canvas behavior remains unverified.
+latency was 80.6–196.7ms. E-021 now splits previously unseen cold-paste Contact
+rasterization into 8ms animation-frame chunks. Distinct 80-grapheme DPR1/2/3
+frame p95 measured 12.2/16.8/18.5ms, while the complete Contact took 107–122ms.
+The textarea remains immediate and only the latest build may settle;
+non-Chromium Worker/Canvas behavior remains unverified.
+
+Package `0.18.0-experimental.1` adds the calculation-neutral
+`createFieldSignature` checkpoint helper. It records domain, type, dimensions,
+channels and a canonical little-endian FNV-1a-64 change detector without
+changing engine, recipe, Surface or fixture versions. The active 18×14
+ordinary checkpoint pins Contact, Density variation/count, resolved Surface,
+normalized concentration and final Optical signatures. A translation fixture
+also proves that the same explicit seed and phase-relative Contact preserve a
+glyph-local Density signature while the page signature changes with placement.
 
 The engine contains no React component, text control, Vite configuration,
 Sites worker, native code, product data model, font, or reference image.

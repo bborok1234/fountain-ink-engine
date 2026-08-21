@@ -37,6 +37,7 @@ test("self-referenced package barrels expose the stable API", () => {
   assert.equal(engine.MAX_GLYPH_CONTACTS, density.MAX_GLYPH_CONTACTS);
   assert.equal(engine.MAX_GLYPH_CONTACTS, 0xffff);
   assert.equal(engine.engineModelVersion, contracts.engineModelVersion);
+  assert.equal(engine.createFieldSignature, contracts.createFieldSignature);
   assert.equal(engine.makeGlyphMask, canvas2d.makeGlyphMask);
   assert.equal(
     engine.renderOrdinaryInkMaterial,
