@@ -8,8 +8,10 @@ import {
 } from "./surface-recipe.js";
 import { PAPER_SURFACE_SMOOTH_R1 } from "./paper-smooth-r1.js";
 import { PAPER_SURFACE_BALANCED_R1 } from "./paper-balanced-r1.js";
+import { PAPER_SURFACE_BALANCED_R2 } from "./paper-balanced-r2.js";
 import { PAPER_SURFACE_ABSORBENT_R1 } from "./paper-absorbent-r1.js";
 import { PAPER_SURFACE_ABSORBENT_R2 } from "./paper-absorbent-r2.js";
+import { PAPER_SURFACE_ABSORBENT_R3 } from "./paper-absorbent-r3.js";
 import { SUPPORTED_SURFACE_RUNTIME_VERSIONS } from "./versions.js";
 import { REGISTERED_SURFACE_RECIPE_SERIALIZATIONS } from "./registered-built-ins.js";
 
@@ -17,8 +19,10 @@ const keyFor = (recipe) => `${recipe.id}@${recipe.revision}`;
 const BUILT_INS = [
   PAPER_SURFACE_SMOOTH_R1,
   PAPER_SURFACE_BALANCED_R1,
+  PAPER_SURFACE_BALANCED_R2,
   PAPER_SURFACE_ABSORBENT_R1,
   PAPER_SURFACE_ABSORBENT_R2,
+  PAPER_SURFACE_ABSORBENT_R3,
 ];
 const RESERVED_IDS = new Set(
   Object.keys(REGISTERED_SURFACE_RECIPE_SERIALIZATIONS).map((key) =>

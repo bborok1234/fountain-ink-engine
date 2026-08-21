@@ -1,5 +1,5 @@
-export const surfaceModelVersion = "paper-surface-js-r2";
-export const surfaceRecipeSchemaVersion = 2;
+export const surfaceModelVersion = "paper-surface-js-r3";
+export const surfaceRecipeSchemaVersion = 3;
 
 export const SUPPORTED_SURFACE_RUNTIME_VERSIONS = Object.freeze([
   Object.freeze({
@@ -7,9 +7,10 @@ export const SUPPORTED_SURFACE_RUNTIME_VERSIONS = Object.freeze([
     surfaceRecipeSchemaVersion: 1,
   }),
   Object.freeze({
-    surfaceModelVersion,
-    surfaceRecipeSchemaVersion,
+    surfaceModelVersion: "paper-surface-js-r2",
+    surfaceRecipeSchemaVersion: 2,
   }),
+  Object.freeze({ surfaceModelVersion, surfaceRecipeSchemaVersion }),
 ]);
 
 export const SURFACE_VERSIONS = Object.freeze({

@@ -247,7 +247,7 @@ export class WetInkSimulation {
 
   stepSurface(deltaMilliseconds, surfaceRecipe) {
     assertSurfaceRecipeCompatible(surfaceRecipe);
-    if (surfaceRecipe.surfaceModelVersion === "paper-surface-js-r2") {
+    if (surfaceRecipe.surfaceRecipeSchemaVersion >= 2) {
       return this.#stepDepthSurface(deltaMilliseconds, surfaceRecipe.axes);
     }
     return this.#stepWithSurface(deltaMilliseconds, surfaceRecipe.axes);

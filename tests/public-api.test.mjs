@@ -82,6 +82,10 @@ test("self-referenced package barrels expose the stable API", () => {
     engine.ORDINARY_TEAL_RECIPE_R3,
     recipes.ORDINARY_TEAL_RECIPE_R3,
   );
+  assert.equal(engine.ORDINARY_GREEN_RECIPE_R10, recipes.ORDINARY_GREEN_RECIPE_R10);
+  assert.equal(engine.ORDINARY_BLUE_BLACK_RECIPE_R4, recipes.ORDINARY_BLUE_BLACK_RECIPE_R4);
+  assert.equal(engine.ORDINARY_BURGUNDY_RECIPE_R4, recipes.ORDINARY_BURGUNDY_RECIPE_R4);
+  assert.equal(engine.ORDINARY_TEAL_RECIPE_R4, recipes.ORDINARY_TEAL_RECIPE_R4);
   assert.equal(
     engine.createKeyboardSurfaceState,
     surface.createKeyboardSurfaceState,
@@ -95,9 +99,18 @@ test("self-referenced package barrels expose the stable API", () => {
     surfaceRecipes.PAPER_SURFACE_BALANCED_R1,
   );
   assert.equal(
+    engine.PAPER_SURFACE_BALANCED_R2,
+    surfaceRecipes.PAPER_SURFACE_BALANCED_R2,
+  );
+  assert.equal(
     engine.PAPER_SURFACE_ABSORBENT_R2,
     surfaceRecipes.PAPER_SURFACE_ABSORBENT_R2,
   );
+  assert.equal(
+    engine.PAPER_SURFACE_ABSORBENT_R3,
+    surfaceRecipes.PAPER_SURFACE_ABSORBENT_R3,
+  );
+  assert.equal(engine.createPaperFiberEdge, surface.createPaperFiberEdge);
   assert.equal(canvas2d.makeKeyboardSurfaceState, undefined);
   assert.equal(typeof canvas2d.renderOrdinaryInkMaterial, "function");
 });
@@ -109,11 +122,11 @@ test("importing the Canvas adapter does not touch browser globals", () => {
 
 test("Canvas material adapters reject invalid units before browser allocation", () => {
   assert.throws(() => canvas2d.makeMaterialCoverage({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R9,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R10,
     surfaceSeed: 0,
   }), /surfaceRecipe/);
   assert.throws(() => canvas2d.renderOrdinaryInkMaterial({
-    recipe: recipes.ORDINARY_GREEN_RECIPE_R9,
+    recipe: recipes.ORDINARY_GREEN_RECIPE_R10,
     flow: 58,
     surfaceSeed: 0,
   }), /surfaceRecipe/);

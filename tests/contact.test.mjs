@@ -15,7 +15,7 @@ import {
 } from "../src/contact/index.js";
 import { getNibDensityRange } from "../src/density/index.js";
 import { hashString, randomFrom } from "../src/deterministic/index.js";
-import { ORDINARY_GREEN_RECIPE_R9 } from "../src/recipes/index.js";
+import { ORDINARY_GREEN_RECIPE_R10 } from "../src/recipes/index.js";
 import { PAPER_SURFACE_BALANCED_R1 } from "../src/surface-recipes/index.js";
 
 test("preserves the accepted controlled-width nib ladder", () => {
@@ -117,13 +117,13 @@ test("broad nibs increase signed density range within the recipe cap", () => {
       Math.abs(getNibDensityRange(
         nibId,
         PAPER_SURFACE_BALANCED_R1,
-        ORDINARY_GREEN_RECIPE_R9,
+        ORDINARY_GREEN_RECIPE_R10,
       ) - acceptedRangeAtAbsorption42[nibId]) < 1e-12,
     );
   }
   assert.ok(
-    getNibDensityRange("EB", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R9)
-      > getNibDensityRange("M", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R9),
+    getNibDensityRange("EB", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R10)
+      > getNibDensityRange("M", PAPER_SURFACE_BALANCED_R1, ORDINARY_GREEN_RECIPE_R10),
   );
   assert.equal(
     shapeNibDensityVariation("EB", -0.3),
@@ -135,7 +135,7 @@ test("broad nibs increase signed density range within the recipe cap", () => {
     /recipeSchemaVersion must be an enumerable own data property/,
   );
 
-  const nonFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R9));
+  const nonFinite = JSON.parse(JSON.stringify(ORDINARY_GREEN_RECIPE_R10));
   nonFinite.id = "custom-non-finite-study";
   nonFinite.density.rangeMaximum = Number.NaN;
   assert.throws(
@@ -143,7 +143,7 @@ test("broad nibs increase signed density range within the recipe cap", () => {
     /finite number/,
   );
   assert.throws(
-    () => getNibDensityRange("M", null, ORDINARY_GREEN_RECIPE_R9),
+    () => getNibDensityRange("M", null, ORDINARY_GREEN_RECIPE_R10),
     /surfaceRecipe must be a plain object/,
   );
 });

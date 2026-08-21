@@ -635,3 +635,52 @@ they are not automatically promoted to timeless pass/fail truth.
   fibre-edge operator whose reach and occupancy are measured separately; do not
   increase r2 coarse-grid diffusion. Reverse-side bleed-through and layered
   paper depth remain separate future states.
+
+## E-017-paper-feather-order-and-fibre-edge / A1
+
+- Parent: `E-016-absorbent-paper-depth-uptake / A1`
+- Engine model: `ordinary-js-r11`
+- Ink recipe schema: `6`
+- Surface model/schema: `paper-surface-js-r3 / 3`
+- Fixture manifest: `2`
+- Status: passed checkpoint
+- Hypothesis: the visible paper ladder should not show balanced paper as more
+  laterally spread than absorbent paper. Balanced may keep a restrained,
+  continuous settling edge; absorbent must keep a readable core while exposing
+  a larger but sparse, fibre-connected exterior response rather than whole-glyph
+  blur.
+- Explicit inputs and seed: active four ordinary inks, `paper-balanced@2`,
+  `paper-absorbent@3`, the existing explicit glyph and Surface seeds, bundled
+  Nanum Pen Script; M/48 desktop and B/20 at 390×844 mobile, flow 58.
+- Observed defect: balanced r1 reused `verticalUptake=0.42` as its page-plane
+  geometry response, producing a material mix of about 45%. Absorbent r2 used
+  the separated `lateralMobility=0.20`, producing about 23% mix plus an 82%
+  Contact floor. The resulting visual order was inverted: balanced looked more
+  continuously blurred while absorbent looked sharper.
+- Change: `paper-balanced@2` preserves the r1 axes, step schedule, physical
+  candidate and direct-input state, but changes keyboard coverage resolution
+  from exponent 0.92 to 2.15 with a 72% Contact floor. `paper-absorbent@3`
+  preserves r2 depth and coarse mobility, then adds a full-resolution
+  deterministic fibre alpha plane with 1.75 CSS-pixel reach, 45% sparse edge
+  occupancy and 62%
+  first-branch strength. Fibres start from real Contact, remain connected,
+  cannot enter enclosed counters, and are composed by Surface as coverage—not
+  blur, shadow, outline, or a duplicate glyph.
+- Automated evidence: active absorbent material mix is greater than active
+  balanced mix; at the same Contact fixture absorbent has strictly more visible
+  exterior coverage; Contact and Density planes remain exact; fibre output is
+  deterministic, seed-sensitive, sparse, bounded and counter-safe. Balanced r2
+  direct-input water/mobile/fixed state remains exact with balanced r1. All 112
+  engine tests and the complete HTML harness gate pass.
+- Browser evidence: fresh-cache M/48 desktop and B/20 390px mobile comparisons
+  show a calmer balanced edge and a readable absorbent core with irregular
+  exterior fibres. Console warnings/errors are zero.
+- Why it failed, if applicable: the first comparison mixed a legacy r1 balanced
+  recipe with a separated r2 absorbent recipe, so the labels did not share the
+  same depth-versus-lateral interpretation.
+- Preserved evidence or code: all historical Surface and ink recipe pins,
+  direct-input equations, Contact geometry, Density transport, optical color
+  curves, explicit seeds, literal text and IME ownership.
+- Next different method: quantify the sparse edge at DPR1/2/3 and profile its
+  full-resolution one-byte plane. Do not increase coarse-grid diffusion if the
+  fibres need later visual tuning.

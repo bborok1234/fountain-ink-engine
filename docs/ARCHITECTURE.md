@@ -29,16 +29,17 @@ implicit migration.
 ### Recipes
 
 Owns immutable authored material parameters and canonical JSON serialization.
-`ordinary-green-r9` is the active control and the blue-black, burgundy and teal
-r3 recipes are its ordinary-color peers. They share density bounds, keyboard
+`ordinary-green-r10` is the active control and the blue-black, burgundy and teal
+r4 recipes are its ordinary-color peers. They share density bounds, keyboard
 Surface load, fixed normalization reference, minimum Contact retention and
 alpha endpoints while owning separate Density-to-RGB curves and direct optical
-color coefficients. They select the r10 calculation model and ink schema 6.
-Paper policy is a separate versioned Surface recipe. Smooth and balanced retain
-`paper-surface-js-r1`/schema 1; absorbent r2 uses
-`paper-surface-js-r2`/schema 2 so paper-depth uptake cannot be silently
-reinterpreted as page-plane diffusion. Runtime nib, flow, layout, text, and
-seeds are not recipe fields.
+color coefficients. They select the r11 calculation model and ink schema 6.
+Paper policy is a separate versioned Surface recipe. Smooth r1 remains the
+historical crisp endpoint; balanced r2 keeps `paper-surface-js-r1`/schema 1 so
+the accepted candidate and direct-input solver stay exact while its keyboard
+coverage mix is revised; absorbent r3 uses `paper-surface-js-r3`/schema 3 so
+paper-depth uptake cannot be silently reinterpreted as page-plane diffusion.
+Runtime nib, flow, layout, text, and seeds are not recipe fields.
 
 Structural validation and archival round-trip are separate from calculation
 compatibility. A supported historical model recipe can be parsed without being
@@ -139,7 +140,7 @@ remains above the `0.54` floor, while maximum absorption retains at least that
 fraction of the original Contact alpha. Optical consumes this resolved plane;
 it no longer knows the Surface mix exponent or Contact-retention policy.
 
-The r2 absorbent path separates paper depth from page-plane spread. Both page
+The r2/r3 paper path separates paper depth from page-plane spread. Both page
 axes use the authored `lateralMobility`. A local `depthUptake` sink moves water
 and mobile pigment into lazy subsurface pigment state without expanding its
 screen-space footprint. Signed Density mass follows the same proportional
@@ -147,7 +148,12 @@ transfer so the depth diagnostic stays attributable to the deposited pigment.
 `createKeyboardSurfaceState` and renderer diagnostics expose a copied,
 nullable `paperDepth` grid; it does not feed Optical because it represents ink
 below the visible surface. The legacy r1 solver path remains intact for smooth,
-balanced and archived absorbent r1 recipes.
+balanced and archived absorbent r1 recipes. Active balanced r2 preserves that
+solver but authors a restrained continuous keyboard coverage mix. Active
+absorbent r3 adds a full-resolution sparse
+fibre plane after Contact and coarse Surface calculation; every fibre remains
+connected to Contact, avoids enclosed counters, and is resolved as coverage by
+Surface rather than reconstructed by Optical.
 
 Surface also owns absorption-dependent Density preservation through
 `getSurfaceDensityRange`. Contact supplies only the selected nib's shading

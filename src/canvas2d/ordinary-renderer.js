@@ -7,6 +7,7 @@ import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 import {
   createKeyboardSurfaceState,
+  createPaperFiberEdge,
   createMaterialCoverage,
   resolveKeyboardSurfaceCoverage,
 } from "../surface/index.js";
@@ -26,6 +27,7 @@ function makeDiagnosticStages({
   resolvedCoverage,
   densityTransport,
   paperDepth,
+  fiberEdgeCoverage,
   normalizedConcentration,
   compositeRgba,
 }) {
@@ -41,6 +43,7 @@ function makeDiagnosticStages({
       resolvedCoverage,
       densityTransport,
       paperDepth,
+      fiberEdgeCoverage,
       applied: materialCoverageCandidate !== null,
     }),
     optical: Object.freeze({ compositeRgba }),
@@ -230,11 +233,20 @@ export function renderOrdinaryInkMaterial({
   const materialCoverage = surfaceState?.materialCoverageCandidate ?? null;
   const surfaceDensityTransport = surfaceState?.densityTransport ?? null;
   const paperDepth = surfaceState?.paperDepth ?? null;
+  const fiberEdgeCoverage = createPaperFiberEdge({
+    width: pixelWidth,
+    height: pixelHeight,
+    contactMask: maskPixels.data,
+    scale,
+    surfaceSeed,
+    surfaceRecipe,
+  });
   const resolvedCoverage = resolveKeyboardSurfaceCoverage({
     width: pixelWidth,
     height: pixelHeight,
     contactMask: maskPixels.data,
     materialCoverageCandidate: materialCoverage,
+    fiberEdgeCoverage,
     surfaceRecipe,
   });
   const result = outputContext.createImageData(pixelWidth, pixelHeight);
@@ -266,6 +278,7 @@ export function renderOrdinaryInkMaterial({
     resolvedCoverage,
     densityTransport: surfaceDensityTransport,
     paperDepth,
+    fiberEdgeCoverage,
     normalizedConcentration,
     compositeRgba: result,
   });
@@ -279,5 +292,6 @@ export function renderOrdinaryInkMaterial({
     resolvedCoverage: stages.surface.resolvedCoverage,
     surfaceDensityTransport: stages.surface.densityTransport,
     paperDepth: stages.surface.paperDepth,
+    fiberEdgeCoverage: stages.surface.fiberEdgeCoverage,
   };
 }
