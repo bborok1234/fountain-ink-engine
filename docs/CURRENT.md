@@ -157,6 +157,15 @@ cannot be retuned or extended without a new built-in revision. Experiment
 clients must checkpoint the full canonical recipe because an unregistered
 `id@revision` pair is not a catalog identity.
 
+Package `0.26.0-experimental.1` adds `sheen-component-js-r1` and the independent
+`sheen-study@1` recipe. A Surface-owned Float32 film appears only above the
+authored high-concentration threshold and is reduced by paper roughness and
+poor film preservation. Optical receives a separate scalar specular-view input:
+zero preserves ordinary RGBA exactly, while the active view changes RGB only
+inside existing alpha where film exists. The Workbench exposes base/specular
+views and the film diagnostic from the same solve. This is not the P5-A edge
+zone, an outline, or a shimmer-particle state.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,

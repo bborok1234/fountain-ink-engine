@@ -9,6 +9,7 @@ import * as dyeComponents from "fountain-ink-engine/dye-components";
 import * as deterministic from "fountain-ink-engine/deterministic";
 import * as optical from "fountain-ink-engine/optical";
 import * as recipes from "fountain-ink-engine/recipes";
+import * as sheenComponents from "fountain-ink-engine/sheen-components";
 import * as surface from "fountain-ink-engine/surface";
 import * as surfaceRecipes from "fountain-ink-engine/surface-recipes";
 
@@ -47,6 +48,18 @@ test("self-referenced package barrels expose the stable API", () => {
   assert.equal(
     engine.compositeDyeEdgeOptical,
     optical.compositeDyeEdgeOptical,
+  );
+  assert.equal(
+    engine.compositeSheenOptical,
+    optical.compositeSheenOptical,
+  );
+  assert.equal(
+    engine.SHEEN_COMPONENT_RECIPE_R1,
+    sheenComponents.SHEEN_COMPONENT_RECIPE_R1,
+  );
+  assert.equal(
+    engine.createSheenSurfaceFilm,
+    sheenComponents.createSheenSurfaceFilm,
   );
   assert.equal(engine.MAX_GLYPH_CONTACTS, density.MAX_GLYPH_CONTACTS);
   assert.equal(engine.MAX_GLYPH_CONTACTS, 0xffff);

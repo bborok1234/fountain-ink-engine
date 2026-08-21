@@ -35,6 +35,7 @@ Focused entry points are also available:
 - `fountain-ink-engine/contracts`
 - `fountain-ink-engine/recipes`
 - `fountain-ink-engine/dye-components`
+- `fountain-ink-engine/sheen-components`
 - `fountain-ink-engine/deterministic`
 - `fountain-ink-engine/contact`
 - `fountain-ink-engine/density`
@@ -99,6 +100,25 @@ must be stored with the experiment. Registered ids such as `edge-dye-study`
 remain reserved, so a client cannot silently retune or invent another revision
 of a built-in recipe. An unregistered experiment recipe is not a catalog preset
 and must never be replayed from `id` and `revision` alone.
+
+## Optional sheen component
+
+Package `0.26.0-experimental.1` adds a separate surface-film component:
+
+```js
+import {
+  SHEEN_COMPONENT_RECIPE_R1,
+  createSheenSurfaceFilm,
+} from "fountain-ink-engine/sheen-components";
+import { compositeSheenOptical } from "fountain-ink-engine/optical";
+```
+
+The film is derived from normalized concentration, resolved coverage, and the
+selected paper Surface's film preservation and roughness. Optical receives the
+view observation separately. A zero specular alignment returns the ordinary
+RGBA exactly; an active alignment changes RGB only on existing ink alpha where
+the high-concentration film is present. This is neither the static P5-A color
+zone nor a shimmer-particle overlay.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior
