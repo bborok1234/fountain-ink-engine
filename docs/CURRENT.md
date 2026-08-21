@@ -166,6 +166,16 @@ inside existing alpha where film exists. The Workbench exposes base/specular
 views and the film diagnostic from the same solve. This is not the P5-A edge
 zone, an outline, or a shimmer-particle state.
 
+Package `0.27.0-experimental.1` adds `shimmer-component-js-r1` and the
+independent `shimmer-study@1` recipe. Surface selects a finite particle list
+only from the resolved wet footprint and applies the paper recipe's
+`particleCatch`; Density is deliberately absent from particle placement.
+Optical uses an explicit light observation to mix particle RGB inside existing
+alpha without changing coverage. Reduce Motion chooses the authored static
+phase and never changes particle positions. The built-in list is capped at 512
+particles and occupies 10,240 bytes of typed-array attributes rather than a
+full-page particle field.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,
@@ -290,8 +300,8 @@ matching direct-pad color projection.
   a second calculation path.
 - Browser visual equivalence is checked during the migration, but no single
   permanent pixel image is treated as the final artistic truth.
-- Edge-separated color, sheen, shimmer, pigment, and oxidation remain future
-  versioned experiments.
+- Pigment and oxidation remain future versioned experiments. Edge-separated
+  color, sheen and shimmer now exist as three independent optional components.
 - Serialized keyboard Surface recipes are fail-closed above the bounded
   64-step synchronous calculation budget.
 

@@ -1412,3 +1412,53 @@ they are not automatically promoted to timeless pass/fail truth.
   particles remain different components.
 - Next different method: after merge, begin P5-C with footprint-bound particle
   state and a hard particle budget; do not turn this film into sparkle noise.
+
+## E-033-seeded-wet-footprint-shimmer-particles / A1
+
+- Parent: P5-C shimmer / bounded particulate optical view
+- Ordinary engine/recipe: unchanged (`ordinary-js-r13`, `ordinary-green@12`)
+- Shimmer component model/schema: `shimmer-component-js-r1` / `1`
+- Package: `0.27.0-experimental.1`
+- Fixture manifest: unchanged (`2`)
+- Status: passed engine contract and normal-size/mobile browser observation
+- Hypothesis: fountain-pen shimmer can begin as a finite seeded particle list
+  caught inside the actual resolved wet footprint, with paper-owned catch and
+  a separate light observation, without a page-wide noise plane, glyph halo,
+  alpha change, or reuse of the P5-A/P5-B operators.
+- Primary evidence: Pelikan describes golden shimmering elements flowing
+  randomly in Golden Lapis and separately instructs users to shake the bottle
+  and clean the feeder. Jacques Herbin describes silver flakes illuminating a
+  deep dye color. Diamine distributes shimmer as a distinct ink family. These
+  support particulate state rather than another concentration-color curve.
+- Operator: `surface.shimmerParticles` uses explicit resolved coverage,
+  `particleSeed`, recipe load/threshold/size/budget and the paper recipe's
+  `particleCatch`. The built-in recipe authors gold `[222,184,72]`, load `0.8`,
+  threshold `0.18`, 0.50–1.20 CSS px radii, reflectivity `1`, static phase
+  `0.17`, exponent `2.4`, and a 512-particle cap. Optical renders crisp facets
+  with a small antialias taper and clips every RGB change to existing alpha.
+- Contract: the same inputs and seed reproduce the same five particle arrays;
+  another seed changes the list. Density is not an input. The same structural
+  fixture gives nondecreasing populations from smooth to balanced to absorbent
+  paper. Alpha is byte-exact, component-off ordinary output is unchanged, and
+  malformed inputs fail before output mutation. Reduce Motion ignores runtime
+  light phase and uses the authored static phase without moving particles.
+- Workbench evidence: M/28 balanced paper produced 124 particles with 1.00–2.39
+  device-pixel radii. The static view changed 712 RGB pixels (mean changed
+  channel delta 22.5, maximum 145). B/48 produced 107/195/344 particles on
+  smooth/balanced/absorbent paper. At 390×844 the controls and single-solve A/B
+  remained usable with no console warning/error. Dynamic 270° observation
+  changed the reflected RGB while keeping the same seed and particle list.
+- Memory boundary: the built-in particle arrays occupy at most
+  `5 × 512 × 4 = 10,240` bytes. No full-page particle field is allocated. The
+  active A/B path may retain one base RGBA copy; collapsing diagnostics unmounts
+  its canvases and reduces the Workbench from 17 canvases to the final output
+  canvas only.
+- A1 learning: the first soft radial mix changed bytes but looked too much like
+  a weak glow at normal size. It was discarded in favor of a crisp facet with
+  only an edge taper; the particle footprint and alpha contract did not widen.
+- A1 limit: the scalar light phase is not device tilt, 3D flake geometry,
+  settling through a pen feed, or a product-ready shimmer catalog. It proves a
+  deterministic particulate/material boundary. Chameleon color-shifting
+  particles and long-term settling remain separate future experiments.
+- Next different method: return to the next unchecked roadmap boundary rather
+  than combining P5-D pigment/oxidation into this particle state.

@@ -1,6 +1,6 @@
 {
   "name": "fountain-ink-engine",
-  "version": "0.26.0-experimental.1",
+  "version": "0.27.0-experimental.1",
   "description": "Deterministic, framework-free material engine for digital fountain-pen ink experiments.",
   "keywords": [
     "fountain-pen",
@@ -26,6 +26,7 @@
     "./recipes": "./src/recipes/index.js",
     "./dye-components": "./src/dye-components/index.js",
     "./sheen-components": "./src/sheen-components/index.js",
+    "./shimmer-components": "./src/shimmer-components/index.js",
     "./surface-recipes": "./src/surface-recipes/index.js",
     "./deterministic": "./src/deterministic/index.js",
     "./contact": "./src/contact/index.js",

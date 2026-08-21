@@ -220,6 +220,18 @@ view may alter RGB inside existing alpha but cannot alter alpha, coverage,
 Contact, or Density. The scalar observation is the A1 contract, not a complete
 3D Fresnel or device-orientation model.
 
+### Optional shimmer component
+
+Shimmer owns a bounded particle list rather than a page-sized scalar field.
+Surface selects particle positions from `resolvedCoverage` with an explicit
+uint32 seed, a hard recipe budget and the selected paper's `particleCatch`.
+Each particle stores x/y, radius, orientation and retained strength; Density is
+not an input. Optical receives that immutable list plus an explicit light phase
+and mixes the particle color only where the ordinary alpha is already nonzero.
+Reduce Motion substitutes the recipe-authored static phase without relocating
+or blinking particles. This is not the dye color-zone operator, the sheen film,
+an outline, a blur, or page-wide random noise.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -246,11 +258,14 @@ observes the buffers already used by the accepted render path:
   Surface diagnostic even when an Optical component consumes it;
 - `surface.sheenFilm`: nullable full-resolution Float32 high-concentration film
   derived before Optical; it is absent when the sheen component is disabled;
+- `surface.shimmerParticles`: nullable bounded particle record with five
+  count-sized Float32 arrays; it is absent when the shimmer component is disabled;
 - `optical.baseCompositeRgba`: nullable ordinary RGBA retained only when a dye
-  or sheen component is active, for direct diagnostic comparison with the final;
+  dye, sheen or shimmer component is active, for direct diagnostic comparison
+  with the final;
 - `optical.compositeRgba`: the final ordinary RGBA composite, optionally with
-  the r5 second-dye RGB and/or view-dependent sheen RGB mixed inside existing
-  alpha.
+  the r5 second-dye RGB, view-dependent sheen RGB and/or bounded shimmer RGB
+  mixed inside existing alpha.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
 return fields remain same-reference aliases; `surfaceDensityTransport` is the
