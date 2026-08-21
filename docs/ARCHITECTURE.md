@@ -209,6 +209,17 @@ discontinuous Surface segments rather than every Contact-boundary pixel. The
 bounded plane remains Surface-owned and has no RGB/alpha meaning until a later
 Optical experiment explicitly consumes it.
 
+### Optional sheen component
+
+Sheen uses its own versioned recipe and never reads the P5-A edge-dye color
+zone. Surface derives `sheenFilm` from normalized concentration, resolved
+coverage, and the selected paper recipe's film-preservation/roughness fields.
+Optical consumes that plane together with an explicit `specularAlignment`
+observation. The fallback observation copies ordinary RGBA exactly; the active
+view may alter RGB inside existing alpha but cannot alter alpha, coverage,
+Contact, or Density. The scalar observation is the A1 contract, not a complete
+3D Fresnel or device-orientation model.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -233,10 +244,13 @@ observes the buffers already used by the accepted render path:
   explicitly enabled dye component, plus visible fraction, signed fraction
   delta, bounded edge-accumulation seeds and the r5 `colorZone`. The state remains a
   Surface diagnostic even when an Optical component consumes it;
+- `surface.sheenFilm`: nullable full-resolution Float32 high-concentration film
+  derived before Optical; it is absent when the sheen component is disabled;
 - `optical.baseCompositeRgba`: nullable ordinary RGBA retained only when a dye
-  component is active, for direct diagnostic comparison with the final;
+  or sheen component is active, for direct diagnostic comparison with the final;
 - `optical.compositeRgba`: the final ordinary RGBA composite, optionally with
-  the r5 second-dye RGB mixed inside existing alpha.
+  the r5 second-dye RGB and/or view-dependent sheen RGB mixed inside existing
+  alpha.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
 return fields remain same-reference aliases; `surfaceDensityTransport` is the

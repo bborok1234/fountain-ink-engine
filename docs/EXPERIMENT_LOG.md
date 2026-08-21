@@ -1365,3 +1365,50 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: P5-B sheen begins with a separate concentrated
   surface-film state and view-dependent Optical contract. It must not reuse
   this Contact metric or the P5-A static color-zone operator.
+
+## E-032-concentration-thresholded-sheen-film / A1
+
+- Parent: P5-B sheen / surface-film optical view
+- Ordinary engine/recipe: unchanged (`ordinary-js-r13`, `ordinary-green@12`)
+- Sheen component model/schema: `sheen-component-js-r1` / `1`
+- Package: `0.26.0-experimental.1`
+- Fixture manifest: unchanged (`2`)
+- Status: passed engine contract and normal-size browser observation
+- Hypothesis: sheen can be represented as a concentration-thresholded Surface
+  film plus a separate explicit view response, without reusing the P5-A edge
+  zone, adding particles, widening glyph alpha, or permanently tinting the
+  ordinary base.
+- Primary evidence: Sailor's official green example appears deep green from
+  above and metallic emerald at an angle. Octopus describes sheen as a
+  high-dye-content effect favored by generous flow and smooth coated paper and
+  suppressed by rough absorbent copy paper. Hébert et al. describe bronzing as
+  wavelength-dependent specular color at the ink-air interface and report that
+  roughness spreads and attenuates it. Fritz records changing-light sheen as an
+  ink/paper interaction while deposited amount remains a material variable.
+- Operator: `surface.sheenFilm` activates only above normalized concentration
+  `0.72`. Activation uses exponent `1.4`, authored gain `4`, cap `1`, and paper
+  retention `filmPreservation / (1 + roughness × 0.7)`. Optical receives a
+  separate `specularAlignment` observation. Above view threshold `0.45`, it
+  raises the view response to exponent `1.8`, mixes toward copper-red
+  `[186,77,52]`, and caps the mixture at `0.9`.
+- Contract: `specularAlignment = 0` is byte-exact ordinary RGBA. The active
+  view changes RGB only where film and existing ordinary alpha are both
+  positive; every alpha byte, Contact, Density, Surface coverage, and glyph
+  geometry remains exact. Smooth paper retains at least as much film as
+  balanced paper, which retains at least as much as absorbent paper for the
+  same concentration fixture.
+- Workbench evidence: the Sheen family authors the public component recipe and
+  passes the observation separately. Its base/specular buttons expose the two
+  views, diagnostics display the film before Optical, and the ordinary/final
+  A/B uses the same single material solve. Default M/28 balanced-paper output
+  changed 2,166 RGB pixels in the specular view (mean changed-channel delta
+  9.6, maximum 112) while the static fallback changed zero pixels.
+- Memory boundary: disabled sheen allocates no film plane. An active render adds
+  one page-sized Float32 film plane and one transient page-sized base RGBA copy;
+  collapsed diagnostics unmount their canvases and retain no stage buffers.
+- A1 limit: `specularAlignment` is a scalar observation, not a claimed 3D
+  Fresnel model, device-tilt sensor, or replayable light rig. It establishes the
+  material/view separation first. P5-A color separation and future P5-C
+  particles remain different components.
+- Next different method: after merge, begin P5-C with footprint-bound particle
+  state and a hard particle budget; do not turn this film into sparkle noise.

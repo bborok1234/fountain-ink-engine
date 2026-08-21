@@ -6,9 +6,15 @@ import { assertDensityFieldInputs } from "../density/ordinary-density.js";
 import {
   compositeDyeEdgeOptical,
   compositeOrdinaryOptical,
+  compositeSheenOptical,
 } from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
+import {
+  assertSheenComponentRecipeCompatible,
+  createSheenSurfaceFilm,
+  readSheenObservation,
+} from "../sheen-components/index.js";
 import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
 import {
   createKeyboardSurfaceState,
@@ -42,6 +48,7 @@ function makeDiagnosticStages({
   densityTransport,
   paperDepth,
   dyeComponent,
+  sheenFilm,
   fiberEdgeCoverage,
   normalizedConcentration,
   baseCompositeRgba,
@@ -60,6 +67,7 @@ function makeDiagnosticStages({
       densityTransport,
       paperDepth,
       dyeComponent,
+      sheenFilm,
       fiberEdgeCoverage,
       applied: materialCoverageCandidate !== null,
     }),
@@ -152,6 +160,8 @@ export function prepareOrdinaryInkCanvasInput({
   height,
   surfaceRecipe,
   dyeComponentRecipe = null,
+  sheenComponentRecipe = null,
+  sheenObservation = null,
   createLayer = makeLayer,
 }) {
   assertSurfaceRecipeCompatible(surfaceRecipe);
@@ -159,6 +169,14 @@ export function prepareOrdinaryInkCanvasInput({
     // Compatibility is asserted again at the calculation boundary; this early
     // check prevents a forged component from causing a Canvas allocation.
     assertDyeComponentRecipeCompatible(dyeComponentRecipe);
+  }
+  if (sheenComponentRecipe !== null) {
+    assertSheenComponentRecipeCompatible(sheenComponentRecipe);
+    readSheenObservation(sheenObservation);
+  } else if (sheenObservation !== null) {
+    throw new TypeError(
+      "sheenObservation requires a sheenComponentRecipe.",
+    );
   }
   const maskPixels = mask.getContext("2d").getImageData(
     0,
@@ -201,11 +219,23 @@ export function beginOrdinaryInkMaterial({
   glyphContacts,
   recipe,
   dyeComponentRecipe = null,
+  sheenComponentRecipe = null,
+  sheenObservation = null,
 }) {
   assertInkRecipeCompatible(recipe);
   assertSurfaceRecipeCompatible(surfaceRecipe);
   assertPercent(flow, "flow");
   assertSurfaceSeed(surfaceSeed);
+  if (sheenComponentRecipe !== null) {
+    assertSheenComponentRecipeCompatible(sheenComponentRecipe);
+  } else if (sheenObservation !== null) {
+    throw new TypeError(
+      "sheenObservation requires a sheenComponentRecipe.",
+    );
+  }
+  const validatedSheenObservation = sheenComponentRecipe === null
+    ? null
+    : readSheenObservation(sheenObservation);
   const surfaceResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
     ? surfaceRecipe.axes.verticalUptake
     : Math.max(
@@ -261,6 +291,8 @@ export function beginOrdinaryInkMaterial({
     paperDepth: surfaceApplied ? surfaceState?.paperDepth ?? null : null,
     dyeComponent: surfaceState?.dyeComponent ?? null,
     dyeComponentRecipe,
+    sheenComponentRecipe,
+    sheenObservation: validatedSheenObservation,
     fiberEdgeCoverage,
     nibId,
     flow,
@@ -291,6 +323,8 @@ export function completeOrdinaryInkMaterial({
     paperDepth,
     dyeComponent,
     dyeComponentRecipe,
+    sheenComponentRecipe,
+    sheenObservation,
     fiberEdgeCoverage,
     nibId,
     flow,
@@ -325,31 +359,52 @@ export function completeOrdinaryInkMaterial({
     recipe,
     output,
   });
-  const baseCompositeRgba = dyeComponent === null || dyeComponentRecipe === null
+  const dyeActive = dyeComponent !== null && dyeComponentRecipe !== null;
+  const sheenActive = sheenComponentRecipe !== null;
+  const baseCompositeRgba = !dyeActive && !sheenActive
     ? null
     : Object.freeze({
       width: pixelWidth,
       height: pixelHeight,
       data: new Uint8ClampedArray(ordinaryResult.data),
     });
-  const result = dyeComponent === null || dyeComponentRecipe === null
-    ? ordinaryResult
-    : (() => {
-      const structuralRgba = {
-        width: pixelWidth,
-        height: pixelHeight,
-        data: ordinaryResult.data,
-      };
-      compositeDyeEdgeOptical({
-        pixelWidth,
-        pixelHeight,
-        baseRgba: baseCompositeRgba,
-        dyeComponent,
-        dyeComponentRecipe,
-        output: structuralRgba,
-      });
-      return ordinaryResult;
-    })();
+  const structuralRgba = {
+    width: pixelWidth,
+    height: pixelHeight,
+    data: ordinaryResult.data,
+  };
+  if (dyeActive) {
+    compositeDyeEdgeOptical({
+      pixelWidth,
+      pixelHeight,
+      baseRgba: baseCompositeRgba,
+      dyeComponent,
+      dyeComponentRecipe,
+      output: structuralRgba,
+    });
+  }
+  const sheenFilm = sheenActive
+    ? createSheenSurfaceFilm({
+      pixelWidth,
+      pixelHeight,
+      concentration: normalizedConcentration,
+      resolvedCoverage,
+      surfaceRecipe,
+      sheenComponentRecipe,
+    })
+    : null;
+  if (sheenActive) {
+    compositeSheenOptical({
+      pixelWidth,
+      pixelHeight,
+      baseRgba: structuralRgba,
+      sheenFilm,
+      sheenComponentRecipe,
+      sheenObservation,
+      output: structuralRgba,
+    });
+  }
+  const result = ordinaryResult;
   const stages = makeDiagnosticStages({
     rgbaMask: maskPixels,
     accumulatedVariation: densityField,
@@ -359,6 +414,7 @@ export function completeOrdinaryInkMaterial({
     densityTransport: surfaceDensityTransport,
     paperDepth,
     dyeComponent,
+    sheenFilm,
     fiberEdgeCoverage,
     normalizedConcentration,
     baseCompositeRgba,
@@ -375,6 +431,7 @@ export function completeOrdinaryInkMaterial({
     surfaceDensityTransport: stages.surface.densityTransport,
     paperDepth: stages.surface.paperDepth,
     dyeComponent: stages.surface.dyeComponent,
+    sheenFilm: stages.surface.sheenFilm,
     fiberEdgeCoverage: stages.surface.fiberEdgeCoverage,
   };
 }
@@ -405,12 +462,22 @@ export function renderOrdinaryInkMaterial({
   glyphContacts,
   recipe,
   dyeComponentRecipe = null,
+  sheenComponentRecipe = null,
+  sheenObservation = null,
   createLayer = makeLayer,
 }) {
   assertInkRecipeCompatible(recipe);
   assertSurfaceRecipeCompatible(surfaceRecipe);
   assertPercent(flow, "flow");
   assertSurfaceSeed(surfaceSeed);
+  if (sheenComponentRecipe !== null) {
+    assertSheenComponentRecipeCompatible(sheenComponentRecipe);
+    readSheenObservation(sheenObservation);
+  } else if (sheenObservation !== null) {
+    throw new TypeError(
+      "sheenObservation requires a sheenComponentRecipe.",
+    );
+  }
   assertDensityFieldInputs({
     pixelWidth,
     pixelHeight,
@@ -426,6 +493,8 @@ export function renderOrdinaryInkMaterial({
     height,
     surfaceRecipe,
     dyeComponentRecipe,
+    sheenComponentRecipe,
+    sheenObservation,
     createLayer,
   });
   const prepared = beginOrdinaryInkMaterial({
@@ -442,6 +511,8 @@ export function renderOrdinaryInkMaterial({
     glyphContacts,
     recipe,
     dyeComponentRecipe,
+    sheenComponentRecipe,
+    sheenObservation,
   });
   const materialCoverageCandidate = prepared.surfaceCoverageGrid === null
     ? null

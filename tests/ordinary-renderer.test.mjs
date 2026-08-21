@@ -16,6 +16,7 @@ import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
 import { EDGE_DYE_COMPONENT_RECIPE_R5 as ACTIVE_DYE_COMPONENT_RECIPE } from "fountain-ink-engine/dye-components";
+import { SHEEN_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/sheen-components";
 import {
   ORDINARY_BLUE_BLACK_RECIPE_R6,
   ORDINARY_BURGUNDY_RECIPE_R6,
@@ -386,6 +387,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
       "densityTransport",
       "paperDepth",
       "dyeComponent",
+      "sheenFilm",
       "fiberEdgeCoverage",
       "applied",
   ]);
@@ -415,6 +417,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.ok(stages.surface.densityTransport.signedNumerator instanceof Float32Array);
   assert.ok(stages.surface.densityTransport.pigmentWeight instanceof Float32Array);
   assert.equal(stages.surface.dyeComponent, null);
+  assert.equal(stages.surface.sheenFilm, null);
   assert.equal(stages.optical.baseCompositeRgba, null);
   assertRgbaShape(stages.optical.compositeRgba, 18, 14);
 
@@ -436,6 +439,7 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   );
   assert.equal(result.paperDepth, stages.surface.paperDepth);
   assert.equal(result.dyeComponent, stages.surface.dyeComponent);
+  assert.equal(result.sheenFilm, stages.surface.sheenFilm);
   assert.equal(result.fiberEdgeCoverage, stages.surface.fiberEdgeCoverage);
 });
 
@@ -557,6 +561,73 @@ test("smooth paper keeps ordinary coverage while exposing a visible dye color zo
     }
   }
   assert.ok(changedRgb >= 8);
+});
+
+test("sheen keeps ordinary fallback exact and reveals only high-concentration film in specular view", () => {
+  const { options } = makeOptions(42, 96, 48);
+  const sheenOptions = {
+    ...options,
+    surfaceRecipe: PAPER_SURFACE_SMOOTH_R1,
+    nibId: "EB",
+    flow: 100,
+    sheenComponentRecipe: SHEEN_COMPONENT_RECIPE_R1,
+  };
+  const ordinary = renderOrdinaryInkMaterial({
+    ...sheenOptions,
+    sheenComponentRecipe: null,
+  });
+  const fallback = renderOrdinaryInkMaterial({
+    ...sheenOptions,
+    sheenObservation: { specularAlignment: 0 },
+  });
+  const specular = renderOrdinaryInkMaterial({
+    ...sheenOptions,
+    sheenObservation: { specularAlignment: 1 },
+  });
+
+  assert.deepEqual(fallback.imageData.data, ordinary.imageData.data);
+  assert.deepEqual(
+    fallback.stages.optical.baseCompositeRgba.data,
+    ordinary.imageData.data,
+  );
+  assert.deepEqual(
+    fallback.stages.surface.sheenFilm.data,
+    specular.stages.surface.sheenFilm.data,
+  );
+  assert.ok(
+    specular.stages.surface.sheenFilm.data.some((value) => value > 0),
+  );
+  assert.deepEqual(
+    specular.stages.contact.rgbaMask.data,
+    ordinary.stages.contact.rgbaMask.data,
+  );
+  assert.deepEqual(
+    specular.stages.density.normalizedConcentration.data,
+    ordinary.stages.density.normalizedConcentration.data,
+  );
+  assert.deepEqual(
+    specular.stages.surface.resolvedCoverage.data,
+    ordinary.stages.surface.resolvedCoverage.data,
+  );
+
+  let changedPixels = 0;
+  for (let index = 0; index < specular.stages.surface.sheenFilm.data.length; index += 1) {
+    const offset = index * 4;
+    assert.equal(specular.imageData.data[offset + 3], ordinary.imageData.data[offset + 3]);
+    const changed = specular.imageData.data[offset] !== ordinary.imageData.data[offset]
+      || specular.imageData.data[offset + 1] !== ordinary.imageData.data[offset + 1]
+      || specular.imageData.data[offset + 2] !== ordinary.imageData.data[offset + 2];
+    if (changed) {
+      changedPixels += 1;
+      assert.ok(specular.stages.surface.sheenFilm.data[index] > 0);
+    } else if (specular.stages.surface.sheenFilm.data[index] === 0) {
+      assert.deepEqual(
+        specular.imageData.data.slice(offset, offset + 4),
+        ordinary.imageData.data.slice(offset, offset + 4),
+      );
+    }
+  }
+  assert.ok(changedPixels > 0);
 });
 
 test("internal concentration and dye enrichment remain independent diagnostics", () => {
