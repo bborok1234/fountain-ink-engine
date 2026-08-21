@@ -3,7 +3,7 @@
 > Status: Active experimental library
 > Engine model: `ordinary-js-r13`
 > Ink recipe schema: `6`
-> Dye component model/schema: `dye-component-js-r2 / 1`
+> Dye component model/schema: `dye-component-js-r3 / 2`
 > Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `2`
 
@@ -117,6 +117,14 @@ fraction and its signed delta from the authored initial mixture. Those fields
 are independent from the ordinary normalized-concentration plane. Changing
 flow or signed glyph Density changes ordinary concentration but leaves dye
 enrichment exact. R1 remains serialized archival evidence.
+
+Package `0.22.0-experimental.1` adds schema-2 `edge-dye-study@3` and derives a
+bounded `edgeAccumulation` plane from positive component enrichment, visible
+component mass and the local base-mass gradient. A fixed threshold leaves
+discontinuous occupied segments instead of repainting the complete Contact
+boundary. The candidate changes with the Surface solve but remains independent
+from flow and signed glyph Density. It is diagnostic-only; the ordinary
+Optical RGBA still contains no second color. R1 and R2 remain archival.
 
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
