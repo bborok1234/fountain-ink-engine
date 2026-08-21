@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EDGE_DYE_COMPONENT_RECIPE_R1 } from "../src/dye-components/index.js";
+import { EDGE_DYE_COMPONENT_RECIPE_R2 } from "../src/dye-components/index.js";
 import { ORDINARY_GREEN_RECIPE_R12 } from "../src/recipes/index.js";
 import {
   PAPER_SURFACE_BALANCED_R2,
@@ -68,7 +68,7 @@ test("optional dye component off preserves ordinary solver bytes and allocates n
 
 test("dye component shares water while preserving ordinary mass and Optical bytes", () => {
   const baseline = runSimulation();
-  const component = runSimulation(EDGE_DYE_COMPONENT_RECIPE_R1);
+  const component = runSimulation(EDGE_DYE_COMPONENT_RECIPE_R2);
   assert.deepEqual(component.water, baseline.water);
   assert.deepEqual(component.mobile, baseline.mobile);
   assert.deepEqual(component.fixed, baseline.fixed);
@@ -90,16 +90,16 @@ test("dye component shares water while preserving ordinary mass and Optical byte
 
 test("edge dye has deterministic separate mobile, fixed and depth mass", () => {
   const first = runSimulation(
-    EDGE_DYE_COMPONENT_RECIPE_R1,
+    EDGE_DYE_COMPONENT_RECIPE_R2,
     PAPER_SURFACE_ABSORBENT_R4,
   ).createDyeComponentState();
   const second = runSimulation(
-    EDGE_DYE_COMPONENT_RECIPE_R1,
+    EDGE_DYE_COMPONENT_RECIPE_R2,
     PAPER_SURFACE_ABSORBENT_R4,
   ).createDyeComponentState();
   assert.deepEqual(second, first);
   assert.equal(first.id, "edge-dye-study");
-  assert.equal(first.revision, 1);
+  assert.equal(first.revision, 2);
   assert.ok(first.mobileMass instanceof Float32Array);
   assert.ok(first.fixedMass instanceof Float32Array);
   assert.ok(first.subsurfaceMass instanceof Float32Array);
@@ -116,8 +116,79 @@ test("edge dye has deterministic separate mobile, fixed and depth mass", () => {
   }
 });
 
+test("visible fraction isolates component enrichment from ordinary internal density", () => {
+  const component = runSimulation(
+    EDGE_DYE_COMPONENT_RECIPE_R2,
+  ).createDyeComponentState();
+  const expected = EDGE_DYE_COMPONENT_RECIPE_R2.massFraction
+    / (1 + EDGE_DYE_COMPONENT_RECIPE_R2.massFraction);
+  assert.equal(component.expectedFraction, expected);
+  assert.ok(component.visibleFraction instanceof Float32Array);
+  assert.ok(component.fractionDelta instanceof Float32Array);
+  assert.equal(component.visibleFraction.length, component.width * component.height);
+  assert.equal(component.fractionDelta.length, component.visibleFraction.length);
+  let enriched = 0;
+  let depleted = 0;
+  for (let index = 0; index < component.visibleFraction.length; index += 1) {
+    const fraction = component.visibleFraction[index];
+    const delta = component.fractionDelta[index];
+    assert.ok(Number.isFinite(fraction) && fraction >= 0 && fraction <= 1);
+    assert.ok(
+      Number.isFinite(delta)
+        && delta >= -expected - 1e-7
+        && delta <= 1 - expected + 1e-7,
+    );
+    if (delta > 1e-7) enriched += 1;
+    if (delta < -1e-7) depleted += 1;
+  }
+  assert.ok(enriched > 0);
+  assert.ok(depleted > 0);
+});
+
+test("signed glyph Density does not change component enrichment", () => {
+  const deposit = makeDeposit(40, 24);
+  const makeTransport = (ratio) => {
+    const signedNumerator = new Float32Array(40 * 24);
+    const pigmentWeight = new Float32Array(40 * 24);
+    for (let index = 0; index < pigmentWeight.length; index += 1) {
+      if (deposit.data[index * 4 + 3] === 0) continue;
+      pigmentWeight[index] = 1;
+      signedNumerator[index] = ratio;
+    }
+    return { width: 40, height: 24, signedNumerator, pigmentWeight };
+  };
+  const positive = createKeyboardSurfaceState(
+    deposit,
+    PAPER_SURFACE_BALANCED_R2,
+    DEFAULT_SURFACE_SEED,
+    ORDINARY_GREEN_RECIPE_R12,
+    makeTransport(0.8),
+    EDGE_DYE_COMPONENT_RECIPE_R2,
+  );
+  const negative = createKeyboardSurfaceState(
+    deposit,
+    PAPER_SURFACE_BALANCED_R2,
+    DEFAULT_SURFACE_SEED,
+    ORDINARY_GREEN_RECIPE_R12,
+    makeTransport(-0.8),
+    EDGE_DYE_COMPONENT_RECIPE_R2,
+  );
+  assert.deepEqual(
+    positive.dyeComponent.visibleFraction,
+    negative.dyeComponent.visibleFraction,
+  );
+  assert.deepEqual(
+    positive.dyeComponent.fractionDelta,
+    negative.dyeComponent.fractionDelta,
+  );
+  assert.notDeepEqual(
+    positive.densityTransport.signedNumerator,
+    negative.densityTransport.signedNumerator,
+  );
+});
+
 test("component mobility reaches farther and lower retention fixes a smaller share", () => {
-  const simulation = runSimulation(EDGE_DYE_COMPONENT_RECIPE_R1);
+  const simulation = runSimulation(EDGE_DYE_COMPONENT_RECIPE_R2);
   const component = simulation.createDyeComponentState();
   const baseTotal = new Float32Array(simulation.length);
   const componentTotal = new Float32Array(simulation.length);
@@ -153,7 +224,7 @@ test("high-level keyboard Surface exposes diagnostic component without changing 
     DEFAULT_SURFACE_SEED,
     ORDINARY_GREEN_RECIPE_R12,
     null,
-    EDGE_DYE_COMPONENT_RECIPE_R1,
+    EDGE_DYE_COMPONENT_RECIPE_R2,
   );
   assert.deepEqual(component.coverage, ordinary.coverage);
   assert.deepEqual(component.densityTransport, ordinary.densityTransport);
@@ -175,7 +246,7 @@ test("invalid component fails before deposit mutation and component allocation",
     enumerable: true,
     get() {
       reads += 1;
-      return EDGE_DYE_COMPONENT_RECIPE_R1;
+      return EDGE_DYE_COMPONENT_RECIPE_R2;
     },
   });
   assert.throws(
@@ -186,4 +257,38 @@ test("invalid component fails before deposit mutation and component allocation",
   assert.ok(simulation.water.every((value) => value === 0));
   assert.ok(simulation.mobile.every((value) => value === 0));
   assert.equal(simulation.dyeComponentMobile, null);
+});
+
+test("maximum-grid enrichment has an explicit component memory bound", () => {
+  const width = 320;
+  const height = 240;
+  const deposit = makeDeposit(width, height);
+  const simulation = new WetInkSimulation(width, height, DEFAULT_SURFACE_SEED);
+  simulation.depositMask(deposit, {
+    waterLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.waterLoad,
+    pigmentLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.pigmentLoad,
+    seed: (DEFAULT_SURFACE_SEED ^ 0x85ebca6b) >>> 0,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R2,
+  });
+  simulation.stepSurface(
+    PAPER_SURFACE_ABSORBENT_R4.keyboard.stepMilliseconds,
+    PAPER_SURFACE_ABSORBENT_R4,
+  );
+  const state = simulation.createDyeComponentState();
+  const solverBytes = [
+    simulation.dyeComponentMobile,
+    simulation.dyeComponentFixed,
+    simulation.nextDyeComponentMobile,
+    simulation.dyeComponentSubsurface,
+  ].reduce((total, plane) => total + plane.byteLength, 0);
+  const retainedBytes = [
+    state.mobileMass,
+    state.fixedMass,
+    state.subsurfaceMass,
+    state.visibleFraction,
+    state.fractionDelta,
+  ].reduce((total, plane) => total + plane.byteLength, 0);
+  assert.equal(solverBytes, 1_228_800);
+  assert.equal(retainedBytes, 1_536_000);
+  assert.equal(solverBytes + retainedBytes, 2_764_800);
 });

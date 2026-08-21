@@ -94,6 +94,7 @@ const requiredExports = [
   "dyeComponentModelVersion",
   "dyeComponentRecipeSchemaVersion",
   "EDGE_DYE_COMPONENT_RECIPE_R1",
+  "EDGE_DYE_COMPONENT_RECIPE_R2",
   "assertDyeComponentRecipeCompatible",
   "parseDyeComponentRecipe",
   "PAPER_SURFACE_SMOOTH_R1",

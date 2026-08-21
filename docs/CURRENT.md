@@ -3,7 +3,7 @@
 > Status: Active experimental library
 > Engine model: `ordinary-js-r13`
 > Ink recipe schema: `6`
-> Dye component model/schema: `dye-component-js-r1 / 1`
+> Dye component model/schema: `dye-component-js-r2 / 1`
 > Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `2`
 
@@ -110,6 +110,13 @@ uses a separate depth plane on depth-uptake paper. The component has no Optical
 color in A1. With the component absent, no component plane is allocated and
 the ordinary solver bytes remain exact; with it present, ordinary water,
 pigment, coverage, Density transport and final RGBA remain unchanged.
+
+Package `0.21.0-experimental.1` keeps the A1 transport coefficients in
+`edge-dye-study@2` and adds two bounded diagnostic planes: visible component
+fraction and its signed delta from the authored initial mixture. Those fields
+are independent from the ordinary normalized-concentration plane. Changing
+flow or signed glyph Density changes ordinary concentration but leaves dye
+enrichment exact. R1 remains serialized archival evidence.
 
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every

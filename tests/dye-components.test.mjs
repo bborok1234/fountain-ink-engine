@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   EDGE_DYE_COMPONENT_RECIPE_R1,
+  EDGE_DYE_COMPONENT_RECIPE_R2,
   assertDyeComponentRecipeCompatible,
   dyeComponentModelVersion,
   dyeComponentRecipeSchemaVersion,
@@ -10,16 +11,12 @@ import {
   validateDyeComponentRecipe,
 } from "../src/dye-components/index.js";
 
-test("edge dye component has an independently versioned canonical identity", () => {
-  assert.equal(dyeComponentModelVersion, "dye-component-js-r1");
+test("edge dye component revisions have independent canonical identities", () => {
+  assert.equal(dyeComponentModelVersion, "dye-component-js-r2");
   assert.equal(dyeComponentRecipeSchemaVersion, 1);
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.id, "edge-dye-study");
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.revision, 1);
   assert.equal(validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R1), true);
-  assert.equal(
-    assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R1),
-    true,
-  );
   assert.equal(Object.isFrozen(EDGE_DYE_COMPONENT_RECIPE_R1), true);
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R1),
@@ -31,11 +28,24 @@ test("edge dye component has an independently versioned canonical identity", () 
     ),
     EDGE_DYE_COMPONENT_RECIPE_R1,
   );
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R2.revision, 2);
+  assert.equal(
+    assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R2),
+    true,
+  );
+  assert.throws(
+    () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R1),
+    /incompatible with dye-component-js-r2/,
+  );
+  assert.equal(
+    serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R2),
+    "{\"componentModelVersion\":\"dye-component-js-r2\",\"componentRecipeSchemaVersion\":1,\"id\":\"edge-dye-study\",\"massFraction\":0.32,\"mobilityMultiplier\":1.45,\"retentionMultiplier\":0.62,\"revision\":2}",
+  );
 });
 
 test("registered dye component identity rejects silent retuning", () => {
   const impostor = {
-    ...EDGE_DYE_COMPONENT_RECIPE_R1,
+    ...EDGE_DYE_COMPONENT_RECIPE_R2,
     mobilityMultiplier: 1.8,
   };
   assert.equal(validateDyeComponentRecipe(impostor), true);
@@ -47,7 +57,7 @@ test("registered dye component identity rejects silent retuning", () => {
 
 test("dye component recipes reject accessors and invalid transport values", () => {
   let reads = 0;
-  const accessor = { ...EDGE_DYE_COMPONENT_RECIPE_R1 };
+  const accessor = { ...EDGE_DYE_COMPONENT_RECIPE_R2 };
   Object.defineProperty(accessor, "massFraction", {
     enumerable: true,
     get() {
@@ -68,7 +78,7 @@ test("dye component recipes reject accessors and invalid transport values", () =
   ]) {
     assert.throws(
       () => validateDyeComponentRecipe({
-        ...EDGE_DYE_COMPONENT_RECIPE_R1,
+        ...EDGE_DYE_COMPONENT_RECIPE_R2,
         [key]: value,
       }),
       new RegExp(key),

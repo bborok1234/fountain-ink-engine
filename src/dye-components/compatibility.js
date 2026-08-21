@@ -5,9 +5,11 @@ import {
   validateDyeComponentRecipe,
 } from "./dye-component-recipe.js";
 import { EDGE_DYE_COMPONENT_RECIPE_R1 } from "./edge-dye-r1.js";
+import { EDGE_DYE_COMPONENT_RECIPE_R2 } from "./edge-dye-r2.js";
 
 const REGISTERED_RECIPES = Object.freeze({
   "edge-dye-study@1": "{\"componentModelVersion\":\"dye-component-js-r1\",\"componentRecipeSchemaVersion\":1,\"id\":\"edge-dye-study\",\"massFraction\":0.32,\"mobilityMultiplier\":1.45,\"retentionMultiplier\":0.62,\"revision\":1}",
+  "edge-dye-study@2": "{\"componentModelVersion\":\"dye-component-js-r2\",\"componentRecipeSchemaVersion\":1,\"id\":\"edge-dye-study\",\"massFraction\":0.32,\"mobilityMultiplier\":1.45,\"retentionMultiplier\":0.62,\"revision\":2}",
 });
 
 const keyFor = (recipe) => `${recipe.id}@${recipe.revision}`;
@@ -18,6 +20,15 @@ if (
 ) {
   throw new TypeError(
     "built-in dye component edge-dye-study@1 changed without a revision.",
+  );
+}
+
+if (
+  serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R2)
+    !== REGISTERED_RECIPES["edge-dye-study@2"]
+) {
+  throw new TypeError(
+    "built-in dye component edge-dye-study@2 changed without a revision.",
   );
 }
 export function assertDyeComponentRecipeCompatible(recipe) {
