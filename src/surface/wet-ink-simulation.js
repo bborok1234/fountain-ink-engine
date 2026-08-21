@@ -718,6 +718,40 @@ export class WetInkSimulation {
       visibleFraction[index] = Math.fround(fraction);
       fractionDelta[index] = Math.fround(fraction - expectedFraction);
     }
+    const edgeAccumulation = new Float32Array(this.length);
+    const enrichmentMaximum = 1 - expectedFraction;
+    for (let y = 1; y < this.height - 1; y += 1) {
+      for (let x = 1; x < this.width - 1; x += 1) {
+        const index = y * this.width + x;
+        const delta = fractionDelta[index];
+        const componentMass = this.dyeComponentMobile[index]
+          + this.dyeComponentFixed[index];
+        if (!(delta > 0) || !(componentMass > 0)) continue;
+        const localBaseMaximum = Math.max(
+          this.mobile[index] + this.fixed[index],
+          this.mobile[index - 1] + this.fixed[index - 1],
+          this.mobile[index + 1] + this.fixed[index + 1],
+          this.mobile[index - this.width] + this.fixed[index - this.width],
+          this.mobile[index + this.width] + this.fixed[index + this.width],
+        );
+        const baseMass = this.mobile[index] + this.fixed[index];
+        const exposure = localBaseMaximum > 0
+          ? 1 - clamp(baseMass / localBaseMaximum)
+          : 1;
+        const enrichmentStrength = enrichmentMaximum > 0
+          ? clamp(delta / enrichmentMaximum)
+          : 0;
+        const massVisibility = 1 - Math.exp(
+          -componentMass * this.dyeComponentRecipe.edgeMassGain,
+        );
+        const candidate = enrichmentStrength
+          * (0.25 + exposure * 0.75)
+          * massVisibility;
+        if (candidate >= this.dyeComponentRecipe.edgeEnrichmentThreshold) {
+          edgeAccumulation[index] = Math.fround(candidate);
+        }
+      }
+    }
     return Object.freeze({
       id: this.dyeComponentRecipe.id,
       revision: this.dyeComponentRecipe.revision,
@@ -731,6 +765,7 @@ export class WetInkSimulation {
       expectedFraction,
       visibleFraction,
       fractionDelta,
+      edgeAccumulation,
     });
   }
 

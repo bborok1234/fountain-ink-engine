@@ -51,11 +51,11 @@ material composition without adding a React dependency.
 
 ## Optional dye component state
 
-Package `0.21.0-experimental.1` exposes the second revision of the
+Package `0.22.0-experimental.1` exposes the third revision of the
 diagnostic-only dye state:
 
 ```js
-import { EDGE_DYE_COMPONENT_RECIPE_R2 } from "fountain-ink-engine/dye-components";
+import { EDGE_DYE_COMPONENT_RECIPE_R3 } from "fountain-ink-engine/dye-components";
 
 const state = createKeyboardSurfaceState(
   deposit,
@@ -63,12 +63,12 @@ const state = createKeyboardSurfaceState(
   surfaceSeed,
   inkRecipe,
   densityTransport,
-  EDGE_DYE_COMPONENT_RECIPE_R2,
+  EDGE_DYE_COMPONENT_RECIPE_R3,
 );
 
 // state.dyeComponent = {
 //   width, height, mobileMass, fixedMass, subsurfaceMass,
-//   expectedFraction, visibleFraction, fractionDelta
+//   expectedFraction, visibleFraction, fractionDelta, edgeAccumulation
 // }
 ```
 
@@ -80,8 +80,10 @@ state and preserve the ordinary path exactly.
 `visibleFraction` is the bounded component share of visible base-plus-component
 mass. `fractionDelta` compares it with the authored initial mixture without
 reading ordinary Density or flow. These are diagnostics, not a rendered color
-edge. R1 remains exported for archival round-trip but is incompatible with the
-active r2 component calculation.
+edge. `edgeAccumulation` keeps only positive enrichment with sufficient visible
+component mass and local Surface exposure. It is a sparse diagnostic candidate,
+not a glyph outline and not an Optical second color. R1 and R2 remain exported
+for archival round-trip but are incompatible with the active r3 calculation.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior

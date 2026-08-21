@@ -1,8 +1,8 @@
-export const dyeComponentModelVersion = "dye-component-js-r2";
-export const dyeComponentRecipeSchemaVersion = 1;
-export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1]);
+export const dyeComponentModelVersion = "dye-component-js-r3";
+export const dyeComponentRecipeSchemaVersion = 2;
+export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([1, 2]);
 
-const RECIPE_KEYS = Object.freeze([
+const RECIPE_KEYS_V1 = Object.freeze([
   "id",
   "revision",
   "componentModelVersion",
@@ -10,6 +10,11 @@ const RECIPE_KEYS = Object.freeze([
   "massFraction",
   "mobilityMultiplier",
   "retentionMultiplier",
+]);
+const RECIPE_KEYS_V2 = Object.freeze([
+  ...RECIPE_KEYS_V1,
+  "edgeEnrichmentThreshold",
+  "edgeMassGain",
 ]);
 
 function assertPlainRecord(value, path) {
@@ -59,7 +64,23 @@ function assertString(value, path) {
 
 export function validateDyeComponentRecipe(recipe) {
   assertPlainRecord(recipe, "dyeComponentRecipe");
-  assertExactDataProperties(recipe, RECIPE_KEYS, "dyeComponentRecipe");
+  const schemaDescriptor = Object.getOwnPropertyDescriptor(
+    recipe,
+    "componentRecipeSchemaVersion",
+  );
+  if (!schemaDescriptor?.enumerable || !("value" in schemaDescriptor)) {
+    throw new TypeError(
+      "dyeComponentRecipe.componentRecipeSchemaVersion must be an enumerable own data property.",
+    );
+  }
+  const schema = schemaDescriptor.value;
+  if (!SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS.includes(schema)) {
+    throw new TypeError(
+      `dyeComponentRecipe.componentRecipeSchemaVersion ${String(schema)} is not supported.`,
+    );
+  }
+  const recipeKeys = schema === 1 ? RECIPE_KEYS_V1 : RECIPE_KEYS_V2;
+  assertExactDataProperties(recipe, recipeKeys, "dyeComponentRecipe");
   assertString(recipe.id, "dyeComponentRecipe.id");
   if (!Number.isSafeInteger(recipe.revision) || recipe.revision < 1) {
     throw new TypeError(
@@ -70,11 +91,6 @@ export function validateDyeComponentRecipe(recipe) {
     recipe.componentModelVersion,
     "dyeComponentRecipe.componentModelVersion",
   );
-  if (recipe.componentRecipeSchemaVersion !== 1) {
-    throw new TypeError(
-      "dyeComponentRecipe.componentRecipeSchemaVersion must be 1.",
-    );
-  }
   assertNumber(recipe.massFraction, "dyeComponentRecipe.massFraction", 0, 1);
   assertNumber(
     recipe.mobilityMultiplier,
@@ -82,6 +98,20 @@ export function validateDyeComponentRecipe(recipe) {
     0,
     2,
   );
+  if (schema >= 2) {
+    assertNumber(
+      recipe.edgeEnrichmentThreshold,
+      "dyeComponentRecipe.edgeEnrichmentThreshold",
+      0,
+      1,
+    );
+    assertNumber(
+      recipe.edgeMassGain,
+      "dyeComponentRecipe.edgeMassGain",
+      0.001,
+      200,
+    );
+  }
   assertNumber(
     recipe.retentionMultiplier,
     "dyeComponentRecipe.retentionMultiplier",
@@ -93,8 +123,11 @@ export function validateDyeComponentRecipe(recipe) {
 
 export function serializeDyeComponentRecipe(recipe) {
   validateDyeComponentRecipe(recipe);
+  const recipeKeys = recipe.componentRecipeSchemaVersion === 1
+    ? RECIPE_KEYS_V1
+    : RECIPE_KEYS_V2;
   return JSON.stringify(Object.fromEntries(
-    [...RECIPE_KEYS].sort().map((key) => [key, recipe[key]]),
+    [...recipeKeys].sort().map((key) => [key, recipe[key]]),
   ));
 }
 

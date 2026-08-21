@@ -201,6 +201,14 @@ remain unsupported rather than inventing enrichment. This diagnostic is
 independent from Density's normalized concentration and is not an Optical
 color or edge mask.
 
+R3 turns only positive R2 enrichment into a diagnostic edge-accumulation
+candidate. The operator also requires visible component mass and weights the
+candidate by local exposure against the base-pigment mass gradient. A fixed
+recipe threshold removes weak continuous support, so the result may occupy
+discontinuous Surface segments rather than every Contact-boundary pixel. The
+bounded plane remains Surface-owned and has no RGB/alpha meaning until a later
+Optical experiment explicitly consumes it.
+
 ## Keyboard renderer diagnostics
 
 The public Canvas2D keyboard renderer returns a frozen `stages` record that
@@ -222,8 +230,8 @@ observes the buffers already used by the accepted render path:
   numerator copied from the r2 depth state. It is `null` for r1 recipes or when
   no depth state was created;
 - `surface.dyeComponent`: nullable mobile/fixed/subsurface mass for one
-  explicitly enabled dye component, plus R2 visible fraction and signed
-  fraction delta. It is diagnostic-only;
+  explicitly enabled dye component, plus visible fraction, signed fraction
+  delta and the R3 bounded edge-accumulation candidate. It is diagnostic-only;
 - `optical.compositeRgba`: the final ordinary RGBA composite.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`

@@ -1133,3 +1133,44 @@ they are not automatically promoted to timeless pass/fail truth.
   fraction delta plus actual Surface support and local mass. The gate must
   reject a continuous glyph outline and require discontinuous, material-driven
   occupied segments before Optical color is attempted.
+
+## E-027-discontinuous-edge-accumulation / A1
+
+- Parent: `E-026-dye-enrichment-diagnostics / A1`
+- Ordinary engine model: `ordinary-js-r13` (unchanged)
+- Dye component model/schema: `dye-component-js-r3 / 2`
+- Package: `0.22.0-experimental.1`
+- Fixture manifest: `2`
+- Status: passed diagnostic checkpoint
+- Hypothesis: a color-edge candidate should occupy only material-supported
+  segments where the second dye is both enriched and visibly present. It must
+  not repaint the complete geometric glyph boundary.
+- Operator: `edge-dye-study@3` first keeps positive `fractionDelta`, then
+  multiplies its bounded enrichment strength by a visible-mass response and a
+  local exposure term derived from the center plus four-neighbor base-pigment
+  maximum. Values below the authored fixed threshold are set to zero. The
+  resulting Float32 plane remains bounded 0...1 and has no RGB/alpha meaning.
+- Automated evidence: every occupied candidate cell is positively enriched
+  and contains visible component mass. The compact balanced fixture has a
+  nonzero candidate that is less than half of positive-enrichment support,
+  reaches outside the original Contact, and covers less than half of the
+  original Contact boundary. The absorbent fixture produces a different plane.
+  Flow 0/100 and reversing signed glyph Density leave the candidate exact.
+  Component on still leaves ordinary water, pigment, coverage, concentration
+  and final RGBA exact; component off still allocates zero dedicated planes.
+- Memory boundary: the maximum 320×240 component solver still owns four lazy
+  planes (1,228,800 bytes). The returned mobile/fixed/depth/fraction/delta plus
+  edge-candidate planes retain 1,843,200 bytes, for a component-specific peak
+  of 3,072,000 bytes while the diagnostic state is created.
+- Normal-size browser evidence: M/28, flow 58 on the balanced paper recorded
+  1,358 enriched and 536 depleted cells, with 599 edge candidates and peak
+  0.132. The absorbent paper recorded 354 enriched and 319 depleted cells,
+  with 63 candidates and peak 0.093. The ordinary Optical preview remained the
+  existing green result and the browser reported no new warning/error.
+- Learned: the engine now has a material-driven discontinuous support plane,
+  but a candidate is not yet visible color 테. Calling P5-A complete here would
+  confuse Surface state with Optical expression.
+- Next different method: author a separate second-dye Density-to-color/alpha
+  Optical operator that consumes only this candidate, preserves the base ink
+  and remains readable at normal size. Do not fall back to a full outline,
+  shifted duplicate glyph or page-normalized halo.
