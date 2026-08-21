@@ -43,6 +43,22 @@ test("self-referenced package barrels expose the stable API", () => {
     canvas2d.renderOrdinaryInkMaterial,
   );
   assert.equal(
+    engine.beginOrdinaryInkMaterial,
+    canvas2d.beginOrdinaryInkMaterial,
+  );
+  assert.equal(
+    engine.completeOrdinaryInkMaterial,
+    canvas2d.completeOrdinaryInkMaterial,
+  );
+  assert.equal(
+    engine.prepareOrdinaryInkCanvasInput,
+    canvas2d.prepareOrdinaryInkCanvasInput,
+  );
+  assert.equal(
+    engine.upsampleKeyboardSurfaceCoverage,
+    canvas2d.upsampleKeyboardSurfaceCoverage,
+  );
+  assert.equal(
     engine.ORDINARY_GREEN_RECIPE_R1,
     recipes.ORDINARY_GREEN_RECIPE_R1,
   );

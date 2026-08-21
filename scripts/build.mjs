@@ -119,7 +119,11 @@ const requiredExports = [
   "getSurfaceDensityRange",
   "getDirectDepositLoads",
   "makeGlyphMask",
+  "beginOrdinaryInkMaterial",
+  "completeOrdinaryInkMaterial",
+  "prepareOrdinaryInkCanvasInput",
   "renderOrdinaryInkMaterial",
+  "upsampleKeyboardSurfaceCoverage",
 ];
 for (const name of requiredExports) {
   if (!(name in publicApi)) throw new Error(`Missing public export: ${name}`);
