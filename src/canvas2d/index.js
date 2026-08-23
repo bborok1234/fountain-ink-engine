@@ -1,4 +1,5 @@
 export { makeGlyphMask, makeLayer, morphGlyphAlpha } from "./glyph-mask.js";
+export { createOrdinaryStageSignatures } from "./ordinary-stage-signatures.js";
 export {
   beginOrdinaryInkMaterial,
   completeOrdinaryInkMaterial,

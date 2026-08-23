@@ -369,3 +369,14 @@ anchor are translated together, its glyph-local Density signature remains the
 same while the page-field signature records the new placement. Clients must
 record font and layout facts separately rather than treating a page hash as a
 glyph ID.
+
+`createOrdinaryStageSignatures` names the six stable ordinary pipeline outputs:
+Contact RGBA, Density accumulated variation and sample count, Surface resolved
+coverage, Density normalized concentration, and final Optical RGBA.
+`createStableOutputContract` binds those signatures to a fixture-v3 checkpoint
+by canonicalizing only calculation-relevant replay inputs. Experiment prose,
+status and notes do not affect replay identity. The contract has its own
+version and an explicit recorded-environment scope; a consumer validating a
+parsed checkpoint must validate the nested stable-output contract separately.
+`compareStableOutputContracts` reports input mismatch separately from the exact
+named fields that changed. None of these signatures is an authenticity hash.

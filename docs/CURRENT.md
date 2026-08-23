@@ -202,6 +202,17 @@ font file SHA-256 and dependency-lock SHA-256. It changes no engine model,
 recipe schema or rendered byte. Manifest v1/v2 records remain readable without
 inventing the fields they never stored.
 
+Package `0.31.0-experimental.1` adds stable-output contract v1 without changing
+the engine model, recipe schema, fixture manifest, or any rendered value. A
+fixture-v3 checkpoint's calculation-relevant ink, paper, component, seed,
+layout, raster, font and dependency facts are canonicalized into one replay
+input signature. Six exact named fields bind that input to Contact RGBA,
+Density variation/count, resolved Surface coverage, normalized concentration
+and final Optical RGBA. The scope is deliberately
+`recorded-environment-exact-stage-bytes-v1`: different host/font/raster facts
+change the input signature before byte equality is considered. This is a
+versioned change detector, not a screenshot golden or cryptographic proof.
+
 The final calculation-independent P2 validity matrix renders all 8 active nibs,
 4 ordinary inks, 3 active paper Surfaces and flow 0/58/100: 288 cases. Every
 page plane has its exact declared length, Float32 fields are finite and bounded,
