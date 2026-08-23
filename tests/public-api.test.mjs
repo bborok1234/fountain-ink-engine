@@ -104,6 +104,22 @@ test("self-referenced package barrels expose the stable API", () => {
   assert.equal(engine.freezeRenderContext, contracts.freezeRenderContext);
   assert.equal(engine.validateRenderContext, contracts.validateRenderContext);
   assert.equal(engine.createFieldSignature, contracts.createFieldSignature);
+  assert.equal(
+    engine.createStableOutputContract,
+    contracts.createStableOutputContract,
+  );
+  assert.equal(
+    engine.compareStableOutputContracts,
+    contracts.compareStableOutputContracts,
+  );
+  assert.equal(
+    engine.validateStableOutputContract,
+    contracts.validateStableOutputContract,
+  );
+  assert.equal(
+    engine.createOrdinaryStageSignatures,
+    canvas2d.createOrdinaryStageSignatures,
+  );
   assert.equal(engine.makeGlyphMask, canvas2d.makeGlyphMask);
   assert.equal(
     engine.renderOrdinaryInkMaterial,

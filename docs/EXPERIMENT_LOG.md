@@ -1621,3 +1621,50 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: define stable output by named deterministic stage
   signatures for one manifest, with an explicit environment scope and without
   promoting a screenshot to a permanent golden.
+
+## E-037-stable-output-contract-v1 / A1
+
+- Parent: P6 version and determinism / fixture-to-output relationship
+- Engine/recipe/Surface/fixture calculation: unchanged (`ordinary-js-r13`, ink
+  schema `6`, fixture manifest `3`)
+- Package: `0.31.0-experimental.1`
+- Status: passed structural, Workbench and desktop/mobile browser observation
+- Hypothesis: one fixture-v3 manifest can be bound to exact named calculation
+  outputs without declaring a screenshot to be permanent artistic truth and
+  without claiming byte equality across different font/browser environments.
+- Replay identity: canonical sorted JSON includes only engine/recipe/fixture
+  versions, generic seed, full ink and paper recipes, all component inputs and
+  the strict renderContext. Experiment id, prose, status and observations do
+  not change replay identity. The UTF-8 bytes use the existing
+  `fnv1a64-le-v1` change detector under `checkpoint.replay-inputs-v1`.
+- Named output: `createOrdinaryStageSignatures` records Contact RGBA, Density
+  accumulated variation, Density sample count, Surface resolved coverage,
+  Density normalized concentration and final Optical RGBA. Each signature
+  retains domain, typed-array kind, shape, channel count and exact value hash.
+- Comparison: `createStableOutputContract` binds a fixture-v3 checkpoint to the
+  six field signatures under scope
+  `recorded-environment-exact-stage-bytes-v1`; `compareStableOutputContracts`
+  separates replay-input mismatch from named field mismatch. Old fixture
+  manifests, missing/extra fields, unsupported domains and accessors fail
+  closed. Parsed nested output evidence requires its own public validator.
+- Workbench boundary: pressing `현재 checkpoint 만들기` requests signatures
+  for one material solve. The synchronous diagnostics path and latest-only
+  Worker path use the same public stage-signature helper. Only the six small
+  signature records enter the checkpoint JSON; page-sized typed arrays are not
+  retained in React state. A changed input cancels a stale pending request.
+- Browser evidence: with the bundled font loaded, the default 23-grapheme
+  oxidation fixture produced one replay-input hash and six fields. Repeating
+  the same capture produced the same input and all six exact fields. Changing
+  flow 58→70 preserved Contact hash `77ced3c7b6e83564` while replay input changed
+  `d01e39e93600a6e0`→`4a3d007a1654084a` and Optical changed
+  `587b5ae2cb0caa8b`→`8a55c796b7fb3be2`. A fresh 390×844/DPR1 capture stored
+  364×388 fields, stayed horizontally contained, and reported no warning/error
+  in one in-app tab. The dependency lock identity is now
+  `5742c32c8e09c96492d653cfd7188a81fe0f2a6667380fdc69cad856678b467b`.
+- A1 limit: `fnv1a64-le-v1` is not cryptographic. Exact output comparison is
+  scoped to the manifest's recorded runtime/font/raster/dependency facts; the
+  next P6 browser-matrix work must measure and document Chromium/WebKit/Firefox
+  differences rather than forcing one cross-browser byte golden.
+- Next different method: start the first unchecked P6 browser/scale item by
+  defining the supported Chromium/WebKit/Firefox range and measuring which
+  stages stay structural or exact in each environment.

@@ -200,7 +200,31 @@ these values but never invents browser, font, time, or seed facts.
 
 Manifest v1 and v2 remain archival and do not receive fabricated v3 fields.
 The checkpoint is a replay/handoff input contract, not a permanent artistic
-pixel golden. Named field signatures remain separate observation evidence.
+pixel golden.
+
+Package `0.31.0-experimental.1` can bind one fixture-v3 input manifest to exact
+named stage signatures without retaining the large stage arrays:
+
+```js
+import {
+  createStableOutputContract,
+  validateStableOutputContract,
+} from "fountain-ink-engine/contracts";
+import { createOrdinaryStageSignatures } from "fountain-ink-engine/canvas2d";
+
+const stableOutputContract = createStableOutputContract({
+  checkpoint,
+  stageSignatures: createOrdinaryStageSignatures(material.stages),
+});
+
+validateStableOutputContract(stableOutputContract);
+```
+
+The six fields are Contact RGBA, Density variation/count, resolved Surface,
+normalized concentration, and final Optical RGBA. Exact comparison applies
+only when the checkpoint's recorded runtime, font asset, dependency lock,
+viewport and raster facts are the same. The FNV-1a-64 signatures are portable
+change detectors, not cryptographic integrity proofs.
 
 `ordinary-green-r12` is the active immutable, serializable r13/schema-6 control.
 Blue-black, burgundy and teal r5 are active ordinary-color peers. Paper behavior
