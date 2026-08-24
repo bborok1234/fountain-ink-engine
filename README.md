@@ -21,7 +21,7 @@ or mobile integration.
 
 ```js
 import {
-  ORDINARY_GREEN_RECIPE_R9,
+  ORDINARY_GREEN_RECIPE_R12,
   WetInkSimulation,
   createDensityField,
   getGlyphContactGeometry,
@@ -55,11 +55,18 @@ material composition without adding a React dependency.
 
 ## Optional dye component state
 
-Package `0.25.0-experimental.1` exposes the fifth revision of the dye state
-and its bounded visible color zones:
+Package `0.43.0-experimental.1` keeps the A7-2 shared-transport operator as
+`dye-component-js-r13`, recipe schema 12 and state
+`two-dye-total-residual-v2`, while the current calibrated recipe is
+`edge-dye-study@14`:
 
 ```js
-import { EDGE_DYE_COMPONENT_RECIPE_R5 } from "fountain-ink-engine/dye-components";
+import {
+  EDGE_DYE_COMPONENT_RECIPE_R14,
+} from "fountain-ink-engine/dye-components";
+import {
+  createKeyboardSurfaceState,
+} from "fountain-ink-engine/surface";
 
 const state = createKeyboardSurfaceState(
   deposit,
@@ -67,34 +74,163 @@ const state = createKeyboardSurfaceState(
   surfaceSeed,
   inkRecipe,
   densityTransport,
-  EDGE_DYE_COMPONENT_RECIPE_R5,
+  EDGE_DYE_COMPONENT_RECIPE_R14,
 );
 
 // state.dyeComponent = {
-//   width, height, mobileMass, fixedMass, subsurfaceMass,
-//   expectedFraction, visibleFraction, fractionDelta,
-//   edgeAccumulation, colorZone
+//   id, revision, componentModelVersion, componentRecipeSchemaVersion,
+//   stateModelVersion, width, height, initialSecondaryFraction,
+//   mobileTotalMass, mobileSecondaryResidualMass,
+//   adsorbedTotalMass, adsorbedSecondaryResidualMass,
+//   depthTotalMass, depthSecondaryResidualMass,
+//   mobileTotal, adsorbedTotal, depthTotal, totalMass
 // }
 ```
 
-It shares the ordinary wet footprint while keeping its own mass, mobility and
-retention. Discontinuous accumulation and local positive enrichment peaks seed
-one-cell color zones; Optical changes RGB only inside existing ordinary alpha.
-Smooth paper may calculate this surface-film component without enabling an
-ordinary physical coverage candidate. Revisions 1–4 remain archival.
+R14 preserves R13's operator and R12's non-additive mass model. The component state is a
+canonical view of the already deposited ordinary total. For each `mobile`,
+`adsorbed`, and `depth` phase it stores two Float32 planes:
+
+```text
+T = P + S
+R = S - f0*T
+
+P = (1-f0)*T - R
+S = f0*T + R
+```
+
+Here `f0` is `initialSecondaryFraction`. `T` and signed `R` reconstruct the
+primary (`P`) and secondary (`S`) species without treating Float32 rounding as
+physical separation. The built-in R13 recipe uses `f0=8/33`, preserving the
+nominal A6 composition without preserving its additive mass model. A non-depth
+paper still exposes explicit zero-valued
+depth total/residual planes, so the state shape is stable across paper
+families.
+
+A7-1/R12 established the neutral reference: deposit starts with `R=0`, and
+equal species coefficients keep it exact. A7-2/R13 now computes one
+conservative right/down water-face flux from the previous water state. Primary
+and secondary share that flux through donor-limited upwind advection. A
+harmonic-wetness dispersion term applies their separately authored aqueous
+diffusivities; paper-fibre anisotropy belongs only to the shared water flux and
+is not counted again in diffusion. Each primary/secondary face transfer is
+equal-and-opposite and cannot exceed its donor.
+
+After face transport, both species use the same local depth fraction. Water
+evaporation removes no dye. Interior mobile/adsorbed state then follows an
+analytic, capacity-free linear adsorption/desorption update modulated by paper
+`dyeAffinity`, deterministic paper tooth, and post-evaporation wetness. The
+ghost ring has no face transport or reaction. Five private Float64 cell
+scratch planes are allocated lazily, cleared and reused each step, and are
+never exposed as public state or retained face-flux output.
+
+Schema 12 adds only `primaryDiffusivity`, `secondaryDiffusivity`,
+`primaryAdsorptionRate`, `secondaryAdsorptionRate`,
+`primaryDesorptionRate`, and `secondaryDesorptionRate` to the A7-1 composition
+and palette. The built-in dimensionless pilot values are `.001/.003`,
+`.02/.006`, and `.0002/.0003`, respectively. They preserve the published
+relative timescale ordering of flow, adsorption/evaporation, diffusion, and
+desorption; they are not SI-calibrated constants. R14 changes only those six
+dimensionless rates to `.00005/.0008`, `.06/.001`, and `.000005/.00002`.
+Palette, initial mixture, schema, state, and operator remain pinned. There is
+still no finite capacity, hue/Optical gain, edge mask, or coffee-ring.
+
+The current `npm run verify` gate builds 121 modules and 15 public entry points
+and passes all 223 tests. Package dry-run remains part of the release gate.
 
 Pass `null` or omit the final argument to allocate no component state and
 preserve the ordinary path exactly.
 
-`visibleFraction` is the bounded component share of visible base-plus-component
-mass. `fractionDelta` compares it with the authored initial mixture without
-reading ordinary Density or flow. `edgeAccumulation` keeps discontinuous
-Surface accumulation and local positive enrichment peaks as seeds. `colorZone`
-expands them by at most one grid cell inside positive enrichment. The Optical
-operator changes RGB only where ordinary alpha already exists and copies alpha
-exactly, so it cannot create a glyph outline, glow or wider footprint. R1–R4
-remain exported for archival round-trip but are incompatible with the active
-r5 calculation.
+Optical bilinear-samples the visible mobile and adsorbed `T/R` planes, then
+recovers the transported secondary weight as `f0 + Rvisible/Tvisible`. The
+well-mixed control uses `f0` with the same visible total. Depth mass is not read
+by the current surface Optical path. R13 retains A6's three-band,
+semi-infinite single-constant Kubelka–Munk endpoint approximation only as the
+existing legacy presentation operator; it adds no new hue gain, edge mask,
+outline, or coffee-ring. A separate A7-4 finite-loading comparison described
+below is the current Workbench path.
+
+This is explicitly an RGB three-band endpoint approximation, not a calibrated
+spectral Kubelka–Munk model. It has no measured wavelength-dependent dye K/S,
+paper scattering spectrum, finite-layer thickness, fluorescence, or camera/
+display color-management calibration. The operator changes RGB only where
+ordinary alpha already exists and copies every alpha byte exactly, so it cannot
+add coverage, an outline, glow or a wider footprint. R1–R12 remain exported for
+archival round-trip but are incompatible with the active R13 calculation.
+
+For separation research, the Canvas2D renderer exposes the same state as an
+opaque paper-backed A7-4 pair when asked with
+`DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1`:
+
+```js
+import {
+  DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+  renderOrdinaryInkMaterial,
+} from "fountain-ink-engine/canvas2d";
+
+const material = renderOrdinaryInkMaterial({
+  ...input,
+  dyeOpticalComparison:
+    DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+});
+
+material.dyeOpticalComparison.wellMixedRgba;
+material.dyeOpticalComparison.transportedRgba === material.imageData;
+material.dyeOpticalComparison.outputMetadata;
+material.dyeOpticalComparison.paperOpticalProfile;
+```
+
+Both views come from one prepared Surface state and have identical total dye,
+support, and opaque alpha. The well-mixed branch resets only the local species
+fraction to `f0`; transported uses the local `T/R` result. A default render has
+no comparison property, and a component-off render preserves prior ordinary
+stages, RGBA, and stable signatures exactly.
+
+The active metadata names `three-channel-effective-optical-density-v2`,
+`paper-backed-rgba`, opaque sRGB, visible phases `mobile+adsorbed`, excluded
+phase `depth`, and fixed `referenceVisibleMass=0.14`. The reference comes from
+Workbench engine-unit visible-mass peaks `0.134` at M/28 balanced and `0.179`
+at B/48 balanced. V1 used `1` and was too faint. This is a Beer-inspired
+three-channel effective optical-density preview, not spectral Beer-Lambert or
+Kubelka-Munk scattering.
+
+The existing `imageData`/`optical.compositeRgba` contract is a legacy
+straight-alpha presentation layer. The dye operator already conditions RGB on the
+selected paper reflectance, while a browser client source-overs that alpha onto
+its page background, so it is neither a substrate-independent physical ink
+operator nor a complete opaque paper-resolved reflectance. A future calibrated
+paper-resolved preview must be a separate opaque output.
+
+R14 passes a bounded 27-case start/stop, junction, and double-pass matrix across
+three papers and thin/medium/broad masks. The gate pins deterministic six-plane
+state, finite non-negative reconstructed species, species/total/residual
+conservation, signed connected porous M/B patches, a robust secondary outside
+advantage, and rejection of global recolor/perfect-outline topology. Smooth/EF
+strength is deliberately not forced. Across the 12 porous M/B cases, q05 is
+`-0.0122...-0.00465`, q95 is `+0.02848...+0.03444`, connected patches contain
+`75...481` cells, and outside advantage is `+0.0037...+0.0133`. The fixed state score `phys60` is not a
+perceptual score.
+
+V2 restores readable loading, but browser B/48 balanced same-state A/B remains
+subtle: roughly 12k changed RGB pixels, mean channel delta `0.5`, maximum
+`3–4`, and alpha delta `0`. The perceptual score therefore remains `6.3/10`.
+The locked search also pins the complete engine source-tree and baseline
+behavior digests, self-contained result rows, mass-weighted tail cutoff
+`max(1e-8, 0.001*peak)`, a 30-second process timeout, saturating Pareto axes,
+and non-tradable artifact gates. Both 24-candidate batches closed with
+`48/48 reject-hard`, shortlist `0`, and `opticalAreaFidelity=0` for every row.
+Global recolor affected 11 candidates in batch 1 and all 24 in batch 2. The
+best `opticalDeltaFidelity`, `0.03639156`, came from extreme primary adsorption
+`1` and still failed hard gates. Capacity-free R14 is therefore falsified and
+plateaued under this evaluator.
+
+The next A7-3 hypothesis uses one shared adsorption vacancy with total
+`Q=0.075` and free sites `max(0, Q-A_primary-A_secondary)`, motivated by the
+competitive Langmuir treatment in
+[Venditti, Murali, and Darhuber](https://doi.org/10.1021/acs.langmuir.1c01624).
+It does not resume rate, gain, or palette tuning. Equal independent absolute
+capacities remain forbidden. The score stays `6.3/10`; only blinded human
+review against real ink photographs can raise it to 9.
 
 The engine also accepts current-model, current-schema experiment recipes whose
 `id` is not a registered built-in identity. This is the authoring boundary used

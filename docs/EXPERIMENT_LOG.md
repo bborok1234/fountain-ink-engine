@@ -1668,3 +1668,846 @@ they are not automatically promoted to timeless pass/fail truth.
 - Next different method: start the first unchecked P6 browser/scale item by
   defining the supported Chromium/WebKit/Firefox range and measuring which
   stages stay structural or exact in each environment.
+
+## E-038-specialty-ink-actual-photo-perceptual-audit / A1
+
+- Parent: P5 perceptual closure after E-037 checkpoint integrity
+- Engine/recipe/Surface/component calculation: unchanged
+  (`ordinary-js-r13`, `ordinary-green@12`, current P5 recipes and observations)
+- Package/schema/fixture manifest: unchanged (`0.31.0-experimental.1`, ink
+  schema `6`, fixture manifest `3`)
+- Status: mixed perceptual audit; `[!] Learned` for color edge, shimmer and
+  single-result oxidation; `[~] Running` for sheen; pigment remains state-only
+  backlog rather than a failed Optical attempt
+- Authority correction: E-035's statement that P5 was complete remains true
+  only for the then-current structural checklist. It is superseded for visual
+  completion by the P5-E perceptual-closure gate in `docs/ENGINE_ROADMAP.md`.
+- Hypothesis: every Workbench `잘 보이는 조합` should make its advertised
+  specialty family recognizable in the normal-size final result without
+  requiring diagnostics or an A/B explanation, while preserving the existing
+  component state, ordinary exactness and layer boundaries.
+- Reference protocol: compare causal spatial/optical signatures rather than
+  trying to match camera pixels or one commercial color. Sailor's dual-shading
+  explanation and Manyo Haha photos define different base/secondary colors in
+  high/low-concentration zones; Organics Studio Nitrogen photos define a broad
+  view-dependent sheen film; Pelikan Golden Lapis photos define finite gold
+  particles that appear unevenly and brighten under light; Platinum Classic Ink
+  defines a bright fresh color that darkens over explicit elapsed time.
+- Browser fixture: one in-app tab at `http://127.0.0.1:4174/`, `704×885`
+  viewport, `620×620` paper, literal two-line Korean sentence, green ordinary
+  base, B nib, 48px and flow 58. Edge/sheen used smooth paper, shimmer/oxidation
+  balanced paper, and pigment absorbent paper. Each specialty result was
+  compared with the same Nib/size/flow/Surface ordinary result. Browser
+  warning/error remained empty and the page was restored to its M/28 balanced
+  default after the audit.
+- Measurement boundary: flattened screenshot RGB used the largest per-pixel
+  channel delta. `>2`, `>=20` and `>=80` counts describe this observation only;
+  they are not permanent goldens or automatic perceptual truth.
+- Color-edge observation: 10,884 pixels exceeded delta 2 but only 289 exceeded
+  delta 20; mean maximum-channel change was 4.7. The component changed a broad
+  support yet the final looked almost ordinary. Existing transported dye mass,
+  enrichment and discontinuous zone remain valid evidence; the recommended
+  perceptual promise failed.
+- Sheen observation: 8,264 pixels exceeded delta 2, 2,410 exceeded delta 20 and
+  1,081 exceeded delta 80; mean maximum-channel change was 15.4. Copper-colored
+  areas were immediately visible in concentrated strokes and remained inside
+  existing alpha. The family reads, but the response looks like a static matte
+  recolor rather than an angle-dependent metallic surface film.
+- Shimmer observation: 3,696 pixels exceeded delta 2 but only 69 exceeded delta
+  20; mean maximum-channel change was 2.6. The finite particle model and
+  footprint clipping remain correct, but the recommended static final loses
+  almost all sparkle at 1×. Increasing the particle count would violate the
+  physical/no-noise boundary and is not the next method.
+- Pigment observation: zero pixels exceeded delta 2 relative to the same
+  absorbent-paper ordinary control. This matches E-034's explicit state-only
+  contract and proves that the Workbench must continue to label pigment as
+  visually incomplete; no pigment Optical attempt was evaluated here.
+- Oxidation observation: 10,301 pixels exceeded delta 2 but only 201 exceeded
+  delta 20; mean maximum-channel change was 4.3. A broad weak darkening exists,
+  but the isolated 90-second result cannot be identified as oxidation without
+  the ordinary/fresh comparison. The explicit timestamp and deterministic
+  reaction contract remain valid.
+- Discarded assumption: engine-state completion, a nonzero RGB delta, or a
+  previous A/B diagnostic is not sufficient evidence that the result-first
+  Workbench makes the material recognizable. A `well visible` preset is a
+  perceptual promise and needs its own normal-size reference audit.
+- Preserved evidence: all P5 registered recipes, pins, state planes, bounds,
+  alpha/coverage/geometry invariants, component-off ordinary exactness,
+  fixture-v3 input identity and E-037 field signatures remain untouched. This
+  audit changed no engine or harness code.
+- Full evidence:
+  `docs/research/specialty-ink-perceptual-audit-2026-08-24.md`.
+- Next different method: pause further P6 browser-matrix expansion and close
+  P5 perceptual gaps one hypothesis at a time: E-039 dedicated light-base
+  dual-shading color zones, E-040 angular sheen response, E-041 particle
+  orientation/light response, E-042 simultaneous fresh/half-life/settled
+  oxidation comparison before any curve retune, then E-043 pigment Optical A2.
+
+## E-039-dual-shading-multi-shader-base / A1
+
+- Parent: P5-A dual-shading perceptual closure after E-038
+- Ordinary engine/ink/Surface/fixture: unchanged (`ordinary-js-r13`, ink schema
+  `6`, current paper recipes, fixture manifest `3`)
+- Dye component: `dye-component-js-r5 / schema 4 / edge-dye-study@5` →
+  `dye-component-js-r6 / schema 5 / edge-dye-study@6`
+- Package: `0.32.0-experimental.1`
+- Status: `[!] Learned`; engine invariants passed but the perceptual claim and
+  its automatic proxy failed
+- Hypothesis: preserving r5 transport and discontinuous positive-support zones
+  while authoring a light low/middle/high multi-shader base curve will make the
+  second color readable without increasing a global gain or drawing an outline.
+- Reference: Sailor defines dual shading as different colors appearing across
+  high- and low-concentration areas. The Sailor Manyo Haha writing photographs
+  show a pale blue/lavender interior with intermittent green zones, especially
+  on broad writing and ink-preserving paper. The target is the causal spatial
+  signature rather than an exact camera-pixel or commercial-color copy.
+- Operator: normalized concentration samples the authored base curve
+  `[136,156,202] → [101,144,173] → [105,90,158]`. The result retains 14% of
+  the selected ordinary ink as under-color. Only the existing r5 `colorZone`
+  may mix `[44,136,115]` at the existing gain/cap. r5 mass fraction `0.32`,
+  mobility `1.45`, retention `0.62`, enrichment thresholds, seed radius and
+  zone strengths are byte-preserved.
+- Rejected method: no global edge gain increase, full-glyph recolor pass,
+  continuous boundary outline, blur, shadow, glow or duplicate glyph was used.
+- Engine evidence: low/middle/high base samples, invalid-input failure and all
+  alpha/Contact/Density/Surface/state invariants passed. The renderer also
+  contained both blue-dominant and green-dominant pixels, but that assertion
+  did not verify where the colors occurred and was therefore not evidence of a
+  visible edge.
+- Workbench evidence: the public recipe editor exposes the low/middle/high base
+  colors, base mix and secondary color in addition to the preserved transport
+  and zone controls. The result-first view shows the ordinary under-color,
+  middle base and secondary color as separate swatches. In one existing in-app
+  Browser tab, the default secondary mix and an explicit 0% comparison were
+  nearly indistinguishable. Replacing the secondary color with fluorescent
+  green revealed that the coarse low-resolution zone recolored broad stroke
+  chunks rather than a partial edge. No error overlay appeared.
+  The changed local package lock is recorded by the Workbench checkpoint as
+  `ef331f7f2e24a0863fd85e19550c7143f906be8a6dc2c61f304152e669d9e63d`.
+- Known limit: this is a digital family recipe inspired by the observed
+  mechanism, not a calibrated reproduction of Sailor Manyo Haha. Other ordinary
+  under-colors remain valid inputs but the 86% component base makes their color
+  contribution deliberately secondary. Camera, display and browser color-space
+  variance are not covered by exact pixel equality.
+- Next different method: A2 intersects the transported discontinuous zone with
+  a high-resolution Contact inner-edge band before any further family work.
+
+## E-039-dual-shading-inner-contact-band / A2
+
+- Parent: E-039/A1 perceptual-proxy failure
+- Dye component: `dye-component-js-r7 / schema 6 / edge-dye-study@7`
+- Package: `0.33.0-experimental.1`
+- Status: engine/Workbench implementation passed; user normal-size perceptual
+  confirmation pending
+- Hypothesis: the coarse transported component zone is still useful as the
+  discontinuous material selector, but the visible secondary color must also
+  intersect a full-resolution inner Contact edge to read as 테 rather than a
+  recolored stroke chunk.
+- Operator: R6 transport, base curve and zone generation are preserved. Optical
+  samples eight Contact directions at a scale-aware 1 CSS px radius and applies
+  secondary RGB `[15,145,104]` only where both the zone and inner band exist.
+  The local mix gain is 7 because the reference sentence's zone peaks around
+  0.13; it cannot affect pixels outside that spatial intersection. Alpha and
+  geometry are copied exactly.
+- Rejected method: no blur, outer outline, shadow, glow, duplicate glyph,
+  coverage expansion or second full-glyph recolor pass was added.
+- Automatic evidence: a synthetic solid Contact proves that only the partial
+  boundary overlapping the component zone receives the secondary color. The
+  active renderer compares edge-on against the same recipe with
+  `edgeMixMaximum=0`: changed pixels remain below 65% of Contact, average RGB
+  Euclidean distance is at least 24, maximum distance at least 60, and every
+  alpha byte is exact. This replaces the invalid blue/green-existence proxy.
+- Workbench evidence: the main result view now exposes `바탕만 / 테 적용` so the
+  same text, nib, Surface and base curve can be compared without opening
+  diagnostics. One existing in-app Browser tab loaded the B/48/smooth preset,
+  showed a localized green-teal inner band over the pale blue/lavender base,
+  and had no error overlay. Final acceptance remains pending the user's own
+  normal-size judgment.
+- Known limit: this is a deterministic digital family recipe, not a calibrated
+  camera-pixel copy of Sailor Manyo Haha. Very thin strokes may have little
+  interior left after a 1px inner band; M/28 remains a required sanity check.
+- Next different method: after user acceptance, E-040 keeps the existing
+  `sheenFilm` area and tests a view/light-vector angular response. If the edge
+  is still not legible, change the spatial operator again rather than increasing
+  a global gain.
+
+## E-039-dual-shading-continuous-surface-field / A3
+
+- Parent: E-039/A2 actual-photo re-score (`6.5/10`), where the fixed 1 CSS px
+  Contact band read as a digital outline and could not express broad interior
+  dye separation
+- Dye component: `dye-component-js-r7 / schema 6 / edge-dye-study@7` →
+  `dye-component-js-r8 / schema 7 / edge-dye-study@8`
+- Package: `0.34.0-experimental.1`
+- Status: engine implementation and invariants passed; normal-size Workbench
+  photo comparison remains the perceptual acceptance gate
+- Hypothesis: a secondary color should emerge from transported component
+  enrichment where the visible wet mass also has a local drying/transport
+  front, rather than from a fixed display-pixel band or a seed-radius expansion.
+- Operator: for each interior Surface-grid cell, let `B` be visible base mass,
+  `D` visible second-dye mass and `T=B+D`. Let
+  `E=clamp(max(0,fractionDelta)/(1-expectedFraction))`,
+  `V=1-exp(-D*edgeMassGain)`, and `G` be the maximum four-neighbor
+  `abs(T-Tn)/max(T,Tn,1e-9)`. The canonical field is
+  `S=sqrt(E*V*G)` when `S>=edgeEnrichmentThreshold`, otherwise zero. Raster
+  boundary cells remain zero; no seed, radius or page-scale band is added.
+- Optical: bilinear-sample `secondaryColorField`, then mix the authored
+  secondary RGB by `min(edgeMixMaximum, field*edgeMixGain)`. Contact RGBA and
+  raster scale are no longer dual-shading inputs. The R7 transport coefficients,
+  threshold, mass gain, colors, base curve, base mix and Optical mix values are
+  unchanged so A3 isolates only the spatial hypothesis.
+- Compatibility: schema 7 retains transport, secondary-color mix and base-curve
+  keys while explicitly dropping `edgeZoneRadius`,
+  `edgeZoneMinimumStrength`, `edgeZonePeakThreshold` and
+  `edgeBandCssPixels`. R1–R7 canonical recipe pins remain exact.
+- State/memory: `secondaryColorField` replaces both prior retained zone planes.
+  Deprecated `edgeAccumulation` and `colorZone` aliases are the same exact
+  Float32Array reference for one transition cycle. At the maximum 320×240
+  Surface grid, four optional solver planes remain `1,228,800` bytes and six
+  unique retained component planes use `1,843,200` bytes, for `3,072,000`
+  combined.
+- Automatic evidence: direct formula, boundary-zero, threshold, Surface
+  response, determinism, current-schema exact keys, archival serialization,
+  alias identity/unique buffers, field-direct Optical sampling, deprecated-input
+  non-reading, RGB-only behavior and alpha exactness pass. Engine verification
+  passes 188/188 tests across 114 source modules and 15 public entry points.
+- Rejected method: no gain-only retune, blur, outline, Contact intersection,
+  fixed display width, region growth, duplicate glyph or coverage expansion was
+  introduced.
+- Normal-size observation: one existing Workbench tab kept text, flow 58,
+  seeds, viewport and font fixed while rendering B/48 on smooth, balanced and
+  absorbent paper, M/28 on smooth and balanced paper, and M/20 on balanced
+  paper. The final was inspected before the base-only A/B. Broad blue, violet
+  and cyan-green regions now cross whole stroke segments instead of tracing a
+  one-pixel perimeter. M/28 remains legible and visibly multi-shaded; M/20
+  becomes appropriately subtle instead of acquiring an oversized outline.
+- Perceptual result: `[!] Learned, retained foundation`, weighted `82.5/100`
+  (`8.3/10`). Family recognition `4.5/5`, pooling causality `4/5`, transition
+  naturalness `4/5`, nib/Surface/size response `3.5/5`, palette `4.5/5`,
+  readability `4.5/5`, and absence of digital-fake effects `4/5`. The fixed
+  outline hard fail is closed, but the `>=9` gate is not met.
+- Remaining mismatch: Surface changes the transported field, but the final
+  color still uses one positive-enrichment selector over an authored base
+  curve. Across papers it mostly changes visibility/area rather than letting
+  the two dyes acquire genuinely different paper-dependent retardation and
+  hue dominance. This is weaker than Hinoki/Koke comparisons across Tomoe,
+  Cosmo, Midori and Bank paper.
+- Next different method: A4 keeps A3's continuous transported support but tests
+  explicit dye–paper retardation and a local two-dye optical mixture. It must
+  not retune A3 gain, restore a rim, or alter ordinary mass, coverage or alpha.
+
+## E-039-dual-shading-paper-dye-retardation / A4
+
+- Parent: E-039/A3 retained foundation (`8.3/10`), whose transported field
+  changed area across papers without giving the component an explicit
+  concentration-dependent paper interaction
+- Dye component: `dye-component-js-r8 / schema 7 / edge-dye-study@8` →
+  `dye-component-js-r9 / schema 8 / edge-dye-study@9`
+- Package: `0.35.0-experimental.1`
+- Status: `[!] Learned, retained material improvement`; engine and Workbench
+  integration passed, actual-photo matrix scored `88.1/100` (`8.8/10`), below
+  the `>=9` perceptual gate
+- Hypothesis: paper cellulose has a finite affinity response, so dilute mobile
+  component should encounter more unsaturated binding sites than concentrated
+  component. Increasing paper affinity should therefore retain more component
+  locally, reduce lateral reach and reduce component depth uptake without
+  changing the ordinary carrier solve.
+- Operator: at each dye-component cell,
+  `C=Dmobile/(Dmobile+water+1e-9)`,
+  `U=half/(half+C)`, and
+  `R=clamp(dyeAffinity*paperAffinityMultiplier*U,0,retardationMaximum)`.
+  R9 authors multiplier `1.6`, half saturation `0.10` and maximum `0.82`.
+  Component mobility is multiplied by `1-R`; in the depth Surface variant,
+  component depth fraction is `baseDepthFraction*(1-R)`. Component fixing is
+  `1-(1-baseFixingFraction)^(retentionMultiplier*(1+R))`.
+- Conservation: because `R` varies spatially, the dye-only diffusion step uses
+  a symmetric mean coefficient on each four-neighbor pair. The paired fluxes
+  cancel algebraically, and fixed/depth capacity overflow remains mobile.
+  Float32 plane writes make an exact summed real-number equality inappropriate;
+  tests instead use four relative Float32 ULPs scaled by total mass. Both the
+  small fixture and a filled 320×240 supported grid remain inside that budget
+  after one step in historical vertical-uptake and explicit-depth Surface
+  variants, including the maximum authored mobility case; every component plane
+  remains finite and non-negative.
+- Boundary correction: an initial no-flux implementation carried dye mobile
+  mass on the legacy solver's unstepped outer ring while ordinary water/base
+  were cleared, producing a frozen `visibleFraction=1` orphan. R9 now treats
+  that outer ring explicitly as dye-free numerical ghost padding at public
+  deposit, and symmetric component flux cannot enter it. A repeated-step edge-
+  only deposit test proves zero component mass, fraction delta and secondary
+  field rather than preserving an uncarried dye cell. Both step variants also
+  clear the next dye ring explicitly; a regression injects nonzero internal
+  ring values and proves the published ring is zero after every repeated step.
+  Because `createDyeComponentState()` is publicly callable immediately after
+  deposit, its visible fraction and fraction delta also remain neutral on the
+  ghost ring before the first step, even while the legacy ordinary carrier is
+  temporarily present there.
+  Ordinary and pigment deposition/stepping remain byte-unchanged.
+- Direction evidence: with all other Surface axes fixed, affinity
+  `0.1 → 0.4 → 0.8` monotonically increases the component fixed share and
+  monotonically decreases visible component mass outside original Contact.
+  With paper held fixed, a dilute controlled component fixes a larger share and
+  moves a smaller normalized share than a concentrated component.
+- Preserved boundaries: the R8 palette, base curve, continuous field
+  coefficients and Optical mix are exact. Ordinary water/mobile/fixed/depth
+  and RGBA stay byte-identical with the component enabled; component-off and
+  pigment paths retain their prior arithmetic. Contact, Density, coverage,
+  geometry and every alpha byte remain outside this hypothesis.
+- Compatibility: schema 8 adds only `paperAffinityMultiplier`,
+  `retardationHalfSaturation` and `retardationMaximum`. R1–R8 canonical
+  serializations remain pinned and structurally readable but are incompatible
+  with the active R9 calculation.
+- Browser/photo observation: one in-app Browser tab ran final-only B/48 on
+  smooth, balanced and absorbent paper, M/28 on smooth and balanced paper, and
+  M/20 on balanced paper. Smooth B/48 retained broad blue-violet and cyan-green
+  corridors; absorbent B/48 shifted the same writing visibly toward green and
+  suppressed some violet separation without blur or lost legibility. M/28 was
+  weaker but still multi-hued, and M/20 became appropriately subtle. Against
+  the same B/48 smooth base-only image, the final changed 15,146 pixels by more
+  than 2 max-channel levels, 5,232 by more than 10, and 1,127 by more than 20;
+  the mean max-channel difference on the ink/support mask was 9.42 and the
+  maximum was 43. Smooth versus absorbent B/48 changed 14,828 pixels by more
+  than 2, 6,667 by more than 10, and 3,189 by more than 20, with an ink-mask
+  mean of 13.31 and p95 of 37. This closes A3's weak paper-response gap without
+  changing the palette, gain, coverage or alpha.
+- Perceptual result: family recognition `4.6/5`, pooling/transport causality
+  `4.5/5`, transition naturalness `4.1/5`, nib/Surface/size response `4.6/5`,
+  palette consistency `4.0/5`, readability `4.7/5`, and absence of digital-fake
+  effects `4.1/5`; weighted `88.1/100` (`8.8/10`). There is no fixed-outline,
+  blur, alpha or readability hard fail. The gate still fails because total is
+  below 90 and transition naturalness is below the first-three `4.5/5` floor.
+- Actual-reference mismatch: Sailor Manyo Haha and Koke writing photographs
+  show pale full-stroke mixtures whose violet/green dominance emerges from
+  local deposited mass and can be difficult to photograph in drier or finer
+  writing. A4 now reacts credibly to paper and nib, but some transitions still
+  look like an authored second-color patch over a base curve rather than two
+  absorbers continuously sharing one optical path. This checkpoint validates a
+  deterministic material direction, not a calibrated cellulose adsorption
+  curve.
+- Next different method: A5 must not raise A3/A4 gains. Replace the positive-
+  enrichment recoloring operator with a local two-absorber mixture driven by
+  the visible primary/secondary mass ratio, while preserving A4 transport,
+  coverage and alpha. Re-run the same final-only matrix and actual-photo rubric
+  before any `>=9` claim.
+
+## E-039-dual-shading-mass-ratio-optical-density / A5
+
+- Parent: E-039/A4 retained material improvement (`8.8/10`). A4 made the
+  transported secondary dye react to paper affinity, but its final color still
+  came from A3's derived positive `secondaryColorField`; visible changes in the
+  transported state could therefore remain weak or look like authored patches.
+- Dye component: `dye-component-js-r9 / schema 8 / edge-dye-study@9` →
+  `dye-component-js-r10 / schema 9 / edge-dye-study@10`
+- Package: `0.36.0-experimental.1`
+- Status: `[!] Learned; mechanism retained, perceptual closure rejected`.
+  The final-only browser/photo matrix scored `87.4/100` (`8.7/10`), below A4
+  and below the `>=9/10` target.
+- Hypothesis: the visible secondary color should be caused by the local ratio
+  and amount of separately transported dyes, not by an independently authored
+  edge field. A concentrated enriched pool should show more secondary color
+  than the same ratio at trace mass, while a below-baseline mixture should stay
+  on the existing A4 base curve.
+- Preserved transport: R10 keeps every R9 transport and base-palette input
+  exact. Recorded balanced mobile/fixed signatures remain
+  `5807f9e6f7727f2d / 4a6aed9eb6526519`; absorbent mobile/fixed/subsurface
+  remain `fb08af230c6e8096 / e33fa0760e09a281 / 282c0b032329338d` under the
+  same fixture seeds and domain literals. Component-off, direct Surface,
+  pigment, ordinary mass, Contact, Density, coverage and geometry retain their
+  existing paths.
+- State: R10 retires `secondaryColorField` and its historical aliases. One
+  Float32 `primaryVisibleMass=fround(baseMobile+baseFixed)` plane replaces it;
+  secondary `mobileMass`, `fixedMass`, `subsurfaceMass`, `expectedFraction`,
+  `visibleFraction` and `fractionDelta` remain. Diagnostics compute the native-
+  grid fraction from the retained Float32 primary plane itself. On the maximum
+  320×240 grid, solver bytes remain `1,228,800`, retained diagnostic bytes
+  remain `1,843,200`, and total bytes remain `3,072,000` across six unique
+  buffers: the replacement is net-zero memory.
+- Optical operator: bilinear-sample visible primary `P` and secondary mobile
+  plus fixed `S` separately, then compute
+  `f=S/(P+S)`, `f0=massFraction/(1+massFraction)`,
+  `v=1-exp(-S*componentMassVisibilityScale)`,
+  `e=max(0,(f-f0)/(1-f0))`, `presence=v*e`, and
+  `q=(presence*a)/(1-presence+presence*a)`, where R10 authors visibility scale
+  `200` and relative absorptivity `4`. `q=0` for absent secondary mass,
+  non-enrichment or zero absorptivity and copies the A4 base byte exactly.
+  Positive `q` converts base and secondary sRGB channels through the standard
+  sRGB EOTF, clamps linear channels to `1/65535`, interpolates optical density
+  `-ln(linear)`, converts through the standard OETF and rounds to byte RGB.
+  R10 authors secondary `[15,145,104]`. Subsurface dye is intentionally absent
+  from surface Optical. Existing alpha is copied byte-exact and alpha-zero RGB
+  is untouched.
+- Schema: schema 9 keeps the A4 transport, affinity and base-curve fields; adds
+  `secondaryRed/Green/Blue`, `componentMassVisibilityScale` and
+  `secondaryRelativeAbsorptivity`; and rejects the retired threshold/gain/cap
+  fields. R1–R9 canonical identities stay pinned as archival evidence.
+- Automatic evidence: unequal two-cell masses prove that Optical divides only
+  after interpolating both mass planes. Independent monotonic tests hold `S`
+  fixed while increasing enrichment and hold the enriched ratio fixed while
+  increasing total mass. Exact fixtures cover `q=0`, intermediate optical
+  density, the limit toward the authored secondary, the sRGB toe branches and
+  a zero secondary channel's `1/65535` floor. A throwing getter proves Optical
+  never reads subsurface mass.
+- Anti-patch gate: one deterministic nonuniform B/48 synthetic stroke fixture
+  runs on active smooth r1, balanced r2 and absorbent r4. Active and zero-
+  absorptivity A/B solves have exact component transport/state arrays and both
+  preserve ordinary Contact, Density variation/sample/concentration, Surface
+  coverage/depth/transport and alpha. On every paper, at least 25% of changed
+  pixels lie between 10% and 90% of that solve's `q` maximum, the `q`-maximum
+  plateau stays below 20%, and Spearman rank correlation of `q` with presence
+  exceeds `0.99`. A nonzero interior share plus a boundary-continuity ceiling
+  rejects a continuous outline; exact-secondary pixels and isolated pixels
+  near the authored secondary endpoint are both zero. Observed
+  intermediate/interior/boundary-continuity shares were
+  `0.457/0.091/0.463` on smooth, `0.267/0.442/0.779` on balanced and
+  `0.403/0.875/0.729` on absorbent; maximum-plateau share was at most `0.0061`,
+  rank correlation was `1`, and endpoint/speck counts were zero. This synthetic gate
+  detects caps, binary patches, outlines and green specks, but is not a human
+  or real-font perceptual rating.
+- Browser/photo observation: one in-app Browser tab ran B/48 on smooth,
+  balanced and absorbent paper, M/28 on smooth and balanced paper, and M/20 on
+  balanced paper twice after a fresh reload. All six first/second captures had
+  byte-identical PNG hashes. The A5 result removed A4's authored patch feeling
+  and retained crisp readable gradients, but the second absorber became
+  effectively invisible at normal size. On B/48 smooth, `first dye only`
+  versus `two absorbers` changed 3,833 pixels by more than two max-channel
+  levels, only 18 by more than ten, and zero by more than twenty; ink/support
+  mean max-channel difference was `1.53`, p95 `5`, and maximum `13`. Side by
+  side, the two outputs were not reliably distinguishable. Paper response
+  itself remained measurable: smooth versus absorbent B/48 changed 13,938
+  pixels by more than two, 5,858 by more than ten, and 2,864 by more than
+  twenty, but most of that response already existed in the preserved A4
+  transport/base curve rather than visibly demonstrating the second absorber.
+- Perceptual result: family recognition `4.2/5`, visible mass/pooling causality
+  `3.9/5`, transition naturalness `4.7/5`, nib/Surface/size response `4.3/5`,
+  palette consistency `4.4/5`, readability `4.8/5`, and absence of digital-fake
+  effects `4.8/5`; weighted `87.4/100` (`8.7/10`). There is no outline, blur,
+  cap, isolated speck, alpha or readability hard fail. The gate fails because
+  total, family recognition and visible causality are below their required
+  floors. Actual Haha/Koke writing can be subtle, especially with finer or
+  drier nibs, but it still exposes a perceivable secondary hue in suitable wet
+  or broad writing; A5's B/48 A/B does not.
+- Lesson: changing credible transport is insufficient when the last color
+  stage observes a separately derived selector. The final operator must consume
+  the conserved state whose causal response is being studied. Conversely,
+  automatic continuity and invariance gates can validate mechanism and reject
+  digital artifacts, but cannot establish photographic similarity or artistic
+  strength.
+- Next different method: do not raise `secondaryRelativeAbsorptivity` or add a
+  gain. A5 proves `q` is continuous and non-patchy, so the coarse-field branch
+  is rejected. A6 will research and test a three-band Kubelka–Munk diffuse-
+  paper reflectance operator in which paper scattering and the two dyes'
+  absorption jointly determine visible color. It must preserve R10 transport,
+  mass interpolation, geometry and alpha and may not restore a binary
+  threshold, spatial cap, fixed band or derived outline field.
+
+## E-039-dual-shading-three-band-kubelka-munk / A6
+
+- Parent: E-039/A5 (`8.7/10`, perceptual closure rejected).
+- Dye component: `dye-component-js-r10 / schema 9 / edge-dye-study@10` →
+  `dye-component-js-r11 / schema 10 / edge-dye-study@11`
+- Package: `0.37.0-experimental.1`
+- Status: `[!] Learned; engine mechanism retained, perceptual closure rejected`.
+  The initial `92.3/100` claim used the wrong visual proxy and is withdrawn.
+  An actual-photo spatial re-audit scores the result `6.3/10`: it is an
+  attractive teal ordinary-shading result, not a completed dual-shading model.
+- Hypothesis: A5's low-mass visibility and relative-absorptivity map hid the
+  second absorber at normal size. Keep the transported visible masses and RGB
+  endpoints fixed, but let their actual local mass share interact with the
+  paper's diffuse reflectance through a Kubelka–Munk endpoint mixture rather
+  than raising a gain.
+- Preserved state: R11 copies all R10 transport, retardation, base-palette,
+  secondary RGB and Surface mass fields. R1–R10 registered serializations stay
+  pinned. Contact, Density, coverage, geometry, subsurface exclusion and alpha
+  keep their existing paths.
+- Removed controls: schema 10 deletes `componentMassVisibilityScale` and
+  `secondaryRelativeAbsorptivity`; it adds no numeric recipe field. The Optical
+  weight is the direct post-bilinear mass share `w2=S/(P+S)`, with `w1=1-w2`.
+  `S=0` or zero total mass copies the R10/A4 base RGB byte exactly.
+- Optical operator: for each linear-sRGB channel, clamp the Surface-owned paper
+  diffuse reflectance `Rp` to `[1/65535,1]`; normalize each base/secondary
+  endpoint to `r=clamp(linear/Rp,1/65535,1-1/65535)`; compute
+  `F(r)=(1-r)^2/(2r)`; mix `Fmix=w1*Fb+w2*Fs`; invert with
+  `rm=1/(1+Fmix+sqrt(Fmix*(Fmix+2)))`; and encode
+  `clamp(Rp*rm,0,1)` through the standard sRGB OETF. The public Canvas renderer
+  passes `surfaceRecipe.axes.paperReflectance` explicitly as
+  `paperDiffuseReflectance`, which Optical validates as finite in `0...1`
+  before mutating an output buffer.
+- Automatic evidence: focused component, Optical, Surface, renderer, pigment
+  exclusivity and public-API tests pass. They pin ratio-after-interpolation,
+  common mass-scale invariance, monotonic endpoint weight, pure endpoints,
+  exact intermediate K–M arithmetic, sRGB toe/zero handling, malformed paper
+  input rejection before mutation, deterministic B/48 behavior across three
+  active papers, and an isolated renderer fixture where changing only
+  `paperReflectance` leaves component state, concentration, coverage, ordinary
+  base and alpha exact while changing final dye RGB.
+- Scientific limit: this is a semi-infinite single-constant **three-band RGB
+  endpoint approximation**, not calibrated spectral Kubelka–Munk. The project
+  has no measured wavelength-dependent dye K/S, paper scattering spectrum,
+  layer thickness, fluorescence, or capture/display color calibration. A6 may
+  be judged as a useful deterministic rendering hypothesis, but not as a
+  quantitative physical identification of a real ink-paper pair.
+- Research evidence: the operator follows the remission form in
+  [Kubelka's finite-layer treatment](https://opg.optica.org/josa/abstract.cfm?uri=josa-38-5-448)
+  and the three-band rendering precedent in
+  [Curtis et al.](https://grail.cs.washington.edu/projects/watercolor/), while
+  keeping the concentration-dependent transport motivated by the measured
+  adsorption/retardation behavior in
+  [Langmuir 2021](https://pubs.acs.org/doi/10.1021/acs.langmuir.1c01624).
+  [Sailor's own definition](https://en.sailor.co.jp/topics/manyo-ink-dual-shading-ink/)
+  and the recorded [Manyo Haha](https://www.gouletpens.com/blogs/fountain-pen-blog/sailor-manyo-haha-ink-review)
+  and [Manyo Koke](https://www.penaddict.com/blog/2024/5/2/sailor-manyo-koke-amp-pro-gear-slim-summer-rain-review)
+  writing photographs remain the perceptual references, not pixel targets.
+- Browser/photo observation: one in-app Browser tab rendered B/48 on smooth,
+  balanced and absorbent paper, M/28 on smooth and balanced paper, and M/20 on
+  balanced paper twice after a fresh reload. All six repeated PNG pairs were
+  byte-identical, and the result preserves readable ordinary shading without
+  outline or blur. However, comparison with the Ayame, Hinoki, Haha and Koke
+  photographs shows that A6 mostly changes the entire writing from violet-blue
+  toward cyan-teal. It does not preserve a broad base-colored body beside
+  locally secondary-dominant pools, interiors or edges in the same stroke.
+  Across paper recipes the topology is also mostly the same teal writing at a
+  different darkness, rather than a paper-dependent rearrangement of hues.
+- Invalid A/B proxy: on B/48 smooth, the former `first dye only` versus
+  `two-dye K-M` comparison did change 6,480 pixels by more than ten channel
+  levels and 3,956 by more than twenty, but the first branch set
+  `massFraction=0`. It therefore compared two different ink compositions, not
+  a well-mixed two-dye control against transported separation. In strong core
+  pixels (`min RGB < 190` after flattening), `96.5%` changed by more than ten
+  levels and `71.7%` by more than twenty: evidence of global recoloring, not
+  spatial dual shading. Changed-pixel area is rejected as a completion proxy.
+- Mechanism diagnosis: the component is deposited everywhere at `0.32×` the
+  primary mass, so the nominal second-dye fraction is already `24.24%` before
+  separation. On a controlled 96×48 deposit, visible-cell fraction q05/median/
+  q95 was `24.21/24.25/24.32%` on smooth, `24.21/24.25/24.45%` on balanced and
+  `24.70/24.82/24.91%` on absorbent paper. A6 mixes the absolute local fraction
+  rather than deviation from the nominal mixture and its semi-infinite model
+  intentionally discards total mass. The uniform baseline mixture therefore
+  dominates the tiny transported separation.
+- Revised perceptual result: `6.3/10`, below the `>=9` target. Strengths are
+  ordinary nib feel, continuous shading, readability and absence of synthetic
+  halo/blur. Hard failures for dual-shading closure are missing coexisting
+  base-dominant and secondary-dominant regions, insufficient separation
+  topology, and a comparison control that changes ink composition.
+- Lesson: deterministic output and a large RGB delta do not prove the intended
+  material cause. A completion gate must compare one calculated `P/S/T` state
+  against a same-composition well-mixed control, and must measure spatial ratio
+  residuals rather than single-dye versus two-dye color distance.
+- Next different method: the research synthesis in
+  `../../docs/research/dual-shading-nine-point-plan-2026-08-24.md` at the umbrella
+  repository level rejects further R11 gain tuning. A7-0 first creates a
+  same-state `P0=(1-f0)T, S0=f0T` well-mixed control and defines the transparent
+  layer versus paper-resolved output contract without changing visible output.
+  A7-1 then gives both dyes explicit mobile/adsorbed/depth mass while keeping
+  total deposited dye fixed. A7-2 transports both species with one conservative
+  water-face flux and independent diffusion/adsorption/desorption. Finite
+  adsorption capacity, surface spectral Beer loading, measured-scattering
+  paper-depth finite K-M and a limited evaporation-front surface-film flow are
+  later one-hypothesis attempts in that order. No Optical gain, edge mask or
+  coffee-ring may hide a
+  flat transported ratio. E-040 sheen remains queued behind this correction.
+
+## E-039-dual-shading-same-state-control / A7-0
+
+- Parent: E-039/A6 (`6.3/10`; perceptual closure rejected).
+- Package: `0.38.0-experimental.1`; dye model/schema and built-in recipe remain
+  `dye-component-js-r11 / 10 / edge-dye-study@11`.
+- Status: `[x] Measurement contract passed; visible material unchanged`.
+- Hypothesis: before changing transport, compare one calculated `P/S/T` state
+  with a counterfactual that preserves `T` but resets only the local fraction
+  to the authored initial mixture `f0=massFraction/(1+massFraction)`.
+- Implementation: public `compositeDyeWellMixedControlOptical` shares all input,
+  validation, bilinear mass sampling, base curve, paper reflectance, K–M
+  arithmetic and alpha behavior with `compositeDyeEdgeOptical`. The versioned
+  Canvas2D request
+  `DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1` returns both Optical
+  buffers from one prepared Surface solve. `transportedRgba` aliases the
+  existing `imageData`; the well-mixed branch alone uses `f0` wherever `T>0`.
+- Compatibility: the default result has no comparison property. Its stage keys,
+  Contact, Density, Surface planes, final RGBA and stable-output signatures are
+  byte-exact. Both comparison buffers have identical alpha. Invalid or dye-free
+  comparison requests fail before output allocation/mutation.
+- Workbench: the former `massFraction=0` recipe and `single dye / two dyes`
+  buttons were removed. `균일 혼합 기준 / 종이 이동 결과` now switch buffers
+  on one Canvas without another material solve. Diagnostics reuse the existing
+  Optical pair and report RGB change plus alpha/Contact/Density/Surface
+  invariants; no extra PIP or vertical preview is mounted.
+- Output decision: the accepted RGBA is named a legacy straight-alpha
+  presentation layer. Because R11 already conditions RGB on the selected paper
+  reflectance and the HTML client later source-overs alpha onto its page, it is
+  neither a substrate-independent physical ink operator nor a complete opaque
+  paper-resolved result. Future calibrated paper-resolved output must be a
+  separately named opaque preview to prevent double paper composition.
+- Automatic evidence: engine build and 212 tests pass. The complete harness
+  engine suite, production build and Sites worker checks pass.
+- Browser observation: one existing in-app Browser tab at `127.0.0.1:4174`
+  opened B/48/smooth and switched the same Canvas between `균일 혼합 기준` and
+  `종이 이동 결과` repeatedly. The two normal-size results were intentionally
+  very similar. The opt-in diagnostic reported 13,803 changed RGB pixels at
+  1236×1236, mean channel delta `0.4`, maximum delta `20`, and exact alpha delta
+  `0`; Contact, Density, Surface and total dye state were shared. The control
+  view disabled checkpoint capture, transported re-enabled it, console
+  warning/error count was zero, and closing diagnostics unmounted the extra
+  research canvases.
+- Perceptual result: unchanged at `6.3/10`. A7-0 repairs the comparator; it does
+  not add spatial separation or claim progress toward the `>=9` gate.
+- Lesson: an honest control is a material research instrument, not a visual
+  effect. If the two views look nearly identical, the transported fraction
+  field is flat and Optical tuning is not allowed to hide that fact.
+- Next different method: A7-1 gives both dyes explicit neutral
+  mobile/adsorbed/depth state with fixed total deposited dye. With identical
+  species coefficients it must remain exact with the well-mixed control before
+  A7-2 introduces shared conservative capillary advection.
+
+## E-039-dual-shading-neutral-two-dye-state / A7-1
+
+- Parent: E-039/A7-0 same-state control (`6.3/10`; visible material unchanged).
+- Package/model/schema/recipe: `0.39.0-experimental.1` /
+  `dye-component-js-r12` / `11` / `edge-dye-study@12`; state model
+  `neutral-two-dye-total-residual-v1`.
+- Status: `[x] Engine invariant gate passed; perceptual closure unchanged`.
+- Hypothesis: before differential transport can be trusted, one fixed deposited
+  dye mass must represent both species without Float32 ratio noise inventing
+  separation. Identical species behavior must remain exactly neutral and must
+  produce the same Optical bytes as the A7-0 well-mixed control.
+- Canonical state: each mobile, adsorbed and paper-depth phase stores a total
+  Float32 plane `T=P+S` and signed secondary-residual plane `R=S-f0T`. The
+  inverse is `P=(1-f0)T-R`, `S=f0T+R`. Non-depth papers publish explicit zero
+  depth total/residual planes, so all papers have the same six-plane state
+  shape. The built-in authors `f0=8/33`, preserving A6's nominal composition
+  while rejecting its additive mass interpretation.
+- Deposition and transfer: R12 records the actual ordinary deposited mass delta
+  as dye `T`; it does not add `massFraction*T` as a second material. Neutral
+  deposition sets `R=0`. A7-1 performs no lateral dye-species transport and
+  applies each ordinary local mobile-to-adsorbed or mobile-to-depth fraction
+  equally to `T` and `R`, preserving both reconstructed species and total mass.
+- Retired assumption: schema 11 replaces A6's `massFraction` with
+  `initialSecondaryFraction` and removes mobility, retention, paper-affinity,
+  retardation, visibility and relative-absorptivity controls. The retained
+  base/secondary palette is an Optical description, not a state-separation
+  knob.
+- Automatic evidence: focused recipe, Surface, Optical, renderer and public-API
+  gates pin canonical R12 serialization, invalid-input rejection before
+  mutation/allocation, deterministic six-plane state across smooth/balanced/
+  absorbent paper, no added deposited mass, scale-aware conservation of total
+  and both reconstructed species, exact zero residuals, explicit zero depth on
+  non-depth paper, transported/well-mixed RGBA byte equality, and exact
+  component-off ordinary state/stages/RGBA/signatures.
+- Validation: the engine build contains 118 modules and 15 public entry points;
+  all 200 tests pass. `npm pack --dry-run` also passes with 131 package files
+  when run with a writable temporary npm cache; the machine's default cache has
+  a pre-existing root-owned `EPERM` and is not an engine failure.
+- Scientific basis and limit: the future split into common moisture flow plus
+  per-colorant mobile/fibre/adsorbed state follows
+  [Venditti, Murali, and Darhuber (Langmuir 2021)](https://doi.org/10.1021/acs.langmuir.1c01624).
+  [Syms (Biomicrofluidics 2017)](https://doi.org/10.1063/1.4989627) separately
+  supports evaporation-driven paper advection with species-dependent
+  retardation.
+  A7-1 implements only the neutral conservation boundary. It does not claim
+  lateral chromatography, calibrated adsorption kinetics, site saturation, or
+  visible separation.
+- Perceptual result: unchanged at `6.3/10`. Transported and well-mixed are
+  intentionally byte-identical because every residual is zero. This is not a
+  failed visible effect and must not be scored as progress toward the `>=9`
+  gate; it is the control that makes later progress falsifiable.
+- Lesson: equal independent absolute Langmuir capacities are not a safe neutral
+  baseline for an unequal mixture. They generally change the species ratio even
+  when rate constants match. Capacity is therefore absent from A7-1 and A7-2.
+  If evidence later requires A7-3, it must test either composition-scaled
+  capacity or one shared-vacancy term as a separate hypothesis.
+- Next different method: A7-2 computes one conservative water-face flux and
+  shares its advection between both species, while species-specific diffusion
+  and linear adsorption/desorption may create signed `R` topology. It adds no
+  finite capacity, hue gain, edge mask, or coffee-ring. Optical remains a
+  measuring instrument until the transported state itself separates.
+
+## E-039-dual-shading-shared-water-face-transport / A7-2
+
+- Parent: E-039/A7-1 neutral mass/invariant gate (`6.3/10`; no visible
+  separation).
+- Package/model/schema/recipe/state: `0.40.0-experimental.1` /
+  `dye-component-js-r13` / `12` / `edge-dye-study@13` /
+  `two-dye-total-residual-v2`.
+- Status: `[!] Learned; transport engine gate passed, first rate calibration
+  remains perceptually insufficient`.
+- Hypothesis: two explicit species sharing the same capillary water flow, but
+  differing in aqueous dispersion and reversible paper interaction, should
+  create signed spatial separation without drawing a color zone or adding
+  secondary mass.
+- Shared face operator: R13 reads the previous water state, visits each
+  interior right/down face once, and forms one anisotropic water flux from the
+  arithmetic mean of the existing fibre face factors. Both dyes use that same
+  donor-limited `q` through upwind concentration advection. A harmonic-wetness
+  species-dispersion term uses separate aqueous diffusivities; fibre
+  anisotropy is not applied a second time. Flux is reconstructed into primary
+  and secondary mass, limited against each donor, and accumulated
+  equal-and-opposite before returning to the public `T/R` basis.
+- Local phase order: the shared face update runs first, followed by the common
+  mobile-to-depth transfer. Evaporation changes water but removes no dye. An
+  analytic capacity-free mobile/adsorbed reaction then uses each species'
+  linear adsorption/desorption rates, paper `dyeAffinity`, deterministic paper
+  tooth, and post-evaporation wetness. The numerical ghost ring has no face
+  flux and no reaction.
+- Recipe boundary: schema 12 adds only primary/secondary diffusivity,
+  adsorption rate and desorption rate. Built-in values are `.001/.003`,
+  `.02/.006`, and `.0002/.0003`. These dimensionless pilots preserve the
+  literature's relative ordering `flow < adsorption/evaporation < diffusion <
+  desorption` in characteristic time; they are not SI-calibrated constants.
+  There is no finite capacity, Optical/color gain, edge mask, concentration
+  threshold, or coffee-ring.
+- Memory boundary: five private Float64 cell scratch planes store outgoing
+  water, outgoing primary/secondary mass, and primary/secondary deltas. They
+  allocate lazily only for active dye transport, clear and reuse on every
+  step, remain bounded by cell count, and never become public or retained
+  face-flux state.
+- Hard invariants: exact neutral behavior with identical species coefficients;
+  algebraic equal/opposite two-cell face transfer; non-negative donor species;
+  uniform wetness/concentration zero flux; ghost no-flux/no-reaction; dye mass
+  unchanged by water evaporation; both positive and negative residual support;
+  scale-aware primary, secondary and total conservation across smooth,
+  balanced and absorbent paper; exact component-off ordinary state/stages/
+  RGBA/signatures; deterministic repeated output; and scratch identity reuse.
+- Validation: `npm run verify` passes with 119 built modules, 15 public entry
+  points, and all 206 tests. `npm pack --dry-run` passes with 132 files, 159.6 kB packed,
+  and 674.9 kB unpacked.
+- Browser measurement: the existing Workbench rendered B/48 on smooth paper.
+  Visible fraction residual exceeded the fixed diagnostic threshold in 1,459
+  positive and 907 negative Surface cells, peaking at `+0.0023/-0.0019`.
+  Same-state transported versus well-mixed Optical changed 502 RGB pixels with
+  mean channel delta `0.3`, maximum channel delta `1`, exact alpha delta `0`,
+  and zero console warnings or errors.
+- Perceptual result: unchanged at `6.3/10`. R13 proves the model can produce a
+  conservative two-signed separation field, but its built-in rate mapping is
+  far too subtle at normal size. This passes the physical operator boundary,
+  not the P5-A perceptual gate, and no `>=9` claim is made.
+- Lesson: a correct signed residual is necessary but its spatial extent and
+  amplitude still require calibration against the photographed body/core/rim/
+  pool topology. Raising an Optical gain would hide insufficient material
+  separation and invalidate the same-state control.
+- Scientific evidence: the state and ordering follow
+  [Venditti, Murali, and Darhuber (Langmuir 2021)](https://doi.org/10.1021/acs.langmuir.1c01624),
+  while the real-photo archetype and area estimates remain owned by the
+  umbrella repository's dual-shading research plan. Neither source identifies
+  the current dimensionless browser coefficients as physical constants.
+- Next different method: create a versioned R14 transport-rate calibration that
+  preserves the R13 equations, conservation gates, no-fake-effect rules, and
+  photo topology targets. Do not silently retune revision 13 and do not add
+  Optical gain. A7-3 capacity remains conditional on saturation evidence;
+  A7-4 effective optical-density research remains pending until state
+  separation is strong enough to evaluate.
+
+## E-039-dual-shading-r14-rate-calibration / A7-2-R14
+
+- Parent: E-039/A7-2 R13 shared transport (`6.3/10`; operator passed, pilot
+  calibration too subtle).
+- Current package/model/schema/recipe/state: `0.43.0-experimental.1` /
+  `dye-component-js-r13` / `12` / `edge-dye-study@14` /
+  `two-dye-total-residual-v2`.
+- Status: `[x] Versioned physical-state calibration gate passed; perceptual
+  score unchanged`.
+- Hypothesis: stronger primary fibre binding and wider secondary aqueous
+  dispersion can enlarge signed local separation without changing R13's shared
+  water-face operator or hiding the result with Optical gain.
+- Mutable boundary: R14 preserves R13's palette, `initialSecondaryFraction`,
+  schema, state, face transport, reaction equations, and Surface coupling. It
+  changes only primary/secondary diffusivity, adsorption rate, and desorption
+  rate to `.00005/.0008`, `.06/.001`, and `.000005/.00002`.
+- Calibration matrix: deterministic `start-stop`, `cross-junction`, and
+  double-pass-like deposits run on smooth, balanced, and absorbent paper with
+  representative thin, medium, and broad masks: 27 fixtures total. Every
+  fixture runs twice.
+- Contract fixes and hard gates: all six public Float32 planes are repeat-exact;
+  reconstructed P/S are finite and non-negative; primary, secondary, total,
+  and signed residual sums remain within Float32 budgets. Porous medium/broad
+  cases have `q05 < 0 < q95`, connected positive and negative meaningful
+  patches, and a robust secondary outside-mass advantage. Meaningful topology
+  cannot be a one-sign global recolor or a perfect constant-width outline.
+  Across the 12 porous M/B cases q05 ranges `-0.0122...-0.00465`, q95 ranges
+  `+0.02848...+0.03444`, connected patches contain `75...481` cells,
+  meaningful interior share is `0.44...0.70`, and outside advantage is
+  `+0.0037...+0.0133`. Smooth/EF separation strength is deliberately not forced.
+- Evaluator boundary: the frozen automatic physical-state score is named
+  `phys60`. It summarizes state/topology evidence and is not a score out of ten,
+  a photograph match, or permission to raise the perceptual rating.
+- Validation: the latest engine gate builds 121 source modules and 15 public
+  entry points and passes 223 tests, including the focused 27-case calibration
+  suite. Component-off ordinary and existing R13 checkpoints remain preserved.
+- Perceptual result: still `6.3/10`. R14 supplies a stronger, testable state for
+  Optical evaluation; no automatic state metric proves that the normal-size
+  writing looks like a real dual-shading ink.
+
+## E-039-dual-shading-finite-loading-optical / A7-4-v1-v2
+
+- Parent: R14 state calibration with same-state well-mixed/transported control.
+- Current package/output: `0.43.0-experimental.1` /
+  `three-channel-effective-optical-density-v2` /
+  `DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1`.
+- Status: `[!] V1 unit calibration learned; V2 engineering contract passed;
+  final visual evaluation still open`.
+- Hypothesis: visible mobile+adsorbed primary/secondary mass should control
+  finite loading against an explicit paper endpoint, so low mass approaches
+  paper and high mass approaches the authored dye endpoint without changing
+  Contact, coverage, geometry, or alpha.
+- Honest operator boundary: both views are opaque paper-backed sRGB and share
+  one Surface solve. The operator is Beer-inspired three-channel effective
+  optical density. Metadata explicitly records `spectral:false`,
+  `scattering:false`, visible phases `mobile+adsorbed`, and excluded phase
+  `depth`. It is not spectral Beer-Lambert or Kubelka-Munk scattering.
+- V1 failure: `three-channel-effective-optical-density-v1` used
+  `referenceVisibleMass=1`. That reference was far above the Workbench's
+  engine-unit visible loading, so normal-size output became too faint. This was
+  a unit-calibration failure, not evidence to retune palette or R14 transport.
+- V2 calibration: M/28 balanced reported visible-mass peak `0.134`; B/48
+  balanced reported `0.179`. V2 fixes `referenceVisibleMass=0.14` and records
+  calibration id `engine-visible-mass-reference-r1`. The value is versioned and
+  is not a mutable Workbench gain.
+- Browser observation: V2 restores readable writing. B/48 balanced same-state
+  A/B still changes only about `12k` pixels (one 1920×904 DPR2 run reported
+  13,430), mean channel delta `0.5`, maximum `3–4`, and alpha delta `0`; console
+  warning/error count is zero. The effect is therefore still subtle.
+- Perceptual result: unchanged at `6.3/10`. Legibility and a nonzero A/B delta
+  close the presentation-unit defect, not the photo-based 9-point gate.
+
+## E-039-dual-shading-bounded-autoresearch / protocol pivot
+
+- Status: `[!] Two locked batches plateaued; capacity-free R14 falsified for
+  this evaluator; no candidate has perceptual approval`.
+- Adaptation: use the bounded keep/discard structure from
+  [Karpathy autoresearch](https://github.com/karpathy/autoresearch) and its
+  [program.md](https://github.com/karpathy/autoresearch/blob/master/program.md?plain=1),
+  adapted to Fountain's immutable physics and human-review boundaries.
+- Fixed evaluator: fixture definitions, seeds, hard-fail thresholds,
+  conservation tests, topology classifiers, and `phys60` remain unchanged
+  during a batch. The agent may mutate only R14's six transport rates. Palette,
+  initial fraction, Optical reference loading, masks, gains, and evaluator code
+  are out of scope.
+- Search budget: one batch ends after 24 candidates or 30 minutes, whichever
+  comes first. A candidate must pass all hard gates before joining a Pareto
+  front over physical-state/topology metrics. Every rejection and parent vector
+  remains in the experiment record.
+- Stop rule: two consecutive batches with a plateaued hard-gated Pareto front
+  end coefficient search. The next experiment chooses exactly one A7-3
+  fraction-scaled-capacity or shared-vacancy operator; it does not continue
+  gain or palette tuning.
+- Human boundary: photo identity and expected archetype stay hidden during
+  candidate selection. Blinded human comparison with real ink photographs is
+  the only route to a perceptual score of 9. `phys60`, RGB delta, changed-pixel
+  count, or agent preference can never award that score.
+- Hardening: evaluator lock v2 pins the complete engine source tree and baseline
+  behavior digest. Recorded rows are self-contained. Physical q05/q50/q95 use
+  mass weights after cutoff `max(1e-8,0.001*peak visible mass)`. Each child has
+  a process-level 30-second kill deadline. Pareto fidelity saturates at fixed
+  targets, while conservation/readability/global-recolor/outline/fragmentation/
+  speckle remain non-tradable hard gates.
+- Exact result: batch 1 `24/24 reject-hard`, shortlist `0`, all
+  `opticalAreaFidelity=0`, global recolor 11; batch 2 `24/24 reject-hard`,
+  shortlist `0`, all `opticalAreaFidelity=0`, global recolor 24. The overall
+  best `opticalDeltaFidelity=0.03639156` came from extreme
+  `primaryAdsorptionRate=1` and still failed hard gates. Total: `48/48
+  reject-hard`, shortlist `0`.
+- Conclusion: the capacity-free R14 six-rate family is falsified/plateaued under
+  the locked evaluator. Perceptual score remains `6.3/10`; no 9-point claim.
+- Next different method: A7-3 tests a single shared-vacancy Langmuir capacity,
+  motivated by [Venditti, Murali, and Darhuber](https://doi.org/10.1021/acs.langmuir.1c01624),
+  with fixed total `Q=0.075` and free sites
+  `max(0,Q-A_primary-A_secondary)`. Independent absolute species capacities,
+  gain/palette changes, and renewed R14 rate tuning are excluded.

@@ -3,11 +3,489 @@ import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertFiniteRange, assertUint32 } from "../contracts/numeric.js";
 import { assertSurfaceDensityTransportGrid } from "./density-transport.js";
 import { assertSurfaceRecipeCompatible } from "../surface-recipes/index.js";
-import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
+import {
+  assertDyeComponentRecipeCompatible,
+  dyeComponentStateModelVersion,
+  serializeDyeComponentRecipe,
+} from "../dye-components/index.js";
 import { assertPigmentComponentRecipeCompatible } from "../pigment-components/index.js";
 
 const clamp = (value, minimum = 0, maximum = 1) =>
   Math.min(maximum, Math.max(minimum, value));
+
+const DYE_WATER_EPSILON = 1e-9;
+
+function isExactZeroPlane(plane) {
+  for (let index = 0; index < plane.length; index += 1) {
+    if (plane[index] !== 0) return false;
+  }
+  return true;
+}
+
+function prepareDyeNextMobile(simulation) {
+  if (simulation.materialComponentKind !== "dye") return;
+  // Copying before local phase transfers preserves the numerical ghost ring as
+  // a no-flux boundary. A7 face transport itself traverses interior faces only.
+  simulation.nextMaterialComponentMobile.set(
+    simulation.materialComponentMobile,
+  );
+  simulation.nextMaterialComponentMobileResidual.set(
+    simulation.materialComponentMobileResidual,
+  );
+}
+
+function transferDyeMobileToDepth(
+  simulation,
+  index,
+  depthFraction,
+) {
+  const boundedDepthFraction = clamp(depthFraction);
+  const mobileTotal = simulation.materialComponentMobile[index];
+  const mobileResidual = simulation.materialComponentMobileResidual[index];
+
+  // Canonical state is total plus secondary residual:
+  //   P = (1 - f0)T - R, S = f0T + R.
+  // Applying the same bounded donor fraction to T and R preserves both species
+  // and makes the depth transfer equal/opposite without a post-hoc clamp.
+  const depthTotal = mobileTotal * boundedDepthFraction;
+  const depthResidual = mobileResidual * boundedDepthFraction;
+  simulation.nextMaterialComponentMobile[index] = mobileTotal - depthTotal;
+  simulation.nextMaterialComponentMobileResidual[index] = mobileResidual === 0
+    ? 0
+    : mobileResidual - depthResidual;
+  if (simulation.materialComponentSubsurface !== null) {
+    simulation.materialComponentSubsurface[index] += depthTotal;
+    if (mobileResidual !== 0) {
+      simulation.materialComponentSubsurfaceResidual[index] += depthResidual;
+    }
+  }
+}
+
+function forEachInteriorFace(
+  simulation,
+  horizontalWaterCoefficient,
+  verticalWaterCoefficient,
+  roughness,
+  visit,
+) {
+  for (let y = 1; y < simulation.height - 1; y += 1) {
+    for (let x = 1; x < simulation.width - 1; x += 1) {
+      const index = y * simulation.width + x;
+      if (x + 1 < simulation.width - 1) {
+        const neighbor = index + 1;
+        const factorA = 1 - roughness * 0.28
+          + Math.abs(simulation.fiberX[index]) * 0.7 * roughness;
+        const factorB = 1 - roughness * 0.28
+          + Math.abs(simulation.fiberX[neighbor]) * 0.7 * roughness;
+        visit(
+          index,
+          neighbor,
+          horizontalWaterCoefficient * (factorA + factorB) * 0.5,
+        );
+      }
+      if (y + 1 < simulation.height - 1) {
+        const neighbor = index + simulation.width;
+        const factorA = 1 - roughness * 0.28
+          + Math.abs(simulation.fiberY[index]) * 0.7 * roughness;
+        const factorB = 1 - roughness * 0.28
+          + Math.abs(simulation.fiberY[neighbor]) * 0.7 * roughness;
+        visit(
+          index,
+          neighbor,
+          verticalWaterCoefficient * (factorA + factorB) * 0.5,
+        );
+      }
+    }
+  }
+}
+
+function donorScale(available, outgoing) {
+  if (!(outgoing > available) || !(outgoing > 0)) return 1;
+  // Bias the limiter inward by four machine epsilons. This is part of the
+  // bounded donor transfer, not a post-hoc clamp, and prevents summation order
+  // from making a fully drained donor microscopically negative.
+  return (available / outgoing) * (1 - Number.EPSILON * 4);
+}
+
+function resolveLimitedWaterFlux(
+  simulation,
+  outgoingWater,
+  first,
+  second,
+  faceCoefficient,
+) {
+  const raw = faceCoefficient
+    * (simulation.water[first] - simulation.water[second]);
+  if (raw === 0) return 0;
+  const donor = raw > 0 ? first : second;
+  return raw * donorScale(
+    simulation.water[donor],
+    outgoingWater[donor],
+  );
+}
+
+function resolveDyeFaceFlux(
+  simulation,
+  recipe,
+  frame,
+  outgoingWater,
+  first,
+  second,
+  faceCoefficient,
+) {
+  const waterFirst = simulation.water[first];
+  const waterSecond = simulation.water[second];
+  const totalFirst = simulation.materialComponentMobile[first];
+  const totalSecond = simulation.materialComponentMobile[second];
+  const residualFirst = simulation.materialComponentMobileResidual[first];
+  const residualSecond = simulation.materialComponentMobileResidual[second];
+  const concentrationTotalFirst = totalFirst
+    / Math.max(waterFirst, DYE_WATER_EPSILON);
+  const concentrationTotalSecond = totalSecond
+    / Math.max(waterSecond, DYE_WATER_EPSILON);
+  const concentrationResidualFirst = residualFirst
+    / Math.max(waterFirst, DYE_WATER_EPSILON);
+  const concentrationResidualSecond = residualSecond
+    / Math.max(waterSecond, DYE_WATER_EPSILON);
+  const waterFlux = resolveLimitedWaterFlux(
+    simulation,
+    outgoingWater,
+    first,
+    second,
+    faceCoefficient,
+  );
+  const upwindTotal = waterFlux >= 0
+    ? concentrationTotalFirst
+    : concentrationTotalSecond;
+  const upwindResidual = waterFlux >= 0
+    ? concentrationResidualFirst
+    : concentrationResidualSecond;
+  const gradientTotal = concentrationTotalFirst - concentrationTotalSecond;
+  const gradientResidual =
+    concentrationResidualFirst - concentrationResidualSecond;
+  const harmonicWetness = waterFirst > 0 && waterSecond > 0
+    ? (2 * waterFirst * waterSecond) / (waterFirst + waterSecond)
+    : 0;
+  // A7-2 treats this as an aqueous molecular/dispersion pilot. Paper fibre
+  // anisotropy belongs to the shared water flux above; applying the face
+  // factor again here would double-count the current paper hypothesis.
+  const fraction = recipe.initialSecondaryFraction;
+  const primaryShare = 1 - fraction;
+  const primaryDiffusivity = recipe.primaryDiffusivity * frame;
+  const secondaryDiffusivity = recipe.secondaryDiffusivity * frame;
+  const totalDiffusion = harmonicWetness * (
+    (primaryShare * primaryDiffusivity
+      + fraction * secondaryDiffusivity) * gradientTotal
+    + (secondaryDiffusivity - primaryDiffusivity) * gradientResidual
+  );
+  const residualDiffusion = harmonicWetness * (
+    fraction * primaryShare
+      * (secondaryDiffusivity - primaryDiffusivity) * gradientTotal
+    + (primaryShare * secondaryDiffusivity
+      + fraction * primaryDiffusivity) * gradientResidual
+  );
+  const totalFlux = waterFlux * upwindTotal + totalDiffusion;
+  const residualFlux = waterFlux * upwindResidual + residualDiffusion;
+  return {
+    primary: primaryShare * totalFlux - residualFlux,
+    secondary: fraction * totalFlux + residualFlux,
+  };
+}
+
+function getDyeTransportScratch(simulation) {
+  if (simulation.dyeTransportScratch === null) {
+    simulation.dyeTransportScratch = {
+      outgoingWater: new Float64Array(simulation.length),
+      outgoingPrimary: new Float64Array(simulation.length),
+      outgoingSecondary: new Float64Array(simulation.length),
+      primaryDelta: new Float64Array(simulation.length),
+      secondaryDelta: new Float64Array(simulation.length),
+    };
+  }
+  for (const plane of Object.values(simulation.dyeTransportScratch)) {
+    plane.fill(0);
+  }
+  return simulation.dyeTransportScratch;
+}
+
+function transportNeutralTotalWithSharedWaterFlux(
+  simulation,
+  recipe,
+  frame,
+  outgoingWater,
+  horizontalWaterCoefficient,
+  verticalWaterCoefficient,
+  roughness,
+  scratch,
+) {
+  const outgoingTotal = scratch.outgoingPrimary;
+  const totalDelta = scratch.primaryDelta;
+  const resolveTotalFlux = (first, second, faceCoefficient) => {
+    const waterFirst = simulation.water[first];
+    const waterSecond = simulation.water[second];
+    const concentrationFirst = simulation.materialComponentMobile[first]
+      / Math.max(waterFirst, DYE_WATER_EPSILON);
+    const concentrationSecond = simulation.materialComponentMobile[second]
+      / Math.max(waterSecond, DYE_WATER_EPSILON);
+    const waterFlux = resolveLimitedWaterFlux(
+      simulation,
+      outgoingWater,
+      first,
+      second,
+      faceCoefficient,
+    );
+    const upwind = waterFlux >= 0
+      ? concentrationFirst
+      : concentrationSecond;
+    const harmonicWetness = waterFirst > 0 && waterSecond > 0
+      ? (2 * waterFirst * waterSecond) / (waterFirst + waterSecond)
+      : 0;
+    return waterFlux * upwind
+      + harmonicWetness * recipe.primaryDiffusivity * frame
+        * (concentrationFirst - concentrationSecond);
+  };
+  forEachInteriorFace(
+    simulation,
+    horizontalWaterCoefficient,
+    verticalWaterCoefficient,
+    roughness,
+    (first, second, faceCoefficient) => {
+      const flux = resolveTotalFlux(first, second, faceCoefficient);
+      if (flux > 0) outgoingTotal[first] += flux;
+      else outgoingTotal[second] -= flux;
+    },
+  );
+  forEachInteriorFace(
+    simulation,
+    horizontalWaterCoefficient,
+    verticalWaterCoefficient,
+    roughness,
+    (first, second, faceCoefficient) => {
+      const flux = resolveTotalFlux(first, second, faceCoefficient);
+      const donor = flux > 0 ? first : second;
+      const limited = flux * donorScale(
+        simulation.materialComponentMobile[donor],
+        outgoingTotal[donor],
+      );
+      totalDelta[first] -= limited;
+      totalDelta[second] += limited;
+    },
+  );
+  for (let index = 0; index < simulation.length; index += 1) {
+    simulation.materialComponentMobile[index] += totalDelta[index];
+    simulation.materialComponentMobileResidual[index] = 0;
+  }
+}
+
+function transportDyeWithSharedWaterFlux(
+  simulation,
+  recipe,
+  frame,
+  horizontalWaterCoefficient,
+  verticalWaterCoefficient,
+  roughness,
+) {
+  if (simulation.materialComponentKind !== "dye") return;
+  const scratch = getDyeTransportScratch(simulation);
+  const outgoingWater = scratch.outgoingWater;
+  forEachInteriorFace(
+    simulation,
+    horizontalWaterCoefficient,
+    verticalWaterCoefficient,
+    roughness,
+    (first, second, faceCoefficient) => {
+      const raw = faceCoefficient
+        * (simulation.water[first] - simulation.water[second]);
+      if (raw > 0) outgoingWater[first] += raw;
+      else outgoingWater[second] -= raw;
+    },
+  );
+
+  if (
+    recipe.primaryDiffusivity === recipe.secondaryDiffusivity
+    && isExactZeroPlane(simulation.materialComponentMobileResidual)
+  ) {
+    transportNeutralTotalWithSharedWaterFlux(
+      simulation,
+      recipe,
+      frame,
+      outgoingWater,
+      horizontalWaterCoefficient,
+      verticalWaterCoefficient,
+      roughness,
+      scratch,
+    );
+    return;
+  }
+
+  const fraction = recipe.initialSecondaryFraction;
+  const primaryShare = 1 - fraction;
+  const outgoingPrimary = scratch.outgoingPrimary;
+  const outgoingSecondary = scratch.outgoingSecondary;
+  const primaryDelta = scratch.primaryDelta;
+  const secondaryDelta = scratch.secondaryDelta;
+  forEachInteriorFace(
+    simulation,
+    horizontalWaterCoefficient,
+    verticalWaterCoefficient,
+    roughness,
+    (first, second, faceCoefficient) => {
+      const flux = resolveDyeFaceFlux(
+        simulation,
+        recipe,
+        frame,
+        outgoingWater,
+        first,
+        second,
+        faceCoefficient,
+      );
+      if (flux.primary > 0) outgoingPrimary[first] += flux.primary;
+      else outgoingPrimary[second] -= flux.primary;
+      if (flux.secondary > 0) outgoingSecondary[first] += flux.secondary;
+      else outgoingSecondary[second] -= flux.secondary;
+    },
+  );
+  forEachInteriorFace(
+    simulation,
+    horizontalWaterCoefficient,
+    verticalWaterCoefficient,
+    roughness,
+    (first, second, faceCoefficient) => {
+      const flux = resolveDyeFaceFlux(
+        simulation,
+        recipe,
+        frame,
+        outgoingWater,
+        first,
+        second,
+        faceCoefficient,
+      );
+      const primaryDonor = flux.primary > 0 ? first : second;
+      const secondaryDonor = flux.secondary > 0 ? first : second;
+      const primaryAvailable = primaryShare
+        * simulation.materialComponentMobile[primaryDonor]
+        - simulation.materialComponentMobileResidual[primaryDonor];
+      const secondaryAvailable = fraction
+        * simulation.materialComponentMobile[secondaryDonor]
+        + simulation.materialComponentMobileResidual[secondaryDonor];
+      const primaryFlux = flux.primary * donorScale(
+        primaryAvailable,
+        outgoingPrimary[primaryDonor],
+      );
+      const secondaryFlux = flux.secondary * donorScale(
+        secondaryAvailable,
+        outgoingSecondary[secondaryDonor],
+      );
+      primaryDelta[first] -= primaryFlux;
+      primaryDelta[second] += primaryFlux;
+      secondaryDelta[first] -= secondaryFlux;
+      secondaryDelta[second] += secondaryFlux;
+    },
+  );
+  for (let index = 0; index < simulation.length; index += 1) {
+    const total = simulation.materialComponentMobile[index];
+    const residual = simulation.materialComponentMobileResidual[index];
+    const primary = primaryShare * total - residual + primaryDelta[index];
+    const secondary = fraction * total + residual + secondaryDelta[index];
+    const nextTotal = primary + secondary;
+    simulation.materialComponentMobile[index] = nextTotal;
+    simulation.materialComponentMobileResidual[index] =
+      secondary - fraction * nextTotal;
+  }
+}
+
+function resolveLinearMobileAdsorbed(
+  mobile,
+  adsorbed,
+  adsorptionRate,
+  desorptionRate,
+  frame,
+) {
+  const rate = adsorptionRate + desorptionRate;
+  if (!(rate > 0)) return { mobile, adsorbed };
+  const total = mobile + adsorbed;
+  const reactionFraction = 1 - Math.exp(-rate * frame);
+  const mobileEquilibriumShare = desorptionRate / rate;
+  const nextMobile = mobile * (1 - reactionFraction)
+    + total * mobileEquilibriumShare * reactionFraction;
+  return {
+    mobile: nextMobile,
+    adsorbed: total - nextMobile,
+  };
+}
+
+function reactDyeMobileAdsorbed(
+  simulation,
+  recipe,
+  frame,
+  dyeAffinity,
+  roughness,
+) {
+  if (simulation.materialComponentKind !== "dye") return;
+  const exactNeutralRates =
+    recipe.primaryAdsorptionRate === recipe.secondaryAdsorptionRate
+    && recipe.primaryDesorptionRate === recipe.secondaryDesorptionRate
+    && isExactZeroPlane(simulation.nextMaterialComponentMobileResidual)
+    && isExactZeroPlane(simulation.materialComponentFixedResidual);
+  const fraction = recipe.initialSecondaryFraction;
+  const primaryShare = 1 - fraction;
+  for (let y = 1; y < simulation.height - 1; y += 1) {
+    for (let x = 1; x < simulation.width - 1; x += 1) {
+      const index = y * simulation.width + x;
+      const paperTooth = 1 - roughness * 0.28
+        + coordinateNoise(x, y, simulation.seed ^ 0xa511e9b3)
+          * 0.56 * roughness;
+      const wetness = clamp(simulation.nextWater[index], 0, 1);
+      const primaryAdsorptionRate = recipe.primaryAdsorptionRate
+        * dyeAffinity * paperTooth;
+      const secondaryAdsorptionRate = recipe.secondaryAdsorptionRate
+        * dyeAffinity * paperTooth;
+      const primaryDesorptionRate = recipe.primaryDesorptionRate * wetness;
+      const secondaryDesorptionRate = recipe.secondaryDesorptionRate * wetness;
+      if (exactNeutralRates) {
+        const neutral = resolveLinearMobileAdsorbed(
+          simulation.nextMaterialComponentMobile[index],
+          simulation.materialComponentFixed[index],
+          primaryAdsorptionRate,
+          primaryDesorptionRate,
+          frame,
+        );
+        simulation.nextMaterialComponentMobile[index] = neutral.mobile;
+        simulation.materialComponentFixed[index] = neutral.adsorbed;
+        simulation.nextMaterialComponentMobileResidual[index] = 0;
+        simulation.materialComponentFixedResidual[index] = 0;
+        continue;
+      }
+      const mobileTotal = simulation.nextMaterialComponentMobile[index];
+      const mobileResidual =
+        simulation.nextMaterialComponentMobileResidual[index];
+      const adsorbedTotal = simulation.materialComponentFixed[index];
+      const adsorbedResidual = simulation.materialComponentFixedResidual[index];
+      const primary = resolveLinearMobileAdsorbed(
+        primaryShare * mobileTotal - mobileResidual,
+        primaryShare * adsorbedTotal - adsorbedResidual,
+        primaryAdsorptionRate,
+        primaryDesorptionRate,
+        frame,
+      );
+      const secondary = resolveLinearMobileAdsorbed(
+        fraction * mobileTotal + mobileResidual,
+        fraction * adsorbedTotal + adsorbedResidual,
+        secondaryAdsorptionRate,
+        secondaryDesorptionRate,
+        frame,
+      );
+      const nextMobileTotal = primary.mobile + secondary.mobile;
+      const nextAdsorbedTotal = primary.adsorbed + secondary.adsorbed;
+      simulation.nextMaterialComponentMobile[index] = nextMobileTotal;
+      simulation.nextMaterialComponentMobileResidual[index] =
+        secondary.mobile - fraction * nextMobileTotal;
+      simulation.materialComponentFixed[index] = nextAdsorbedTotal;
+      simulation.materialComponentFixedResidual[index] =
+        secondary.adsorbed - fraction * nextAdsorbedTotal;
+    }
+  }
+}
 
 function assertSeed(value, path) {
   return assertUint32(value, path);
@@ -60,11 +538,24 @@ export class WetInkSimulation {
     // from ordinary/direct paths. Dye and pigment reuse the same slot because
     // A1 workbench modes are exclusive; public state snapshots stay distinct.
     this.materialComponentRecipe = null;
+    // A validated canonical snapshot makes a simulation's component choice
+    // sticky across deposits. The caller may pass an equivalent recipe object,
+    // but cannot retune an existing identity or omit the dye partition later.
+    this.materialComponentRecipeCanonical = null;
     this.materialComponentKind = null;
     this.materialComponentMobile = null;
     this.materialComponentFixed = null;
     this.nextMaterialComponentMobile = null;
     this.materialComponentSubsurface = null;
+    // A7 dye-only signed residual planes. Pigment keeps the earlier four-plane
+    // slot exactly and never allocates these arrays.
+    this.materialComponentMobileResidual = null;
+    this.materialComponentFixedResidual = null;
+    this.nextMaterialComponentMobileResidual = null;
+    this.materialComponentSubsurfaceResidual = null;
+    // Lazy A7-only cell accumulators. They are reused per step and never
+    // exposed as a public or retained face-flux plane. Component-off stays null.
+    this.dyeTransportScratch = null;
     this.activity = 0;
     this.makeFiberField();
   }
@@ -101,6 +592,13 @@ export class WetInkSimulation {
     this.materialComponentFixed?.fill(0);
     this.nextMaterialComponentMobile?.fill(0);
     this.materialComponentSubsurface?.fill(0);
+    this.materialComponentMobileResidual?.fill(0);
+    this.materialComponentFixedResidual?.fill(0);
+    this.nextMaterialComponentMobileResidual?.fill(0);
+    this.materialComponentSubsurfaceResidual?.fill(0);
+    if (this.dyeTransportScratch !== null) {
+      for (const plane of Object.values(this.dyeTransportScratch)) plane.fill(0);
+    }
     this.activity = 0;
   }
 
@@ -158,6 +656,23 @@ export class WetInkSimulation {
       : pigmentComponentRecipe !== null
         ? "pigment"
         : null;
+    const dyeComponentRecipeCanonical = dyeComponentRecipe === null
+      ? null
+      : serializeDyeComponentRecipe(dyeComponentRecipe);
+    if (this.materialComponentKind === "dye") {
+      if (dyeComponentRecipeCanonical === null) {
+        throw new TypeError(
+          "Every deposit after dye activation requires the same canonical dye component recipe.",
+        );
+      }
+      if (
+        dyeComponentRecipeCanonical !== this.materialComponentRecipeCanonical
+      ) {
+        throw new TypeError(
+          "A WetInkSimulation cannot mix different canonical dye component recipes.",
+        );
+      }
+    }
     if (materialComponentRecipe !== null) {
       if (
         this.materialComponentRecipe !== null
@@ -181,10 +696,18 @@ export class WetInkSimulation {
     }
     if (materialComponentRecipe !== null && this.materialComponentMobile === null) {
       this.materialComponentKind = materialComponentKind;
-      this.materialComponentRecipe = materialComponentRecipe;
+      this.materialComponentRecipe = materialComponentKind === "dye"
+        ? Object.freeze({ ...materialComponentRecipe })
+        : materialComponentRecipe;
+      this.materialComponentRecipeCanonical = dyeComponentRecipeCanonical;
       this.materialComponentMobile = new Float32Array(this.length);
       this.materialComponentFixed = new Float32Array(this.length);
       this.nextMaterialComponentMobile = new Float32Array(this.length);
+      if (materialComponentKind === "dye") {
+        this.materialComponentMobileResidual = new Float32Array(this.length);
+        this.materialComponentFixedResidual = new Float32Array(this.length);
+        this.nextMaterialComponentMobileResidual = new Float32Array(this.length);
+      }
     }
 
     for (let y = 0; y < this.height; y += 1) {
@@ -236,12 +759,18 @@ export class WetInkSimulation {
         }
         if (materialComponentRecipe !== null) {
           const depositedBaseMass = this.mobile[index] - previousMobile;
-          this.materialComponentMobile[index] = clamp(
-            this.materialComponentMobile[index]
-              + depositedBaseMass * materialComponentRecipe.massFraction,
-            0,
-            1.8,
-          );
+          if (materialComponentKind === "dye") {
+            // This is a partition of the ordinary deposited dye, not extra
+            // material. R=0 encodes the authored f0 well-mixed composition.
+            this.materialComponentMobile[index] += depositedBaseMass;
+          } else {
+            this.materialComponentMobile[index] = clamp(
+              this.materialComponentMobile[index]
+                + depositedBaseMass * materialComponentRecipe.massFraction,
+              0,
+              1.8,
+            );
+          }
         }
       }
     }
@@ -359,7 +888,19 @@ export class WetInkSimulation {
       && this.materialComponentSubsurface === null
     ) {
       this.materialComponentSubsurface = new Float32Array(this.length);
+      if (this.materialComponentKind === "dye") {
+        this.materialComponentSubsurfaceResidual = new Float32Array(this.length);
+      }
     }
+    transportDyeWithSharedWaterFlux(
+      this,
+      this.materialComponentRecipe,
+      frame,
+      horizontalDiffusion,
+      verticalDiffusion,
+      roughness,
+    );
+    prepareDyeNextMobile(this);
     let activeWater = 0;
 
     for (let y = 1; y < this.height - 1; y += 1) {
@@ -464,15 +1005,26 @@ export class WetInkSimulation {
             nextSubsurface,
           );
         }
-        if (this.materialComponentMobile !== null) {
+        if (this.materialComponentKind === "dye") {
+          const storedDepthFraction = mobileAfterSpread > 0
+            ? (nextSubsurface - previousSubsurface) / mobileAfterSpread
+            : 0;
+          transferDyeMobileToDepth(
+            this,
+            index,
+            storedDepthFraction,
+          );
+        } else if (this.materialComponentMobile !== null) {
           const componentMobile = this.materialComponentMobile[index];
           const componentMobility = pigmentMobility
             * this.materialComponentRecipe.mobilityMultiplier;
-          const componentLaplacian =
-            (this.materialComponentMobile[left] + this.materialComponentMobile[right]
+          const componentLaplacian = (
+            this.materialComponentMobile[left]
+              + this.materialComponentMobile[right]
               + this.materialComponentMobile[above]
-              + this.materialComponentMobile[below] - componentMobile * 4)
-            * componentMobility * clamp(water * 1.35, 0, 1);
+              + this.materialComponentMobile[below]
+              - componentMobile * 4
+          ) * componentMobility * clamp(water * 1.35, 0, 1);
           const componentAfterSpread = Math.max(
             0,
             componentMobile + componentLaplacian,
@@ -488,27 +1040,32 @@ export class WetInkSimulation {
           );
           const componentFixing = componentSurface
             * componentFixingFraction;
-          const componentNextMobile = Math.max(
+          this.nextMaterialComponentMobile[index] = Math.max(
             0,
             componentSurface - componentFixing,
           );
-          const componentNextFixed = clamp(
+          this.materialComponentFixed[index] = clamp(
             this.materialComponentFixed[index] + componentFixing,
             0,
             2.1,
           );
-          const componentNextSubsurface = clamp(
+          this.materialComponentSubsurface[index] = clamp(
             this.materialComponentSubsurface[index] + componentDepth,
             0,
             2.1,
           );
-          this.nextMaterialComponentMobile[index] = componentNextMobile;
-          this.materialComponentFixed[index] = componentNextFixed;
-          this.materialComponentSubsurface[index] = componentNextSubsurface;
         }
         activeWater += nextWater;
       }
     }
+
+    reactDyeMobileAdsorbed(
+      this,
+      this.materialComponentRecipe,
+      frame,
+      dyeAffinity,
+      roughness,
+    );
 
     [this.water, this.nextWater] = [this.nextWater, this.water];
     [this.mobile, this.nextMobile] = [this.nextMobile, this.mobile];
@@ -523,11 +1080,21 @@ export class WetInkSimulation {
         this.nextMaterialComponentMobile,
         this.materialComponentMobile,
       ];
+      if (this.materialComponentKind === "dye") {
+        [
+          this.materialComponentMobileResidual,
+          this.nextMaterialComponentMobileResidual,
+        ] = [
+          this.nextMaterialComponentMobileResidual,
+          this.materialComponentMobileResidual,
+        ];
+      }
     }
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
     this.nextMobileSignedMass?.fill(0);
     this.nextMaterialComponentMobile?.fill(0);
+    this.nextMaterialComponentMobileResidual?.fill(0);
     this.activity = activeWater / this.length;
   }
 
@@ -547,6 +1114,15 @@ export class WetInkSimulation {
     const verticalDiffusion = (0.034 + verticalUptake * 0.088) * frame;
     const pigmentMobility = (0.008 + lateralMobility * 0.032) * frame;
     const evaporation = (0.0028 + verticalUptake * 0.0032) * frame;
+    transportDyeWithSharedWaterFlux(
+      this,
+      this.materialComponentRecipe,
+      frame,
+      horizontalDiffusion,
+      verticalDiffusion,
+      roughness,
+    );
+    prepareDyeNextMobile(this);
     let activeWater = 0;
 
     for (let y = 1; y < this.height - 1; y += 1) {
@@ -582,7 +1158,6 @@ export class WetInkSimulation {
           (0.0035 + edgeDryness * 0.026 + dyeAffinity * 0.004)
             * paperTooth * frame,
         );
-
         this.nextWater[index] = nextWater;
         if (this.mobileSignedMass === null) {
           this.nextMobile[index] = Math.max(0, mobile + mobileLaplacian - fixing);
@@ -626,15 +1201,20 @@ export class WetInkSimulation {
             nextFixed,
           );
         }
-        if (this.materialComponentMobile !== null) {
+        if (this.materialComponentKind === "dye") {
+          // Face transport already populated the copied mobile plane. A7-2
+          // applies its capacity-free adsorption/desorption after evaporation.
+        } else if (this.materialComponentMobile !== null) {
           const componentMobile = this.materialComponentMobile[index];
           const componentMobility = pigmentMobility
             * this.materialComponentRecipe.mobilityMultiplier;
-          const componentLaplacian =
-            (this.materialComponentMobile[left] + this.materialComponentMobile[right]
+          const componentLaplacian = (
+            this.materialComponentMobile[left]
+              + this.materialComponentMobile[right]
               + this.materialComponentMobile[above]
-              + this.materialComponentMobile[below] - componentMobile * 4)
-            * componentMobility * clamp(water * 1.35, 0, 1);
+              + this.materialComponentMobile[below]
+              - componentMobile * 4
+          ) * componentMobility * clamp(water * 1.35, 0, 1);
           const componentAfterDiffusion = Math.max(
             0,
             componentMobile + componentLaplacian,
@@ -663,6 +1243,14 @@ export class WetInkSimulation {
       }
     }
 
+    reactDyeMobileAdsorbed(
+      this,
+      this.materialComponentRecipe,
+      frame,
+      dyeAffinity,
+      roughness,
+    );
+
     [this.water, this.nextWater] = [this.nextWater, this.water];
     [this.mobile, this.nextMobile] = [this.nextMobile, this.mobile];
     if (this.mobileSignedMass !== null) {
@@ -676,11 +1264,21 @@ export class WetInkSimulation {
         this.nextMaterialComponentMobile,
         this.materialComponentMobile,
       ];
+      if (this.materialComponentKind === "dye") {
+        [
+          this.materialComponentMobileResidual,
+          this.nextMaterialComponentMobileResidual,
+        ] = [
+          this.nextMaterialComponentMobileResidual,
+          this.materialComponentMobileResidual,
+        ];
+      }
     }
     this.nextWater.fill(0);
     this.nextMobile.fill(0);
     this.nextMobileSignedMass?.fill(0);
     this.nextMaterialComponentMobile?.fill(0);
+    this.nextMaterialComponentMobileResidual?.fill(0);
     this.activity = activeWater / this.length;
   }
 
@@ -732,135 +1330,53 @@ export class WetInkSimulation {
       this.materialComponentMobile === null
       || this.materialComponentKind !== "dye"
     ) return null;
-    const expectedFraction = this.materialComponentRecipe.massFraction
-      / (1 + this.materialComponentRecipe.massFraction);
-    const visibleFraction = new Float32Array(this.length);
-    const fractionDelta = new Float32Array(this.length);
+    const mobileTotalMass = new Float32Array(this.materialComponentMobile);
+    const mobileSecondaryResidualMass = new Float32Array(
+      this.materialComponentMobileResidual,
+    );
+    const adsorbedTotalMass = new Float32Array(this.materialComponentFixed);
+    const adsorbedSecondaryResidualMass = new Float32Array(
+      this.materialComponentFixedResidual,
+    );
+    // A7 state shape is stable across paper families. A paper without a depth
+    // operator exposes explicit zero planes instead of null.
+    const depthTotalMass = this.materialComponentSubsurface === null
+      ? new Float32Array(this.length)
+      : new Float32Array(this.materialComponentSubsurface);
+    const depthSecondaryResidualMass =
+      this.materialComponentSubsurfaceResidual === null
+        ? new Float32Array(this.length)
+        : new Float32Array(this.materialComponentSubsurfaceResidual);
+    let mobileTotal = 0;
+    let adsorbedTotal = 0;
+    let depthTotal = 0;
     for (let index = 0; index < this.length; index += 1) {
-      const baseMass = this.mobile[index] + this.fixed[index];
-      const componentMass = this.materialComponentMobile[index]
-        + this.materialComponentFixed[index];
-      const totalMass = baseMass + componentMass;
-      if (!(totalMass > 0)) continue;
-      const fraction = clamp(componentMass / totalMass);
-      visibleFraction[index] = Math.fround(fraction);
-      fractionDelta[index] = Math.fround(fraction - expectedFraction);
-    }
-    const edgeAccumulation = new Float32Array(this.length);
-    const enrichmentMaximum = 1 - expectedFraction;
-    for (let y = 1; y < this.height - 1; y += 1) {
-      for (let x = 1; x < this.width - 1; x += 1) {
-        const index = y * this.width + x;
-        const delta = fractionDelta[index];
-        const componentMass = this.materialComponentMobile[index]
-          + this.materialComponentFixed[index];
-        if (!(delta > 0) || !(componentMass > 0)) continue;
-        const localBaseMaximum = Math.max(
-          this.mobile[index] + this.fixed[index],
-          this.mobile[index - 1] + this.fixed[index - 1],
-          this.mobile[index + 1] + this.fixed[index + 1],
-          this.mobile[index - this.width] + this.fixed[index - this.width],
-          this.mobile[index + this.width] + this.fixed[index + this.width],
-        );
-        const baseMass = this.mobile[index] + this.fixed[index];
-        const exposure = localBaseMaximum > 0
-          ? 1 - clamp(baseMass / localBaseMaximum)
-          : 1;
-        const enrichmentStrength = enrichmentMaximum > 0
-          ? clamp(delta / enrichmentMaximum)
-          : 0;
-        const massVisibility = 1 - Math.exp(
-          -componentMass * this.materialComponentRecipe.edgeMassGain,
-        );
-        const candidate = enrichmentStrength
-          * (0.25 + exposure * 0.75)
-          * massVisibility;
-        if (candidate >= this.materialComponentRecipe.edgeEnrichmentThreshold) {
-          edgeAccumulation[index] = Math.fround(candidate);
-        }
-      }
-    }
-    // Smooth, film-preserving paper has little page-plane Surface response, so
-    // the exposure-based candidate above can legitimately be empty. Preserve
-    // discontinuity by adding only strict local maxima of positive component
-    // enrichment as film-separation seeds; never turn the whole boundary on.
-    for (let y = 1; y < this.height - 1; y += 1) {
-      for (let x = 1; x < this.width - 1; x += 1) {
-        const index = y * this.width + x;
-        const delta = fractionDelta[index];
-        if (!(delta >= this.materialComponentRecipe.edgeZonePeakThreshold)) continue;
-        const isLocalPeak = delta >= fractionDelta[index - 1]
-          && delta >= fractionDelta[index + 1]
-          && delta >= fractionDelta[index - this.width]
-          && delta >= fractionDelta[index + this.width]
-          && (
-            delta > fractionDelta[index - 1]
-            || delta > fractionDelta[index + 1]
-            || delta > fractionDelta[index - this.width]
-            || delta > fractionDelta[index + this.width]
-          );
-        if (!isLocalPeak) continue;
-        const enrichmentStrength = enrichmentMaximum > 0
-          ? clamp(delta / enrichmentMaximum)
-          : 0;
-        edgeAccumulation[index] = Math.max(
-          edgeAccumulation[index],
-          Math.fround(enrichmentStrength),
-        );
-      }
-    }
-    const colorZone = new Float32Array(this.length);
-    const zoneRadius = this.materialComponentRecipe.edgeZoneRadius;
-    const zoneMinimum = this.materialComponentRecipe.edgeZoneMinimumStrength;
-    for (let y = 0; y < this.height; y += 1) {
-      for (let x = 0; x < this.width; x += 1) {
-        const index = y * this.width + x;
-        const delta = fractionDelta[index];
-        const componentMass = this.materialComponentMobile[index]
-          + this.materialComponentFixed[index];
-        if (!(delta > 0) || !(componentMass > 0)) continue;
-        let hasCandidateSeed = false;
-        for (
-          let offsetY = -zoneRadius;
-          offsetY <= zoneRadius && !hasCandidateSeed;
-          offsetY += 1
-        ) {
-          const sampleY = y + offsetY;
-          if (sampleY < 0 || sampleY >= this.height) continue;
-          for (let offsetX = -zoneRadius; offsetX <= zoneRadius; offsetX += 1) {
-            const sampleX = x + offsetX;
-            if (sampleX < 0 || sampleX >= this.width) continue;
-            if (edgeAccumulation[sampleY * this.width + sampleX] > 0) {
-              hasCandidateSeed = true;
-              break;
-            }
-          }
-        }
-        if (!hasCandidateSeed) continue;
-        const enrichmentStrength = enrichmentMaximum > 0
-          ? clamp(delta / enrichmentMaximum)
-          : 0;
-        colorZone[index] = Math.fround(
-          zoneMinimum
-            + (1 - zoneMinimum) * Math.sqrt(enrichmentStrength),
-        );
-      }
+      mobileTotal += mobileTotalMass[index];
+      adsorbedTotal += adsorbedTotalMass[index];
+      depthTotal += depthTotalMass[index];
     }
     return Object.freeze({
       id: this.materialComponentRecipe.id,
       revision: this.materialComponentRecipe.revision,
+      componentModelVersion:
+        this.materialComponentRecipe.componentModelVersion,
+      componentRecipeSchemaVersion:
+        this.materialComponentRecipe.componentRecipeSchemaVersion,
+      stateModelVersion: dyeComponentStateModelVersion,
       width: this.width,
       height: this.height,
-      mobileMass: new Float32Array(this.materialComponentMobile),
-      fixedMass: new Float32Array(this.materialComponentFixed),
-      subsurfaceMass: this.materialComponentSubsurface === null
-        ? null
-        : new Float32Array(this.materialComponentSubsurface),
-      expectedFraction,
-      visibleFraction,
-      fractionDelta,
-      edgeAccumulation,
-      colorZone,
+      initialSecondaryFraction:
+        this.materialComponentRecipe.initialSecondaryFraction,
+      mobileTotalMass,
+      mobileSecondaryResidualMass,
+      adsorbedTotalMass,
+      adsorbedSecondaryResidualMass,
+      depthTotalMass,
+      depthSecondaryResidualMass,
+      mobileTotal,
+      adsorbedTotal,
+      depthTotal,
+      totalMass: mobileTotal + adsorbedTotal + depthTotal,
     });
   }
 
@@ -927,6 +1443,30 @@ export class WetInkSimulation {
   get dyeComponentSubsurface() {
     return this.materialComponentKind === "dye"
       ? this.materialComponentSubsurface
+      : null;
+  }
+
+  get dyeComponentMobileResidual() {
+    return this.materialComponentKind === "dye"
+      ? this.materialComponentMobileResidual
+      : null;
+  }
+
+  get dyeComponentFixedResidual() {
+    return this.materialComponentKind === "dye"
+      ? this.materialComponentFixedResidual
+      : null;
+  }
+
+  get nextDyeComponentMobileResidual() {
+    return this.materialComponentKind === "dye"
+      ? this.nextMaterialComponentMobileResidual
+      : null;
+  }
+
+  get dyeComponentSubsurfaceResidual() {
+    return this.materialComponentKind === "dye"
+      ? this.materialComponentSubsurfaceResidual
       : null;
   }
 

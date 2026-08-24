@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "dual-shading-autoresearch-candidate-v1",
+  "id": "dual-shading-r14-baseline",
+  "hypothesis": "The versioned R14 transport calibration is the honest baseline for a locked search over only the six two-dye transport rates.",
+  "note": "No palette, initial fraction, paper, optical operator, fixture, metric or threshold is mutable in this baseline.",
+  "primaryDiffusivity": 0.00005,
+  "secondaryDiffusivity": 0.0008,
+  "primaryAdsorptionRate": 0.06,
+  "secondaryAdsorptionRate": 0.001,
+  "primaryDesorptionRate": 0.000005,
+  "secondaryDesorptionRate": 0.00002
+}

@@ -4,6 +4,8 @@ import {
   beginOrdinaryInkMaterial,
   completeOrdinaryInkMaterial,
   createOrdinaryStageSignatures,
+  DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+  DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
   prepareOrdinaryInkCanvasInput,
   renderOrdinaryInkMaterial as renderOrdinaryInkMaterialForSurface,
   upsampleKeyboardSurfaceCoverage,
@@ -12,10 +14,17 @@ import {
   getMeanDensity as getMeanDensityForSurface,
   getNibDensityRange as getNibDensityRangeForSurface,
 } from "fountain-ink-engine/density";
-import { compositeOrdinaryInk as compositeOrdinaryInkForSurface } from "fountain-ink-engine/optical";
+import {
+  compositeOrdinaryInk as compositeOrdinaryInkForSurface,
+  FINITE_LOADING_DYE_OPTICAL_OUTPUT_METADATA,
+  WARM_WHITE_PAPER_OPTICAL_PROFILE_R1,
+} from "fountain-ink-engine/optical";
 import { shapeNibDensityVariation } from "fountain-ink-engine/contact";
 import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.js";
-import { EDGE_DYE_COMPONENT_RECIPE_R5 as ACTIVE_DYE_COMPONENT_RECIPE } from "fountain-ink-engine/dye-components";
+import {
+  EDGE_DYE_COMPONENT_RECIPE_R13 as ACTIVE_DYE_COMPONENT_RECIPE,
+  EDGE_DYE_COMPONENT_RECIPE_R14,
+} from "fountain-ink-engine/dye-components";
 import { SHEEN_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/sheen-components";
 import { SHIMMER_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/shimmer-components";
 import { PIGMENT_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/pigment-components";
@@ -35,6 +44,7 @@ import {
   PAPER_SURFACE_BALANCED_R1,
   PAPER_SURFACE_BALANCED_R2,
   PAPER_SURFACE_SMOOTH_R1,
+  freezeSurfaceRecipe,
 } from "fountain-ink-engine/surface-recipes";
 
 const renderOrdinaryInkMaterial = (options) =>
@@ -231,6 +241,61 @@ function assertRgbaShape(image, width, height) {
   assert.ok(image.data.every((value) => Number.isInteger(value)));
 }
 
+function bilinearSampleMass(plane, width, height, x, y) {
+  const x0 = Math.floor(x);
+  const y0 = Math.floor(y);
+  const x1 = Math.min(width - 1, x0 + 1);
+  const y1 = Math.min(height - 1, y0 + 1);
+  const fx = x - x0;
+  const fy = y - y0;
+  const top = plane[y0 * width + x0] * (1 - fx)
+    + plane[y0 * width + x1] * fx;
+  const bottom = plane[y1 * width + x0] * (1 - fx)
+    + plane[y1 * width + x1] * fx;
+  return top * (1 - fy) + bottom * fy;
+}
+
+function dyeSignalAt(state, outputWidth, outputHeight, x, y) {
+  const mappedX = Math.max(
+    0,
+    Math.min(state.width - 1, (x + 0.5) * state.width / outputWidth - 0.5),
+  );
+  const mappedY = Math.max(
+    0,
+    Math.min(state.height - 1, (y + 0.5) * state.height / outputHeight - 0.5),
+  );
+  const visibleTotal = bilinearSampleMass(
+    state.mobileTotalMass,
+    state.width,
+    state.height,
+    mappedX,
+    mappedY,
+  ) + bilinearSampleMass(
+    state.adsorbedTotalMass,
+    state.width,
+    state.height,
+    mappedX,
+    mappedY,
+  );
+  const visibleResidual = bilinearSampleMass(
+    state.mobileSecondaryResidualMass,
+    state.width,
+    state.height,
+    mappedX,
+    mappedY,
+  ) + bilinearSampleMass(
+    state.adsorbedSecondaryResidualMass,
+    state.width,
+    state.height,
+    mappedX,
+    mappedY,
+  );
+  const secondaryWeight = visibleTotal > 0
+    ? state.initialSecondaryFraction + visibleResidual / visibleTotal
+    : 0;
+  return { secondaryWeight };
+}
+
 test("staged worker boundary is byte-exact with the synchronous renderer", () => {
   const { options } = makeOptions(42);
   const surfaceRecipe = legacySurfaceAt(0.42);
@@ -279,6 +344,202 @@ test("staged completion rejects a forged prepared state", () => {
   assert.throws(() => completeOrdinaryInkMaterial({
     prepared: {},
   }), /opaque result/);
+});
+
+test("staged begin requires a Surface deposit before component allocation", () => {
+  const { options } = makeOptions(42);
+  let densityReads = 0;
+  const unreadableGlyphContacts = new Proxy([], {
+    get() {
+      densityReads += 1;
+      throw new Error("density allocation path was entered");
+    },
+  });
+  const common = {
+    ...options,
+    surfaceRecipe: legacySurfaceAt(0.42),
+    maskPixels: makeImageData(options.pixelWidth, options.pixelHeight),
+    surfaceDeposit: null,
+    glyphContacts: unreadableGlyphContacts,
+  };
+
+  for (const component of [
+    { dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE },
+    { pigmentComponentRecipe: PIGMENT_COMPONENT_RECIPE_R1 },
+  ]) {
+    assert.throws(
+      () => beginOrdinaryInkMaterial({ ...common, ...component }),
+      /surfaceDeposit is required for a transported dye or pigment component/,
+    );
+    assert.equal(densityReads, 0);
+  }
+});
+
+test("A7-2 comparison reuses one solve and preserves transported output", () => {
+  const { options } = makeOptions(42, 96, 48);
+  const surfaceRecipe = legacySurfaceAt(0.42);
+  const dyeOptions = {
+    ...options,
+    surfaceRecipe,
+    dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
+  };
+  const transportedOnly = renderOrdinaryInkMaterial(dyeOptions);
+  const compared = renderOrdinaryInkMaterial({
+    ...dyeOptions,
+    dyeOpticalComparison:
+      DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
+  });
+
+  assert.equal(Object.hasOwn(transportedOnly, "dyeOpticalComparison"), false);
+  assert.deepEqual(compared.imageData, transportedOnly.imageData);
+  assert.deepEqual(compared.stages, transportedOnly.stages);
+  assert.deepEqual(
+    createOrdinaryStageSignatures(compared.stages),
+    createOrdinaryStageSignatures(transportedOnly.stages),
+  );
+  assert.equal(
+    compared.dyeOpticalComparison.id,
+    DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
+  );
+  assert.equal(
+    compared.dyeOpticalComparison.transportedRgba,
+    compared.imageData,
+  );
+  assertRgbaShape(compared.dyeOpticalComparison.wellMixedRgba, 96, 48);
+  assert.notDeepEqual(
+    compared.dyeOpticalComparison.wellMixedRgba.data,
+    compared.dyeOpticalComparison.transportedRgba.data,
+  );
+  for (let offset = 3; offset < compared.imageData.data.length; offset += 4) {
+    assert.equal(
+      compared.dyeOpticalComparison.wellMixedRgba.data[offset],
+      compared.dyeOpticalComparison.transportedRgba.data[offset],
+    );
+  }
+
+  const canvasInput = prepareOrdinaryInkCanvasInput({
+    ...dyeOptions,
+    surfaceRecipe,
+  });
+  const prepared = beginOrdinaryInkMaterial({
+    ...dyeOptions,
+    ...canvasInput,
+    surfaceRecipe,
+  });
+  const materialCoverageCandidate = upsampleKeyboardSurfaceCoverage({
+    coverage: prepared.surfaceCoverageGrid,
+    pixelWidth: options.pixelWidth,
+    pixelHeight: options.pixelHeight,
+    createLayer: makeCanvas,
+  });
+  const stagedCompared = completeOrdinaryInkMaterial({
+    prepared,
+    materialCoverageCandidate,
+    output: makeImageData(options.pixelWidth, options.pixelHeight),
+    dyeOpticalComparison:
+      DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
+  });
+  assert.deepEqual(stagedCompared.imageData, compared.imageData);
+  assert.deepEqual(
+    stagedCompared.dyeOpticalComparison.wellMixedRgba,
+    compared.dyeOpticalComparison.wellMixedRgba,
+  );
+});
+
+test("A7-4 finite-loading comparison is opaque, paper-backed and staged exact", () => {
+  const { options } = makeOptions(42, 96, 48);
+  const dyeOptions = {
+    ...options,
+    surfaceRecipe: PAPER_SURFACE_BALANCED_R2,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R14,
+    dyeOpticalComparison:
+      DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+  };
+  const compared = renderOrdinaryInkMaterial(dyeOptions);
+  const comparison = compared.dyeOpticalComparison;
+
+  assert.equal(
+    comparison.id,
+    DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+  );
+  assert.equal(
+    comparison.outputMetadata,
+    FINITE_LOADING_DYE_OPTICAL_OUTPUT_METADATA,
+  );
+  assert.equal(
+    comparison.paperOpticalProfile,
+    WARM_WHITE_PAPER_OPTICAL_PROFILE_R1,
+  );
+  assert.equal(comparison.transportedRgba, compared.imageData);
+  assert.notDeepEqual(
+    comparison.transportedRgba.data,
+    comparison.wellMixedRgba.data,
+  );
+  assert.deepEqual(
+    Array.from(comparison.transportedRgba.data.slice(0, 4)),
+    [255, 254, 250, 255],
+  );
+  for (let offset = 3; offset < compared.imageData.data.length; offset += 4) {
+    assert.equal(comparison.transportedRgba.data[offset], 255);
+    assert.equal(comparison.wellMixedRgba.data[offset], 255);
+  }
+
+  const canvasInput = prepareOrdinaryInkCanvasInput(dyeOptions);
+  const prepared = beginOrdinaryInkMaterial({
+    ...dyeOptions,
+    ...canvasInput,
+  });
+  const materialCoverageCandidate = upsampleKeyboardSurfaceCoverage({
+    coverage: prepared.surfaceCoverageGrid,
+    pixelWidth: options.pixelWidth,
+    pixelHeight: options.pixelHeight,
+    createLayer: makeCanvas,
+  });
+  const staged = completeOrdinaryInkMaterial({
+    prepared,
+    materialCoverageCandidate,
+    output: makeImageData(options.pixelWidth, options.pixelHeight),
+    dyeOpticalComparison:
+      DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+  });
+  assert.deepEqual(staged.imageData, compared.imageData);
+  assert.deepEqual(
+    staged.dyeOpticalComparison.wellMixedRgba,
+    comparison.wellMixedRgba,
+  );
+  assert.equal(
+    staged.dyeOpticalComparison.outputMetadata,
+    FINITE_LOADING_DYE_OPTICAL_OUTPUT_METADATA,
+  );
+});
+
+test("A7-0 rejects invalid comparison requests before output mutation", () => {
+  const { options } = makeOptions(42);
+  let allocations = 0;
+  const outputContext = {
+    createImageData() {
+      allocations += 1;
+      throw new Error("output was allocated");
+    },
+  };
+  for (const dyeOpticalComparison of [
+    DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
+    DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+  ]) {
+    assert.throws(() => renderOrdinaryInkMaterial({
+      ...options,
+      outputContext,
+      dyeOpticalComparison,
+    }), /requires an active dyeComponentRecipe/);
+    assert.equal(allocations, 0);
+  }
+  assert.throws(() => renderOrdinaryInkMaterial({
+    ...options,
+    outputContext,
+    dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
+    dyeOpticalComparison: "unsupported-comparison",
+  }), /supported comparison id/);
+  assert.equal(allocations, 0);
 });
 
 function legacyCompositeBytes(result, options) {
@@ -455,65 +716,256 @@ test("keyboard renderer exposes honest four-stage diagnostics and aliases", () =
   assert.equal(result.fiberEdgeCoverage, stages.surface.fiberEdgeCoverage);
 });
 
-test("dye edge Optical changes RGB only inside the ordinary alpha footprint", () => {
-  const { options } = makeOptions(42, 96, 48);
-  const ordinary = renderOrdinaryInkMaterial(options);
-  const component = renderOrdinaryInkMaterial({
-    ...options,
-    dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
-  });
-  let changedRgb = 0;
-  let totalChannelDelta = 0;
-  let maximumChannelDelta = 0;
-  assert.deepEqual(
-    component.stages.optical.baseCompositeRgba.data,
-    ordinary.imageData.data,
-  );
-  for (let offset = 0; offset < component.imageData.data.length; offset += 4) {
-    assert.equal(component.imageData.data[offset + 3], ordinary.imageData.data[offset + 3]);
-    const changed = component.imageData.data[offset] !== ordinary.imageData.data[offset]
-      || component.imageData.data[offset + 1] !== ordinary.imageData.data[offset + 1]
-      || component.imageData.data[offset + 2] !== ordinary.imageData.data[offset + 2];
-    if (!changed) continue;
-    changedRgb += 1;
-    for (let channel = 0; channel < 3; channel += 1) {
-      const delta = Math.abs(
-        component.imageData.data[offset + channel]
-          - ordinary.imageData.data[offset + channel],
-      );
-      totalChannelDelta += delta;
-      maximumChannelDelta = Math.max(maximumChannelDelta, delta);
+test("B48 transported two-dye K-M stays causal across the paper matrix", () => {
+  const width = 96;
+  const height = 48;
+  const studyData = new Uint8ClampedArray(width * height * 4);
+  for (let y = 3; y < height - 3; y += 1) {
+    for (let x = 4; x < width - 4; x += 1) {
+      const upperCenter = 10 + x * 0.19 + Math.sin(x * 0.17) * 2.5;
+      const lowerCenter = 36 - x * 0.11 + Math.sin(x * 0.13 + 1.2) * 2;
+      const upperDistance = Math.abs(y - upperCenter);
+      const lowerDistance = Math.abs(y - lowerCenter);
+      const stemDistance = Math.abs(x - 19);
+      const upperCoverage = Math.max(0, Math.min(1, 5.4 - upperDistance));
+      const lowerCoverage = Math.max(0, Math.min(1, 4.6 - lowerDistance));
+      const stemCoverage = y >= 7 && y <= 39
+        ? Math.max(0, Math.min(1, 4.2 - stemDistance))
+        : 0;
+      const coverage = Math.max(upperCoverage, lowerCoverage, stemCoverage);
+      if (coverage === 0) continue;
+      const spatialDensity = 0.46
+        + 0.27 * (x / (width - 1))
+        + 0.27 * (0.5 + 0.5 * Math.sin(x * 0.31 + y * 0.23));
+      const alpha = Math.round(255 * coverage * spatialDensity);
+      const offset = (y * width + x) * 4;
+      studyData[offset] = 255;
+      studyData[offset + 1] = 255;
+      studyData[offset + 2] = 255;
+      studyData[offset + 3] = alpha;
     }
-    assert.ok(ordinary.imageData.data[offset + 3] > 0);
   }
-  assert.ok(changedRgb >= 40);
-  assert.ok(totalChannelDelta / (changedRgb * 3) >= 18);
-  assert.ok(maximumChannelDelta >= 50);
-  assert.deepEqual(
-    component.stages.surface.materialCoverageCandidate.data,
-    ordinary.stages.surface.materialCoverageCandidate.data,
-  );
-  assert.deepEqual(
-    component.stages.surface.resolvedCoverage.data,
-    ordinary.stages.surface.resolvedCoverage.data,
-  );
-  assert.deepEqual(
-    component.stages.surface.densityTransport,
-    ordinary.stages.surface.densityTransport,
-  );
-  assert.deepEqual(
-    component.stages.surface.paperDepth,
-    ordinary.stages.surface.paperDepth,
-  );
-  assert.equal(ordinary.stages.surface.dyeComponent, null);
-  assert.ok(
-    component.stages.surface.dyeComponent.mobileMass.some(
-      (value) => value > 0,
-    ),
-  );
+  const studyMask = makeCanvas(width, height, studyData);
+  const { options } = makeOptions(42, width, height);
+  const commonStudyOptions = {
+    ...options,
+    mask: studyMask,
+    glyphContacts: [{
+      rgbaMask: studyMask.getContext("2d").getImageData(0, 0, width, height),
+      destinationX: 0,
+      destinationY: 0,
+      x: 3,
+      baseline: 38,
+      seed: 0x1234abcd,
+    }],
+    nibId: "B",
+    fontSize: 48,
+  };
+  const surfaces = [
+    PAPER_SURFACE_SMOOTH_R1,
+    PAPER_SURFACE_BALANCED_R2,
+    PAPER_SURFACE_ABSORBENT_R4,
+  ];
+  for (const surfaceRecipe of surfaces) {
+    const studyOptions = { ...commonStudyOptions, surfaceRecipe };
+    const ordinary = renderOrdinaryInkMaterial(studyOptions);
+    const component = renderOrdinaryInkMaterial({
+      ...studyOptions,
+      dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
+    });
+    const repeated = renderOrdinaryInkMaterial({
+      ...studyOptions,
+      dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
+    });
+    const baseOnly = component.stages.optical.baseCompositeRgba;
+    const label = `${surfaceRecipe.id}@${surfaceRecipe.revision}`;
+    assert.deepEqual(component.imageData.data, repeated.imageData.data, `${label} RGBA determinism`);
+    assert.deepEqual(component.stages.surface.dyeComponent, repeated.stages.surface.dyeComponent, `${label} dye determinism`);
+    assert.deepEqual(
+      component.stages.contact.rgbaMask,
+      ordinary.stages.contact.rgbaMask,
+      `${label} Contact`,
+    );
+    assert.deepEqual(
+      component.stages.density.accumulatedVariation,
+      ordinary.stages.density.accumulatedVariation,
+      `${label} Density variation`,
+    );
+    assert.deepEqual(
+      component.stages.density.sampleCount,
+      ordinary.stages.density.sampleCount,
+      `${label} Density samples`,
+    );
+    assert.deepEqual(
+      component.stages.density.normalizedConcentration,
+      ordinary.stages.density.normalizedConcentration,
+      `${label} concentration`,
+    );
+    assert.deepEqual(
+      baseOnly.data,
+      ordinary.imageData.data,
+      `${label} component base`,
+    );
+
+    let visiblePixels = 0;
+    let secondaryPixels = 0;
+    let changedInterior = 0;
+    let changedBoundary = 0;
+    let supportBoundaryPixels = 0;
+    const positiveWeights = [];
+    for (let offset = 0; offset < component.imageData.data.length; offset += 4) {
+      assert.equal(
+        component.imageData.data[offset + 3],
+        baseOnly.data[offset + 3],
+        `${label} alpha`,
+      );
+      assert.equal(
+        baseOnly.data[offset + 3],
+        ordinary.imageData.data[offset + 3],
+        `${label} ordinary alpha`,
+      );
+      const visibleAlpha = baseOnly.data[offset + 3];
+      if (visibleAlpha > 0) visiblePixels += 1;
+      const pixel = offset / 4;
+      const x = pixel % width;
+      const y = Math.floor(pixel / width);
+      const supportInterior = visibleAlpha > 0
+        && x > 0
+        && y > 0
+        && x < width - 1
+        && y < height - 1
+        && baseOnly.data[((y - 1) * width + x) * 4 + 3] > 0
+        && baseOnly.data[((y + 1) * width + x) * 4 + 3] > 0
+        && baseOnly.data[(y * width + x - 1) * 4 + 3] > 0
+        && baseOnly.data[(y * width + x + 1) * 4 + 3] > 0;
+      if (visibleAlpha > 0 && !supportInterior) supportBoundaryPixels += 1;
+      const signal = dyeSignalAt(
+        component.stages.surface.dyeComponent,
+        width,
+        height,
+        x,
+        y,
+      );
+      if (visibleAlpha > 0 && signal.secondaryWeight > 0) {
+        positiveWeights.push(signal.secondaryWeight);
+      }
+      const changed = component.imageData.data[offset] !== baseOnly.data[offset]
+        || component.imageData.data[offset + 1] !== baseOnly.data[offset + 1]
+        || component.imageData.data[offset + 2] !== baseOnly.data[offset + 2];
+      if (!changed) continue;
+      secondaryPixels += 1;
+      assert.ok(visibleAlpha > 0, `${label} cannot add visible support`);
+      if (supportInterior) changedInterior += 1;
+      else changedBoundary += 1;
+    }
+    const weightMinimum = Math.min(...positiveWeights);
+    const weightMaximum = Math.max(...positiveWeights);
+    const distinctWeights = new Set(
+      positiveWeights.map((value) => value.toFixed(5)),
+    ).size;
+    const interiorShare = changedInterior / secondaryPixels;
+    const evidence = JSON.stringify({
+      label,
+      visiblePixels,
+      secondaryPixels,
+      changedInterior,
+      changedBoundary,
+      supportBoundaryPixels,
+      interiorShare,
+      weightMinimum,
+      weightMaximum,
+      distinctWeights,
+    });
+    assert.ok(secondaryPixels > 0, evidence);
+    assert.ok(positiveWeights.length > 0, evidence);
+    assert.ok(
+      weightMinimum < ACTIVE_DYE_COMPONENT_RECIPE.initialSecondaryFraction,
+      evidence,
+    );
+    assert.ok(
+      weightMaximum > ACTIVE_DYE_COMPONENT_RECIPE.initialSecondaryFraction,
+      evidence,
+    );
+    assert.ok(distinctWeights > 1, evidence);
+    assert.ok(interiorShare >= 0.05, evidence);
+
+    const compareNullablePlane = (left, right, path) => {
+      assert.equal(left === null, right === null, `${label} ${path} nullability`);
+      if (left !== null) assert.deepEqual(left, right, `${label} ${path}`);
+    };
+    compareNullablePlane(
+      component.stages.surface.materialCoverageCandidate,
+      ordinary.stages.surface.materialCoverageCandidate,
+      "materialCoverageCandidate",
+    );
+    compareNullablePlane(
+      component.stages.surface.resolvedCoverage,
+      ordinary.stages.surface.resolvedCoverage,
+      "resolvedCoverage",
+    );
+    assert.deepEqual(
+      component.stages.surface.densityTransport,
+      ordinary.stages.surface.densityTransport,
+      `${label} densityTransport`,
+    );
+    compareNullablePlane(
+      component.stages.surface.paperDepth,
+      ordinary.stages.surface.paperDepth,
+      "paperDepth",
+    );
+    assert.equal(ordinary.stages.surface.dyeComponent, null);
+    assert.ok(
+      component.stages.surface.dyeComponent.mobileTotalMass.some(
+        (value) => value > 0,
+      ),
+      `${label} component mass`,
+    );
+  }
 });
 
-test("smooth paper keeps ordinary coverage while exposing a visible dye color zone", () => {
+test("renderer propagates only Surface-owned paper reflectance into dye Optical", () => {
+  const smooth98 = freezeSurfaceRecipe({
+    ...PAPER_SURFACE_SMOOTH_R1,
+    id: "paper-reflectance-98-test",
+    axes: { ...PAPER_SURFACE_SMOOTH_R1.axes, paperReflectance: 0.98 },
+  });
+  const smooth93 = freezeSurfaceRecipe({
+    ...PAPER_SURFACE_SMOOTH_R1,
+    id: "paper-reflectance-93-test",
+    axes: { ...PAPER_SURFACE_SMOOTH_R1.axes, paperReflectance: 0.93 },
+  });
+  const { options } = makeOptions(42, 96, 48);
+  const render = (surfaceRecipe) => renderOrdinaryInkMaterial({
+    ...options,
+    surfaceRecipe,
+    dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
+  });
+  const highReflectance = render(smooth98);
+  const lowReflectance = render(smooth93);
+
+  assert.deepEqual(
+    highReflectance.stages.surface.dyeComponent,
+    lowReflectance.stages.surface.dyeComponent,
+  );
+  assert.deepEqual(
+    highReflectance.stages.density.normalizedConcentration,
+    lowReflectance.stages.density.normalizedConcentration,
+  );
+  assert.deepEqual(
+    highReflectance.stages.surface.resolvedCoverage,
+    lowReflectance.stages.surface.resolvedCoverage,
+  );
+  assert.deepEqual(
+    highReflectance.stages.optical.baseCompositeRgba,
+    lowReflectance.stages.optical.baseCompositeRgba,
+  );
+  assert.notDeepEqual(highReflectance.imageData.data, lowReflectance.imageData.data);
+  for (let offset = 3; offset < highReflectance.imageData.data.length; offset += 4) {
+    assert.equal(highReflectance.imageData.data[offset], lowReflectance.imageData.data[offset]);
+  }
+});
+
+test("smooth paper keeps ordinary coverage while exposing separated dye mass", () => {
   const { options } = makeOptions(42, 96, 48);
   const gradientData = new Uint8ClampedArray(96 * 48 * 4);
   for (let y = 7; y < 41; y += 1) {
@@ -551,8 +1003,17 @@ test("smooth paper keeps ordinary coverage while exposing a visible dye color zo
     ordinary.stages.surface.resolvedCoverage.data,
   );
   assert.ok(component.stages.surface.dyeComponent);
+  const residual =
+    component.stages.surface.dyeComponent.mobileSecondaryResidualMass;
+  assert.ok(residual.some((value) => value > 0));
   assert.ok(
-    component.stages.surface.dyeComponent.colorZone.some((value) => value > 0),
+    component.stages.surface.dyeComponent
+      .adsorbedSecondaryResidualMass.some((value) => value < 0),
+  );
+  assert.ok(
+    component.stages.surface.dyeComponent.mobileTotalMass.some(
+      (value) => value > 0,
+    ),
   );
   assert.deepEqual(
     component.stages.optical.baseCompositeRgba.data,
@@ -787,7 +1248,7 @@ test("oxidation uses explicit commit age while preserving material fields and al
   assert.ok(changedHalf > 0);
 });
 
-test("internal concentration and dye enrichment remain independent diagnostics", () => {
+test("internal concentration changes while A7 transport state stays independent", () => {
   const { options } = makeOptions(42);
   const dry = renderOrdinaryInkMaterial({
     ...options,
@@ -800,20 +1261,16 @@ test("internal concentration and dye enrichment remain independent diagnostics",
     dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
   });
   assert.deepEqual(
-    dry.stages.surface.dyeComponent.visibleFraction,
-    wet.stages.surface.dyeComponent.visibleFraction,
+    dry.stages.surface.dyeComponent.mobileTotalMass,
+    wet.stages.surface.dyeComponent.mobileTotalMass,
   );
   assert.deepEqual(
-    dry.stages.surface.dyeComponent.fractionDelta,
-    wet.stages.surface.dyeComponent.fractionDelta,
+    dry.stages.surface.dyeComponent.adsorbedTotalMass,
+    wet.stages.surface.dyeComponent.adsorbedTotalMass,
   );
   assert.deepEqual(
-    dry.stages.surface.dyeComponent.edgeAccumulation,
-    wet.stages.surface.dyeComponent.edgeAccumulation,
-  );
-  assert.deepEqual(
-    dry.stages.surface.dyeComponent.colorZone,
-    wet.stages.surface.dyeComponent.colorZone,
+    dry.stages.surface.dyeComponent.mobileSecondaryResidualMass,
+    wet.stages.surface.dyeComponent.mobileSecondaryResidualMass,
   );
   assert.notDeepEqual(
     dry.stages.density.normalizedConcentration.data,
