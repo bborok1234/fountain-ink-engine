@@ -206,16 +206,11 @@ test("batch recording is self-contained, idempotent, and single-writer", async (
   }
 });
 
-test("one-candidate no-record smoke uses a child evaluator and is deterministic", async () => {
+test("archived R14 batch execution rejects the current A7-3 runtime without recording", async () => {
   const resultsBefore = await readFile(DEFAULT_BATCH_RESULTS_PATH, "utf8");
-  const first = await runBatch({ candidateLimit: 1, record: false });
-  const second = await runBatch({ candidateLimit: 1, record: false });
-  assert.equal(stableStringify(first), stableStringify(second));
-  assert.equal(first.plan.plannedCandidateCount, 24);
-  assert.equal(first.plan.evaluatedCandidateCount, 1);
-  assert.equal(first.plan.complete, false);
-  assert.equal(first.candidates[0].candidate.id, "dual-shading-b1-01-pdiff-half");
-  assert.equal(first.scalarScore, null);
-  assert.equal(first.automaticNinePointClaim, false);
+  await assert.rejects(
+    runBatch({ candidateLimit: 1, record: false }),
+    /candidate child failed.*(?:evaluator lock mismatch|engine source tree lock mismatch|pinned to engine)/s,
+  );
   assert.equal(await readFile(DEFAULT_BATCH_RESULTS_PATH, "utf8"), resultsBefore);
 });

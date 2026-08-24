@@ -15,6 +15,7 @@ import {
   EDGE_DYE_COMPONENT_RECIPE_R12,
   EDGE_DYE_COMPONENT_RECIPE_R13,
   EDGE_DYE_COMPONENT_RECIPE_R14,
+  EDGE_DYE_COMPONENT_RECIPE_R15,
   assertDyeComponentRecipeCompatible,
   dyeComponentModelVersion,
   dyeComponentRecipeSchemaVersion,
@@ -24,8 +25,8 @@ import {
 } from "../src/dye-components/index.js";
 
 test("edge dye component revisions have independent canonical identities", () => {
-  assert.equal(dyeComponentModelVersion, "dye-component-js-r13");
-  assert.equal(dyeComponentRecipeSchemaVersion, 12);
+  assert.equal(dyeComponentModelVersion, "dye-component-js-r14");
+  assert.equal(dyeComponentRecipeSchemaVersion, 13);
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.id, "edge-dye-study");
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.revision, 1);
   assert.equal(validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R1), true);
@@ -43,7 +44,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R2.revision, 2);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R1),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R2),
@@ -51,7 +52,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R2),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R3.revision, 3);
   assert.equal(
@@ -60,12 +61,12 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R3),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R4.revision, 4);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R4),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R4),
@@ -78,7 +79,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R5),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R6.revision, 6);
   assert.equal(
@@ -87,12 +88,12 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R6),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R7.revision, 7);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R7),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R7),
@@ -101,7 +102,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R8.revision, 8);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R8),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R8),
@@ -114,7 +115,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R9.revision, 9);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R9),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R9),
@@ -127,7 +128,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R10.revision, 10);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R10),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R10),
@@ -136,7 +137,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R11.revision, 11);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R11),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R11),
@@ -145,7 +146,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R12.revision, 12);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R12),
-    /incompatible with dye-component-js-r13/,
+    /incompatible with dye-component-js-r14/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R12),
@@ -187,6 +188,21 @@ test("edge dye component revisions have independent canonical identities", () =>
     ),
     EDGE_DYE_COMPONENT_RECIPE_R14,
   );
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R15.revision, 15);
+  assert.equal(
+    assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R15),
+    true,
+  );
+  assert.equal(
+    serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R15),
+    "{\"baseHighBlue\":158,\"baseHighGreen\":90,\"baseHighRed\":105,\"baseLowBlue\":202,\"baseLowGreen\":156,\"baseLowRed\":136,\"baseMidBlue\":173,\"baseMidGreen\":144,\"baseMidRed\":101,\"baseMix\":0.86,\"componentModelVersion\":\"dye-component-js-r14\",\"componentRecipeSchemaVersion\":13,\"id\":\"edge-dye-study\",\"initialSecondaryFraction\":0.24242424242424243,\"primaryAdsorptionRate\":0.06,\"primaryDesorptionRate\":0.000005,\"primaryDiffusivity\":0.00005,\"revision\":15,\"secondaryAdsorptionRate\":0.001,\"secondaryBlue\":104,\"secondaryDesorptionRate\":0.00002,\"secondaryDiffusivity\":0.0008,\"secondaryGreen\":145,\"secondaryRed\":15,\"sharedAdsorptionCapacity\":0.075}",
+  );
+  assert.deepEqual(
+    parseDyeComponentRecipe(
+      serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R15),
+    ),
+    EDGE_DYE_COMPONENT_RECIPE_R15,
+  );
 });
 
 test("registered dye component identity rejects silent retuning", () => {
@@ -207,6 +223,16 @@ test("registered dye component identity rejects silent retuning", () => {
   assert.equal(validateDyeComponentRecipe(r14Impostor), true);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(r14Impostor),
+    /does not match its registered definition/,
+  );
+
+  const r15Impostor = {
+    ...EDGE_DYE_COMPONENT_RECIPE_R15,
+    sharedAdsorptionCapacity: 0.076,
+  };
+  assert.equal(validateDyeComponentRecipe(r15Impostor), true);
+  assert.throws(
+    () => assertDyeComponentRecipeCompatible(r15Impostor),
     /does not match its registered definition/,
   );
 });
@@ -382,9 +408,51 @@ test("r14 changes only the versioned transport-rate calibration", () => {
   );
 });
 
+test("r15 adds only the shared adsorption capacity model, schema and Q", () => {
+  for (const key of [
+    "initialSecondaryFraction",
+    "baseLowRed",
+    "baseLowGreen",
+    "baseLowBlue",
+    "baseMidRed",
+    "baseMidGreen",
+    "baseMidBlue",
+    "baseHighRed",
+    "baseHighGreen",
+    "baseHighBlue",
+    "baseMix",
+    "secondaryRed",
+    "secondaryGreen",
+    "secondaryBlue",
+    "primaryDiffusivity",
+    "secondaryDiffusivity",
+    "primaryAdsorptionRate",
+    "secondaryAdsorptionRate",
+    "primaryDesorptionRate",
+    "secondaryDesorptionRate",
+  ]) {
+    assert.equal(
+      EDGE_DYE_COMPONENT_RECIPE_R15[key],
+      EDGE_DYE_COMPONENT_RECIPE_R14[key],
+      key,
+    );
+  }
+  assert.equal(
+    EDGE_DYE_COMPONENT_RECIPE_R15.componentModelVersion,
+    "dye-component-js-r14",
+  );
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R15.componentRecipeSchemaVersion, 13);
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R15.sharedAdsorptionCapacity, 0.075);
+  assert.deepEqual(
+    Object.keys(EDGE_DYE_COMPONENT_RECIPE_R15)
+      .filter((key) => !Object.hasOwn(EDGE_DYE_COMPONENT_RECIPE_R14, key)),
+    ["sharedAdsorptionCapacity"],
+  );
+});
+
 test("current-schema experiment recipes are accepted without weakening built-in identity", () => {
   const experimentRecipe = Object.freeze({
-    ...EDGE_DYE_COMPONENT_RECIPE_R13,
+    ...EDGE_DYE_COMPONENT_RECIPE_R15,
     id: "workbench-edge-dye",
     revision: 1,
     secondaryRed: 174,
@@ -400,16 +468,32 @@ test("current-schema experiment recipes are accepted without weakening built-in 
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible({
-      ...EDGE_DYE_COMPONENT_RECIPE_R13,
+      ...EDGE_DYE_COMPONENT_RECIPE_R15,
       revision: 999,
     }),
     /edge-dye-study@999 is not registered/,
   );
 });
 
-test("r13 recipes reject accessors, invalid rates, and retired A6 knobs", () => {
+test("historical schema 12 executes only exact registered R13/R14 identities", () => {
+  assert.equal(assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R13), true);
+  assert.equal(assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R14), true);
+
+  const historicalCustom = Object.freeze({
+    ...EDGE_DYE_COMPONENT_RECIPE_R14,
+    id: "archived-custom-edge-dye",
+    revision: 1,
+  });
+  assert.equal(validateDyeComponentRecipe(historicalCustom), true);
+  assert.throws(
+    () => assertDyeComponentRecipeCompatible(historicalCustom),
+    /historical dye component identity archived-custom-edge-dye@1 is not an exact registered recipe/,
+  );
+});
+
+test("r15 recipes reject accessors, invalid rates or Q, and retired knobs", () => {
   let reads = 0;
-  const accessor = { ...EDGE_DYE_COMPONENT_RECIPE_R13 };
+  const accessor = { ...EDGE_DYE_COMPONENT_RECIPE_R15 };
   Object.defineProperty(accessor, "initialSecondaryFraction", {
     enumerable: true,
     get() {
@@ -439,12 +523,70 @@ test("r13 recipes reject accessors, invalid rates, and retired A6 knobs", () => 
   ]) {
     assert.throws(
       () => validateDyeComponentRecipe({
-        ...EDGE_DYE_COMPONENT_RECIPE_R13,
+        ...EDGE_DYE_COMPONENT_RECIPE_R15,
         [key]: value,
       }),
       new RegExp(key),
     );
   }
+
+  for (const value of [
+    0,
+    -0.01,
+    1e-46,
+    1e-45,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.MAX_VALUE,
+  ]) {
+    assert.throws(
+      () => validateDyeComponentRecipe({
+        ...EDGE_DYE_COMPONENT_RECIPE_R15,
+        sharedAdsorptionCapacity: value,
+      }),
+      /sharedAdsorptionCapacity/,
+    );
+  }
+  for (const value of [2 ** -126, 3.4028234663852886e38]) {
+    assert.equal(validateDyeComponentRecipe({
+      ...EDGE_DYE_COMPONENT_RECIPE_R15,
+      id: "capacity-float32-boundary-control",
+      revision: 1,
+      sharedAdsorptionCapacity: value,
+    }), true);
+  }
+
+  for (const value of [2 ** -13, 1 - 2 ** -13]) {
+    assert.throws(
+      () => validateDyeComponentRecipe({
+        ...EDGE_DYE_COMPONENT_RECIPE_R15,
+        initialSecondaryFraction: value,
+      }),
+      /Float32-stable interior fraction/,
+    );
+  }
+  for (const value of [0, 1, 2 ** -12, 1 - 2 ** -12]) {
+    assert.equal(validateDyeComponentRecipe({
+      ...EDGE_DYE_COMPONENT_RECIPE_R15,
+      id: "fraction-float32-boundary-control",
+      revision: 1,
+      initialSecondaryFraction: value,
+    }), true);
+  }
+
+  const capacityAccessor = { ...EDGE_DYE_COMPONENT_RECIPE_R15 };
+  Object.defineProperty(capacityAccessor, "sharedAdsorptionCapacity", {
+    enumerable: true,
+    get() {
+      reads += 1;
+      return 0.075;
+    },
+  });
+  assert.throws(
+    () => validateDyeComponentRecipe(capacityAccessor),
+    /enumerable own data property/,
+  );
+  assert.equal(reads, 0);
 
   for (const obsoleteKey of [
     "edgeZoneRadius",
@@ -469,7 +611,7 @@ test("r13 recipes reject accessors, invalid rates, and retired A6 knobs", () => 
   ]) {
     assert.throws(
       () => validateDyeComponentRecipe({
-        ...EDGE_DYE_COMPONENT_RECIPE_R13,
+        ...EDGE_DYE_COMPONENT_RECIPE_R15,
         [obsoleteKey]: 1,
       }),
       new RegExp(`unexpected=${obsoleteKey}`),

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "dual-shading-a7-3-archive-manifest-v1",
+  "algorithm": "sha256",
+  "evaluatorLockDigest": "80b3894087a8f4b633e80a9d4880c95c818230e8457a701c7b873459e410ce53",
+  "engineVersion": "0.44.0-experimental.1",
+  "engineSourceTreeDigest": "fd5862639657a4c173d8732bd6ee30c2010cd53a8c34173e7387c2eb3270d04d",
+  "baselineMatrixDigest": "4921a7e44e45e4cfbf023db19d163ee542e554e1379beaed49f1ace279ecb44a",
+  "resultRowCount": 1,
+  "batchResultRowCount": 8,
+  "shortlistCount": 0,
+  "plateau": true,
+  "automaticNinePointClaim": false,
+  "conclusion": "shared-vacancy-r15-plateau",
+  "artifacts": {
+    "scripts/dual-shading-autoresearch/a7-3/capacity-metrics.mjs": "85f4444d81897e5b8fb14182c7cf643ee187bdac4cdcf1bd27a201ece01a8af2",
+    "scripts/dual-shading-autoresearch/a7-3/evaluator.mjs": "33a31786e2d8eedfaf71af8fd6a2032f3fd72f3330596c64db5cacecbab68e46",
+    "scripts/dual-shading-autoresearch/a7-3/run.mjs": "a27483f7b7e0dab5411aac23e3f56613189e596ab2d05bbfbf5067ac712c3e53",
+    "scripts/dual-shading-autoresearch/a7-3/batch.mjs": "cf71a0ca7b17291fd4f6f5ef7848f7236cfef6c8e4eebf3c9bd55ef087464ed4",
+    "scripts/dual-shading-autoresearch/a7-3/archive-validator.mjs": "2491582d27ccf7127147f308e1e173bf5d6821971cf9bef47c8e7396b3046fd0",
+    "research/dual-shading-autoresearch/a7-3/PROGRAM.md": "670417cdc15b1cb764caeff95f4030082b0614ac6ed65d6058384b49a2d398ab",
+    "research/dual-shading-autoresearch/a7-3/evaluator-lock.json": "dd622ffd572c32684157245be39a07013bbefd3d1d2abedb249bf700e9cf458d",
+    "research/dual-shading-autoresearch/a7-3/batch-plan-q-01.json": "9e78cb0ea6553f54060f962941d100b91943e9418322f3160d469bc23da451f9",
+    "research/dual-shading-autoresearch/a7-3/candidate.json": "6d4fc8e0f25cef22ece28304cfc579d60df8c34ec65ef640b0c1bae75c9f7b37",
+    "research/dual-shading-autoresearch/a7-3/results.ndjson": "13b3dc5105a0ffe22830831e489c2f2e1cb0d28bfd7e57829aabf05576e79547",
+    "research/dual-shading-autoresearch/a7-3/batch-results.ndjson": "53d8d9044a1314d22170512407e840844d6c8584dafc5332ece4df2cae1a7531"
+  }
+}

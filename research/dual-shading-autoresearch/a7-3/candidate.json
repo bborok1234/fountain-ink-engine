@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+  "id": "dual-shading-a7-3-q-075-baseline",
+  "hypothesis": "A single shared adsorption capacity can create pool-sensitive competition without independent per-dye storage or optical gain.",
+  "note": "The authored R15 baseline at total Q=0.075; every R14 rate, palette, paper, fixture, metric and optical input stays fixed.",
+  "sharedAdsorptionCapacity": 0.075
+}

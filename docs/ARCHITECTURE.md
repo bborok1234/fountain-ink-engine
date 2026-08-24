@@ -233,9 +233,12 @@ advection. Face accumulation is equal-and-opposite in reconstructed P/S space;
 each species has its own donor limiter. Species dispersion uses harmonic
 wetness and separately authored aqueous diffusivity, while fibre anisotropy is
 owned only by the shared water flux. Both species then share depth transfer;
-evaporation removes only water. An analytic, capacity-free linear mobile/
-adsorbed reaction is modulated by paper affinity, deterministic tooth, and
-post-evaporation wetness. Ghost cells receive neither face transfer nor
+evaporation removes only water. Registered R13/R14 checkpoints retain an
+analytic capacity-free linear mobile/adsorbed reaction. A7-3/R15 instead
+desorbs analytically, then lets both species compete for one shared vacancy
+`max(0,Q-A_primary-A_secondary)` with one common limiter, preserving combined
+adsorbed mass at or below Q. Both reaction families are modulated by paper
+affinity, deterministic tooth, and post-evaporation wetness. Ghost cells receive neither face transfer nor
 reaction. Five lazy private Float64 cell accumulators are cleared and reused
 per step rather than retaining a public face plane.
 
@@ -247,9 +250,11 @@ Optical gain, edge mask, or coffee-ring. This separation of shared moisture
 flow from per-colorant mobile/fibre/adsorbed state follows the governing
 structure reported by
 [Venditti, Murali, and Darhuber (Langmuir 2021)](https://doi.org/10.1021/acs.langmuir.1c01624).
-Finite capacity remains conditional: a later attempt must choose one
-composition-scaled capacity or one shared-vacancy model because equal
-independent absolute capacities do not preserve a neutral unequal mixture.
+Schema 13 adds only the one shared capacity. Its locked Q-only search preserved
+all invariants but failed every photo-topology candidate, so it remains a
+versioned falsified hypothesis rather than proof of perceptual closure. Equal
+independent absolute capacities remain forbidden because they do not preserve
+a neutral unequal mixture.
 
 R3 turns only positive R2 enrichment into a diagnostic edge-accumulation
 candidate. The operator also requires visible component mass and weights the
@@ -326,13 +331,13 @@ observes the buffers already used by the accepted render path:
 - `surface.paperDepth`: the nullable solver-grid subsurface pigment and signed
   numerator copied from the r2 depth state. It is `null` for r1 recipes or when
   no depth state was created;
-- `surface.dyeComponent`: nullable current R14 recipe on the R13
+- `surface.dyeComponent`: nullable current R15 recipe on the shared-water
   `two-dye-total-residual-v2`
   record. It exposes six solver-grid Float32 planes: total and signed secondary
   residual for each mobile, adsorbed, and depth phase. Explicit zero depth
   planes keep the shape stable on non-depth papers. `T=P+S` and `R=S-f0T`
   reconstruct both species; equal-coefficient neutral fixtures keep every `R`
-  exactly zero, while the R14 built-in can publish both residual signs. The
+  exactly zero, while the R15 built-in can publish both residual signs. The
   component total is the ordinary deposited dye represented as two species,
   not extra mass. Optical bilinear-samples visible mobile+adsorbed `T/R`, does
   not read depth mass, and resolves the secondary share only after

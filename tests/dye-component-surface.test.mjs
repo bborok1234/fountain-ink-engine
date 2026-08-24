@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   EDGE_DYE_COMPONENT_RECIPE_R12,
-  EDGE_DYE_COMPONENT_RECIPE_R13 as ACTIVE_DYE_COMPONENT_RECIPE,
+  EDGE_DYE_COMPONENT_RECIPE_R15 as ACTIVE_DYE_COMPONENT_RECIPE,
   dyeComponentStateModelVersion,
   freezeDyeComponentRecipe,
 } from "../src/dye-components/index.js";
@@ -212,8 +212,8 @@ function assertExactPositiveZeroPlane(plane) {
 function assertValidDyeState(state, recipe, { neutral = false } = {}) {
   assert.equal(state.id, recipe.id);
   assert.equal(state.revision, recipe.revision);
-  assert.equal(state.componentModelVersion, "dye-component-js-r13");
-  assert.equal(state.componentRecipeSchemaVersion, 12);
+  assert.equal(state.componentModelVersion, "dye-component-js-r14");
+  assert.equal(state.componentRecipeSchemaVersion, 13);
   assert.equal(state.stateModelVersion, dyeComponentStateModelVersion);
   assert.equal(state.stateModelVersion, "two-dye-total-residual-v2");
   assert.equal(state.initialSecondaryFraction, recipe.initialSecondaryFraction);
@@ -253,6 +253,60 @@ function assertValidDyeState(state, recipe, { neutral = false } = {}) {
     state.totalMass,
     state.mobileTotal + state.adsorbedTotal + state.depthTotal,
   );
+  if (Object.hasOwn(recipe, "sharedAdsorptionCapacity")) {
+    const tolerance = Math.max(
+      FLOAT32_EPSILON * 4,
+      recipe.sharedAdsorptionCapacity * FLOAT32_EPSILON * 4,
+    );
+    for (let index = 0; index < state.adsorbedTotalMass.length; index += 1) {
+      assert.ok(
+        state.adsorbedTotalMass[index]
+          <= recipe.sharedAdsorptionCapacity + tolerance,
+        `adsorbedTotalMass[${index}] ${state.adsorbedTotalMass[index]} exceeds shared Q ${recipe.sharedAdsorptionCapacity}`,
+      );
+    }
+  }
+}
+
+function makeRectangularPass(
+  width,
+  height,
+  minimumX,
+  maximumX,
+  minimumY,
+  maximumY,
+  alpha = 255,
+) {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = minimumY; y < maximumY; y += 1) {
+    for (let x = minimumX; x < maximumX; x += 1) {
+      data[(y * width + x) * 4 + 3] = alpha;
+    }
+  }
+  return { width, height, data };
+}
+
+function runCapacityPasses(passes, steps = 48) {
+  const simulation = new WetInkSimulation(
+    passes[0].width,
+    passes[0].height,
+    DEFAULT_SURFACE_SEED,
+  );
+  for (let index = 0; index < passes.length; index += 1) {
+    simulation.depositMask(passes[index], {
+      waterLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.waterLoad,
+      pigmentLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.pigmentLoad,
+      seed: (DEFAULT_SURFACE_SEED ^ Math.imul(index + 1, 0x85ebca6b)) >>> 0,
+      dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE,
+    });
+  }
+  for (let index = 0; index < steps; index += 1) {
+    simulation.stepSurface(
+      PAPER_SURFACE_BALANCED_R2.keyboard.stepMilliseconds,
+      PAPER_SURFACE_BALANCED_R2,
+    );
+  }
+  return simulation.createDyeComponentState();
 }
 
 function fillTwoCellState(simulation, {
@@ -299,7 +353,7 @@ test("component-off keeps legacy ordinary bytes and performs no A7 allocation", 
   assert.equal(explicitOff.dyeTransportScratch, null);
 });
 
-test("r13 deposit partitions ordinary dye without depositing extra mass", () => {
+test("r15 deposit partitions ordinary dye without depositing extra mass", () => {
   const baseline = depositSimulation();
   const component = depositSimulation(ACTIVE_DYE_COMPONENT_RECIPE);
   assert.deepEqual(component.water, baseline.water);
@@ -384,6 +438,83 @@ test("equal coefficients keep R bitwise positive zero on every paper and step", 
         { neutral: true },
       );
     }
+  }
+});
+
+test("schema-13 exact zero and one mixture endpoints never create an absent species", () => {
+  for (const initialSecondaryFraction of [0, 1]) {
+    const recipe = freezeDyeComponentRecipe({
+      ...ACTIVE_DYE_COMPONENT_RECIPE,
+      id: `pure-${initialSecondaryFraction}-endpoint-control`,
+      revision: 1,
+      initialSecondaryFraction,
+    });
+    const simulation = depositSimulation(recipe);
+    const before = speciesTotals(simulation.createDyeComponentState());
+    for (let index = 0; index < 30; index += 1) {
+      simulation.stepSurface(
+        PAPER_SURFACE_BALANCED_R2.keyboard.stepMilliseconds,
+        PAPER_SURFACE_BALANCED_R2,
+      );
+    }
+    const state = simulation.createDyeComponentState();
+    const after = speciesTotals(state);
+    assertValidDyeState(state, recipe);
+    for (const name of [
+      "mobileSecondaryResidualMass",
+      "adsorbedSecondaryResidualMass",
+      "depthSecondaryResidualMass",
+    ]) {
+      assertExactPositiveZeroPlane(state[name]);
+    }
+    if (initialSecondaryFraction === 0) {
+      assert.equal(before.secondary, 0);
+      assert.equal(after.secondary, 0);
+      assert.ok(
+        Math.abs(after.primary - before.primary)
+          <= float32Budget(before.total, 30),
+      );
+    } else {
+      assert.equal(before.primary, 0);
+      assert.equal(after.primary, 0);
+      assert.ok(
+        Math.abs(after.secondary - before.secondary)
+          <= float32Budget(before.total, 30),
+      );
+    }
+  }
+});
+
+test("schema-13 Float32-stable interior boundaries preserve the minority species", () => {
+  for (const initialSecondaryFraction of [2 ** -12, 1 - 2 ** -12]) {
+    const recipe = freezeDyeComponentRecipe({
+      ...ACTIVE_DYE_COMPONENT_RECIPE,
+      id: `stable-${initialSecondaryFraction}-interior-control`,
+      revision: 1,
+      initialSecondaryFraction,
+    });
+    const simulation = depositSimulation(recipe);
+    const before = speciesTotals(simulation.createDyeComponentState());
+    for (let index = 0; index < 120; index += 1) {
+      simulation.stepSurface(
+        PAPER_SURFACE_BALANCED_R2.keyboard.stepMilliseconds,
+        PAPER_SURFACE_BALANCED_R2,
+      );
+    }
+    const state = simulation.createDyeComponentState();
+    const after = speciesTotals(state);
+    assertValidDyeState(state, recipe);
+    const minorityBefore = initialSecondaryFraction < 0.5
+      ? before.secondary
+      : before.primary;
+    const minorityAfter = initialSecondaryFraction < 0.5
+      ? after.secondary
+      : after.primary;
+    assert.ok(minorityBefore > 0);
+    assert.ok(
+      Math.abs(minorityAfter - minorityBefore) / minorityBefore < 0.001,
+      `minority drift ${(minorityAfter - minorityBefore) / minorityBefore}`,
+    );
   }
 });
 
@@ -579,6 +710,152 @@ test("each species is globally conserved through transport, depth and reaction",
       `${surfaceRecipe.id} secondary drift ${after.secondary - before.secondary}`,
     );
   }
+});
+
+test("zero adsorption makes shared capacity exactly irrelevant", () => {
+  const makeZeroAdsorptionRecipe = (capacity) => freezeDyeComponentRecipe({
+    ...ACTIVE_DYE_COMPONENT_RECIPE,
+    id: "zero-adsorption-capacity-control",
+    revision: 1,
+    primaryAdsorptionRate: 0,
+    secondaryAdsorptionRate: 0,
+    sharedAdsorptionCapacity: capacity,
+  });
+  const lowCapacity = runSimulation(makeZeroAdsorptionRecipe(0.001));
+  const highCapacity = runSimulation(makeZeroAdsorptionRecipe(10));
+  assert.deepEqual(
+    lowCapacity.createDyeComponentState(),
+    highCapacity.createDyeComponentState(),
+  );
+});
+
+test("a full shared capacity with no desorption stops both species uptake", () => {
+  const recipe = freezeDyeComponentRecipe({
+    ...ACTIVE_DYE_COMPONENT_RECIPE,
+    id: "full-capacity-no-desorption-control",
+    revision: 1,
+    primaryDiffusivity: 0,
+    secondaryDiffusivity: 0,
+    primaryDesorptionRate: 0,
+    secondaryDesorptionRate: 0,
+  });
+  const simulation = depositSimulation(recipe, makeDeposit(4, 3));
+  const { first, second } = fillTwoCellState(simulation, {
+    water: [0.8, 0.8],
+    total: [0.4, 0.4],
+    residual: [0, 0],
+  });
+  simulation.materialComponentFixed[first] = recipe.sharedAdsorptionCapacity;
+  simulation.materialComponentFixed[second] = recipe.sharedAdsorptionCapacity;
+  const mobileBefore = new Float32Array(simulation.materialComponentMobile);
+  const mobileResidualBefore = new Float32Array(
+    simulation.materialComponentMobileResidual,
+  );
+  const adsorbedBefore = new Float32Array(simulation.materialComponentFixed);
+  const adsorbedResidualBefore = new Float32Array(
+    simulation.materialComponentFixedResidual,
+  );
+  simulation.stepSurface(
+    PAPER_SURFACE_BALANCED_R2.keyboard.stepMilliseconds,
+    PAPER_SURFACE_BALANCED_R2,
+  );
+  assert.deepEqual(simulation.materialComponentMobile, mobileBefore);
+  assert.deepEqual(
+    simulation.materialComponentMobileResidual,
+    mobileResidualBefore,
+  );
+  assert.deepEqual(simulation.materialComponentFixed, adsorbedBefore);
+  assert.deepEqual(
+    simulation.materialComponentFixedResidual,
+    adsorbedResidualBefore,
+  );
+  assertValidDyeState(simulation.createDyeComponentState(), recipe);
+});
+
+test("shared vacancy creates bounded low/high loading nonlinearity", () => {
+  const recipe = freezeDyeComponentRecipe({
+    ...ACTIVE_DYE_COMPONENT_RECIPE,
+    id: "loading-nonlinearity-control",
+    revision: 1,
+    primaryDiffusivity: 0,
+    secondaryDiffusivity: 0,
+    primaryDesorptionRate: 0,
+    secondaryDesorptionRate: 0,
+  });
+  const runUniformLoad = (load) => {
+    const simulation = depositSimulation(recipe, makeDeposit(4, 3));
+    const { first } = fillTwoCellState(simulation, {
+      water: [0.8, 0.8],
+      total: [load, load],
+      residual: [0, 0],
+    });
+    for (let index = 0; index < 120; index += 1) {
+      simulation.stepSurface(
+        PAPER_SURFACE_BALANCED_R2.keyboard.stepMilliseconds,
+        PAPER_SURFACE_BALANCED_R2,
+      );
+    }
+    return {
+      load,
+      adsorbed: simulation.createDyeComponentState()
+        .adsorbedTotalMass[first],
+    };
+  };
+  const low = runUniformLoad(0.02);
+  const high = runUniformLoad(0.5);
+  assert.ok(high.adsorbed > low.adsorbed);
+  assert.ok(
+    high.adsorbed / high.load < low.adsorbed / low.load,
+    `${high.adsorbed / high.load} should be below ${low.adsorbed / low.load}`,
+  );
+  assert.ok(
+    high.adsorbed
+      <= recipe.sharedAdsorptionCapacity + FLOAT32_EPSILON * 4,
+  );
+});
+
+test("thin loading stays mostly unsaturated while broad overlap reaches Q", () => {
+  const width = 56;
+  const height = 40;
+  const thin = runCapacityPasses([
+    makeRectangularPass(width, height, 8, 48, 20, 21, 160),
+  ]);
+  const broadHorizontal = makeRectangularPass(
+    width,
+    height,
+    8,
+    48,
+    16,
+    25,
+  );
+  const broadDouble = runCapacityPasses([
+    broadHorizontal,
+    broadHorizontal,
+  ]);
+  const broadJunction = runCapacityPasses([
+    broadHorizontal,
+    makeRectangularPass(width, height, 24, 33, 6, 34),
+  ]);
+  const nearCapacityCount = (state) => state.adsorbedTotalMass.reduce(
+    (count, value) => count + (
+      value / ACTIVE_DYE_COMPONENT_RECIPE.sharedAdsorptionCapacity >= 0.99
+        ? 1
+        : 0
+    ),
+    0,
+  );
+  const occupiedCount = (state) => state.adsorbedTotalMass.reduce(
+    (count, value) => count + (value > 0 ? 1 : 0),
+    0,
+  );
+  const thinNear = nearCapacityCount(thin);
+  const thinOccupied = occupiedCount(thin);
+  assert.ok(thinOccupied > 0);
+  assert.ok(thinNear / thinOccupied < 0.1);
+  assert.ok(nearCapacityCount(broadDouble) > 0);
+  assert.ok(nearCapacityCount(broadJunction) > 0);
+  assertValidDyeState(broadDouble, ACTIVE_DYE_COMPONENT_RECIPE);
+  assertValidDyeState(broadJunction, ACTIVE_DYE_COMPONENT_RECIPE);
 });
 
 test("active coefficients deterministically create signed separation", () => {

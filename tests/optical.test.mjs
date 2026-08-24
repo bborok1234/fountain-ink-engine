@@ -15,6 +15,7 @@ import {
 } from "../src/optical/index.js";
 import {
   EDGE_DYE_COMPONENT_RECIPE_R13,
+  EDGE_DYE_COMPONENT_RECIPE_R15,
   dyeComponentStateModelVersion,
   freezeDyeComponentRecipe,
 } from "../src/dye-components/index.js";
@@ -322,7 +323,7 @@ test("equal residual ratios are invariant to common visible-mass scale", () => {
 
 test("zero initial fraction and zero residual apply no secondary color", () => {
   const recipe = freezeDyeComponentRecipe({
-    ...EDGE_DYE_COMPONENT_RECIPE_R13,
+    ...EDGE_DYE_COMPONENT_RECIPE_R15,
     id: "zero-secondary-neutral-test",
     revision: 1,
     initialSecondaryFraction: 0,

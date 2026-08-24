@@ -22,4 +22,5 @@ export { EDGE_DYE_COMPONENT_RECIPE_R11 } from "./edge-dye-r11.js";
 export { EDGE_DYE_COMPONENT_RECIPE_R12 } from "./edge-dye-r12.js";
 export { EDGE_DYE_COMPONENT_RECIPE_R13 } from "./edge-dye-r13.js";
 export { EDGE_DYE_COMPONENT_RECIPE_R14 } from "./edge-dye-r14.js";
+export { EDGE_DYE_COMPONENT_RECIPE_R15 } from "./edge-dye-r15.js";
 export { assertDyeComponentRecipeCompatible } from "./compatibility.js";
