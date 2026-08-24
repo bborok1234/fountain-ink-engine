@@ -1,0 +1,62 @@
+{
+  "algorithm": "sha256",
+  "baseRecipeCanonicalDigest": "112ce234552a0d789841268e4dcb6b1995133138cae0152c4f6f6383c9719978",
+  "baselineLoadDigest": "02c091bb2c3d7a4164dc2f516b592d3b5dddc99e2895f3c6413754970342478c",
+  "baselineMatrixDigest": "c2f25ad0048176d19fe834b430901e315aebb6079cb2eb80bf929c89e47040ce",
+  "baselineVisualDigest": "654d93fa0c4ba93686ec6f3e2933eddbfb0dc492b6fe7cfee1cafbf3b10c4c60",
+  "engineSourceTreeDigest": "f44f6bd04362b6fbca4eb151cf65b357246e2d5059d88a18625e7b089af12c72",
+  "engineVersion": "0.45.0-experimental.1",
+  "evaluatorId": "dual-shading-loading-r16-v1",
+  "files": {
+    "package.json": "df4598f3b86e315b6c7e8db22e2318738d8943f2b9cb98891da6f807c6be17f7",
+    "research/dual-shading-autoresearch/a7-3/archive-manifest.json": "e438f4a68ba2a002e9453ed082bf50124d976e7de05ba482e216cf20a71d7dca",
+    "research/dual-shading-autoresearch/a7-loading-r16/PROGRAM.md": "e96ddec4f10cfd6370901af4a3eee7c70cc4e319262a0d598af8b3a85bee6bc7",
+    "research/dual-shading-autoresearch/a7-loading-r16/candidate.json": "21493a626bafc65c2f745777952400b8af85486682c87527cdfa554fb8e7c49b",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/evaluator.mjs": "e6ddf06c36c44e419e7d4eded7d934bd7cb5618efe1c8fd49e54563ec79c37b1",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/fixtures.mjs": "30b1f7667ec50d5d001904d6d9691dfdc7bc7b2273336d1b1c28351376798bce",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/metrics.mjs": "6c220246f0f0e4979953502981ca55bdf27c7e66dcdc0298e138cdc52dc5d0dd",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/run.mjs": "c885ef6fcbe589554c26f2d22bb0dba6413309a30801b69a976e66ea3e35036f",
+    "src/canvas2d/keyboard-dye-areal-load.js": "9543f50f416a93da5ec9b26daff55762e1fa398882dd3046a720ac9a663f2631",
+    "src/contracts/keyboard-dye-areal-load.js": "eb126699fff7603a3d8f7940bd87e404bfe19a1a8a053bfcc441b2bad946b1b5"
+  },
+  "fixedBaseline": {
+    "candidateSchemaVersion": "dual-shading-loading-r16-candidate-v1",
+    "caseCount": 99,
+    "dyeRecipe": "edge-dye-study@16",
+    "gates": {
+      "areaMismatchMaximum": 0.01,
+      "broadToUefSpanMinimum": 0.9,
+      "conservationRelativeMaximum": 0.00005,
+      "fractionDeltaMinimum": 0.008,
+      "globalRecolorAreaMaximum": 0.72,
+      "interiorShareMaximum": 0.92,
+      "interiorShareMinimum": 0.08,
+      "junctionToBodySpanMinimum": 1.1,
+      "loadTolerance": 0.000002,
+      "mLengthBodySpanVariationMaximum": 0.1,
+      "nonnegativeTolerance": 0.000002,
+      "opticalChangedAreaMaximum": 0.7,
+      "opticalChangedAreaMinimum": 0.015,
+      "opticalMeanChannelDeltaMinimum": 0.25,
+      "opticalPatchMinimumPixels": 4,
+      "opticalPatchShareMinimum": 0.25,
+      "overlapClampShareMaximum": 0.05,
+      "overlapOccupancyDeltaMinimum": 0.05,
+      "readabilityMinimum": 0.82,
+      "signedPatchMinimumPixels": 5,
+      "speckleShareMaximum": 0.2,
+      "wetToDryBroadOpticalAreaDeltaMinimum": 0.015,
+      "wetToDryBroadSpanMinimum": 1.1
+    },
+    "maximumMilliseconds": 30000,
+    "method": "keyboard-dye-areal-load-v1",
+    "opticalModel": "three-channel-effective-optical-density-v2"
+  },
+  "predecessor": {
+    "archiveManifestDigest": "e438f4a68ba2a002e9453ed082bf50124d976e7de05ba482e216cf20a71d7dca",
+    "conclusion": "shared-vacancy-r15-plateau",
+    "currentRuntimeRejected": true,
+    "evaluatorLockDigest": "80b3894087a8f4b633e80a9d4880c95c818230e8457a701c7b873459e410ce53"
+  },
+  "schemaVersion": "dual-shading-loading-r16-evaluator-lock-v1"
+}

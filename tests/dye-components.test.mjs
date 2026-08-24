@@ -16,6 +16,7 @@ import {
   EDGE_DYE_COMPONENT_RECIPE_R13,
   EDGE_DYE_COMPONENT_RECIPE_R14,
   EDGE_DYE_COMPONENT_RECIPE_R15,
+  EDGE_DYE_COMPONENT_RECIPE_R16,
   assertDyeComponentRecipeCompatible,
   dyeComponentModelVersion,
   dyeComponentRecipeSchemaVersion,
@@ -25,8 +26,8 @@ import {
 } from "../src/dye-components/index.js";
 
 test("edge dye component revisions have independent canonical identities", () => {
-  assert.equal(dyeComponentModelVersion, "dye-component-js-r14");
-  assert.equal(dyeComponentRecipeSchemaVersion, 13);
+  assert.equal(dyeComponentModelVersion, "dye-component-js-r15");
+  assert.equal(dyeComponentRecipeSchemaVersion, 14);
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.id, "edge-dye-study");
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R1.revision, 1);
   assert.equal(validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R1), true);
@@ -44,7 +45,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R2.revision, 2);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R1),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R2),
@@ -52,7 +53,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R2),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R3.revision, 3);
   assert.equal(
@@ -61,12 +62,12 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R3),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R4.revision, 4);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R4),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R4),
@@ -79,7 +80,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R5),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R6.revision, 6);
   assert.equal(
@@ -88,12 +89,12 @@ test("edge dye component revisions have independent canonical identities", () =>
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R6),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R7.revision, 7);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R7),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R7),
@@ -102,7 +103,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R8.revision, 8);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R8),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R8),
@@ -115,7 +116,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R9.revision, 9);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R9),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     validateDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R9),
@@ -128,7 +129,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R10.revision, 10);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R10),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R10),
@@ -137,7 +138,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R11.revision, 11);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R11),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R11),
@@ -146,7 +147,7 @@ test("edge dye component revisions have independent canonical identities", () =>
   assert.equal(EDGE_DYE_COMPONENT_RECIPE_R12.revision, 12);
   assert.throws(
     () => assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R12),
-    /incompatible with dye-component-js-r14/,
+    /incompatible with dye-component-js-r15/,
   );
   assert.equal(
     serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R12),
@@ -202,6 +203,21 @@ test("edge dye component revisions have independent canonical identities", () =>
       serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R15),
     ),
     EDGE_DYE_COMPONENT_RECIPE_R15,
+  );
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R16.revision, 16);
+  assert.equal(
+    assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R16),
+    true,
+  );
+  assert.equal(
+    serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R16),
+    "{\"arealLoadContractVersion\":\"keyboard-dye-areal-load-v1\",\"baseHighBlue\":158,\"baseHighGreen\":90,\"baseHighRed\":105,\"baseLowBlue\":202,\"baseLowGreen\":156,\"baseLowRed\":136,\"baseMidBlue\":173,\"baseMidGreen\":144,\"baseMidRed\":101,\"baseMix\":0.86,\"componentModelVersion\":\"dye-component-js-r15\",\"componentRecipeSchemaVersion\":14,\"id\":\"edge-dye-study\",\"initialSecondaryFraction\":0.24242424242424243,\"primaryAdsorptionRate\":0.06,\"primaryDesorptionRate\":0.000005,\"primaryDiffusivity\":0.00005,\"revision\":16,\"secondaryAdsorptionRate\":0.001,\"secondaryBlue\":104,\"secondaryDesorptionRate\":0.00002,\"secondaryDiffusivity\":0.0008,\"secondaryGreen\":145,\"secondaryRed\":15}",
+  );
+  assert.deepEqual(
+    parseDyeComponentRecipe(
+      serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R16),
+    ),
+    EDGE_DYE_COMPONENT_RECIPE_R16,
   );
 });
 
@@ -450,9 +466,36 @@ test("r15 adds only the shared adsorption capacity model, schema and Q", () => {
   );
 });
 
+test("r16 branches from R14 with only the explicit areal-load contract", () => {
+  for (const key of Object.keys(EDGE_DYE_COMPONENT_RECIPE_R14)) {
+    if ([
+      "revision",
+      "componentModelVersion",
+      "componentRecipeSchemaVersion",
+    ].includes(key)) continue;
+    assert.equal(
+      EDGE_DYE_COMPONENT_RECIPE_R16[key],
+      EDGE_DYE_COMPONENT_RECIPE_R14[key],
+      key,
+    );
+  }
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R16.componentModelVersion, "dye-component-js-r15");
+  assert.equal(EDGE_DYE_COMPONENT_RECIPE_R16.componentRecipeSchemaVersion, 14);
+  assert.equal(
+    EDGE_DYE_COMPONENT_RECIPE_R16.arealLoadContractVersion,
+    "keyboard-dye-areal-load-v1",
+  );
+  assert.equal(Object.hasOwn(EDGE_DYE_COMPONENT_RECIPE_R16, "sharedAdsorptionCapacity"), false);
+  assert.deepEqual(
+    Object.keys(EDGE_DYE_COMPONENT_RECIPE_R16)
+      .filter((key) => !Object.hasOwn(EDGE_DYE_COMPONENT_RECIPE_R14, key)),
+    ["arealLoadContractVersion"],
+  );
+});
+
 test("current-schema experiment recipes are accepted without weakening built-in identity", () => {
   const experimentRecipe = Object.freeze({
-    ...EDGE_DYE_COMPONENT_RECIPE_R15,
+    ...EDGE_DYE_COMPONENT_RECIPE_R16,
     id: "workbench-edge-dye",
     revision: 1,
     secondaryRed: 174,
@@ -468,16 +511,31 @@ test("current-schema experiment recipes are accepted without weakening built-in 
   );
   assert.throws(
     () => assertDyeComponentRecipeCompatible({
-      ...EDGE_DYE_COMPONENT_RECIPE_R15,
+      ...EDGE_DYE_COMPONENT_RECIPE_R16,
       revision: 999,
     }),
     /edge-dye-study@999 is not registered/,
   );
+  assert.throws(
+    () => validateDyeComponentRecipe({
+      ...EDGE_DYE_COMPONENT_RECIPE_R16,
+      arealLoadContractVersion: "wrong",
+    }),
+    /arealLoadContractVersion/,
+  );
+  assert.throws(
+    () => validateDyeComponentRecipe({
+      ...EDGE_DYE_COMPONENT_RECIPE_R16,
+      sharedAdsorptionCapacity: 0.075,
+    }),
+    /invalid keys/,
+  );
 });
 
-test("historical schema 12 executes only exact registered R13/R14 identities", () => {
+test("historical schemas execute only exact registered R13/R14/R15 identities", () => {
   assert.equal(assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R13), true);
   assert.equal(assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R14), true);
+  assert.equal(assertDyeComponentRecipeCompatible(EDGE_DYE_COMPONENT_RECIPE_R15), true);
 
   const historicalCustom = Object.freeze({
     ...EDGE_DYE_COMPONENT_RECIPE_R14,
@@ -488,6 +546,16 @@ test("historical schema 12 executes only exact registered R13/R14 identities", (
   assert.throws(
     () => assertDyeComponentRecipeCompatible(historicalCustom),
     /historical dye component identity archived-custom-edge-dye@1 is not an exact registered recipe/,
+  );
+  const historicalR15Custom = Object.freeze({
+    ...EDGE_DYE_COMPONENT_RECIPE_R15,
+    id: "archived-custom-capacity-dye",
+    revision: 1,
+  });
+  assert.equal(validateDyeComponentRecipe(historicalR15Custom), true);
+  assert.throws(
+    () => assertDyeComponentRecipeCompatible(historicalR15Custom),
+    /historical dye component identity archived-custom-capacity-dye@1 is not an exact registered recipe/,
   );
 });
 

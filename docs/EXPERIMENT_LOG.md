@@ -2568,3 +2568,55 @@ they are not automatically promoted to timeless pass/fail truth.
   Browser at B/48 balanced flow 58, peak occupancy was about `57.3%`, the 99%
   count was `0`, and console warning/error count was `0`. This is an explanatory
   diagnostic and does not change the `6.3/10` perceptual score.
+
+## E-039-dual-shading-areal-loading / A7-6-R16
+
+- Parent: terminal R15 shared-vacancy plateau (`8/8 reject-hard`, score
+  `6.3/10`).
+- Package/model/schema/recipe/state: `0.45.0-experimental.1` /
+  `dye-component-js-r15` / `14` / `edge-dye-study@16` /
+  `two-dye-total-residual-v2`.
+- Status: `[!] Engine contract passed; loading-only visual hypothesis
+  falsified`.
+- Hypothesis: actual nib Contact area, flow and repeated/crossing contact load
+  can restore the photographed wet/broad/pool response without changing color,
+  mixture, paper, transport rates, capacity or Optical.
+- Operator boundary: R16 branches from capacity-free R14. Public
+  `keyboard-dye-areal-load-v1` box-integrates each actual glyph Contact alpha in
+  source order and target row-major order, accumulates in Float64 and rounds
+  once per target cell. A full M/flow-58 pass is one; repeats and crossings add.
+  Flow scale is `fround(1 + effectiveFlow(nib,flow) - effectiveFlow(M,58))`.
+- Compatibility: R13/R14/R15 exact registered identities keep their historical
+  operator and bytes. R16 alone requires the load plane. Component-off and
+  incompatible specialty slots reject it rather than silently reinterpret it.
+- Contract hardening: the descriptor validator snapshots own data, requires an
+  exact native Float32Array view and rejects record or nested-plane Proxies
+  before mutation. The builder caps target cells at 76,800 and contact-grid work
+  at 16 million. Accepted water and dye deltas remain bounded; the initial
+  secondary residual is exact `+0`.
+- Locked matrix: 81 UEF/M/B × flow-30/58/85 × smooth/balanced/absorbent ×
+  single/double/cross cases, plus nine width-vs-length and nine equal-area
+  controls. All 99 cases execute twice under a 30-second evaluator budget.
+- Contract result: zero algebra/contract failures, exact load identities,
+  bounded deposits, finite/non-negative species, conservation and determinism.
+- Visual result: 328 predeclared directional failures. Mean fraction spans were
+  UEF `0.04059599`, M `0.03225471`, B `0.02924466`; B/UEF
+  `0.72038299`; wet/dry B `0.95109625`; wet-minus-dry Optical changed-area
+  delta `-0.01254517`; cross junction/body `0.74366004`; M length-only body
+  variation `1.88993527`.
+- Disposition: `contract-pass / visual-falsified`, result id
+  `8e8ebccccacd11b364f5`, score unchanged at `6.3/10`, automatic nine-point
+  claim false. The terminal archive self-pins its validator and requires the
+  predecessor R15 runtime to be rejected rather than refreshed.
+- Validation: build validates 125 modules and 15 public entries; all 271 tests
+  pass. Package dry-run contains 138 files, 180.1 kB packed and 756.9 kB
+  unpacked.
+- Lesson: areal load is necessary plumbing but magnitude scaling alone does not
+  create the missing fraction topology. Broader/wetter/crossed cases moved in
+  the wrong direction. Do not rescue this with palette, gain, Q or another rate
+  sweep.
+- Next different method: first fix the research objective so actual Korean
+  normal-size browser output and photo-derived topology participate in
+  keep/discard. Then test ordered deposit time plus surface-lifetime-gated
+  pinned redistribution as one new operator. The HTML capture/rubric remains
+  outside this public engine subtree.

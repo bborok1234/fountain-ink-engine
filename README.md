@@ -55,18 +55,33 @@ material composition without adding a React dependency.
 
 ## Optional dye component state
 
-Package `0.44.0-experimental.1` keeps the six-plane
+Package `0.45.0-experimental.1` keeps the six-plane
 `two-dye-total-residual-v2` state and advances the current shared-transport
-operator to `dye-component-js-r14`, recipe schema 13 and
-`edge-dye-study@15`:
+operator to `dye-component-js-r15`, recipe schema 14 and
+`edge-dye-study@16`:
 
 ```js
 import {
-  EDGE_DYE_COMPONENT_RECIPE_R15,
+  EDGE_DYE_COMPONENT_RECIPE_R16,
 } from "fountain-ink-engine/dye-components";
+import {
+  createKeyboardDyeArealLoad,
+} from "fountain-ink-engine/canvas2d";
 import {
   createKeyboardSurfaceState,
 } from "fountain-ink-engine/surface";
+
+const keyboardDyeArealLoad = createKeyboardDyeArealLoad({
+  pixelWidth,
+  pixelHeight,
+  targetWidth: deposit.width,
+  targetHeight: deposit.height,
+  scale,
+  fontSize,
+  glyphContacts,
+  nibId,
+  flow,
+});
 
 const state = createKeyboardSurfaceState(
   deposit,
@@ -74,7 +89,9 @@ const state = createKeyboardSurfaceState(
   surfaceSeed,
   inkRecipe,
   densityTransport,
-  EDGE_DYE_COMPONENT_RECIPE_R15,
+  EDGE_DYE_COMPONENT_RECIPE_R16,
+  null,
+  keyboardDyeArealLoad,
 );
 
 // state.dyeComponent = {
@@ -87,8 +104,9 @@ const state = createKeyboardSurfaceState(
 // }
 ```
 
-R15 preserves R14's non-additive mass model and shared-water transport. The component state is a
-canonical view of the already deposited ordinary total. For each `mobile`,
+R16 preserves R14's non-additive mass model, capacity-free reaction and
+shared-water transport. The component state is a canonical view of the already
+deposited ordinary total. For each `mobile`,
 `adsorbed`, and `depth` phase it stores two Float32 planes:
 
 ```text
@@ -117,11 +135,11 @@ is not counted again in diffusion. Each primary/secondary face transfer is
 equal-and-opposite and cannot exceed its donor.
 
 After face transport, both species use the same local depth fraction. Water
-evaporation removes no dye. For schema 13, interior state desorbs analytically,
-then both species compete through one vacancy
-`max(0,Q-A_primary-A_secondary)` and one shared limiting factor; their combined
-adsorbed mass cannot exceed `sharedAdsorptionCapacity`. Registered R13/R14
-checkpoints retain the historical capacity-free reaction. All reactions are
+evaporation removes no dye. Schema 14 uses R14's analytic capacity-free
+reaction. Historical schema 13/R15 instead desorbs analytically, then lets both
+species compete through one vacancy `max(0,Q-A_primary-A_secondary)` and one
+shared limiting factor. Registered R13/R14/R15 checkpoints retain their exact
+historical reactions. All reactions are
 modulated by paper `dyeAffinity`, deterministic paper tooth, and
 post-evaporation wetness. The
 ghost ring has no face transport or reaction. Five private Float64 cell
@@ -136,15 +154,19 @@ and palette. The built-in dimensionless pilot values are `.001/.003`,
 relative timescale ordering of flow, adsorption/evaporation, diffusion, and
 desorption; they are not SI-calibrated constants. R14 changes only those six
 dimensionless rates to `.00005/.0008`, `.06/.001`, and `.000005/.00002`.
-Palette, initial mixture and those six rates remain pinned in R15. Schema 13
-adds only `sharedAdsorptionCapacity=0.075`; there is still no hue/Optical gain,
-edge mask, per-species capacity, or coffee-ring.
+Palette, initial mixture and those six rates remain pinned in R16. Schema 14
+adds only `arealLoadContractVersion="keyboard-dye-areal-load-v1"`; it does not
+carry R15's `sharedAdsorptionCapacity`. The public builder integrates actual
+glyph Contact alpha, flow and repeated/crossing contacts, with a full M/58 pass
+normalized to one. There is still no hue/Optical gain, edge mask, per-species
+capacity, surface residence or coffee-ring.
 
-The current `npm run verify` gate builds 122 modules and 15 public entry points
-and passes all 254 tests. Package dry-run remains part of the release gate.
+The current `npm run verify` gate builds 125 modules and 15 public entry points
+and passes all 271 tests. Package dry-run contains 138 files and remains part
+of the release gate.
 
-Pass `null` or omit the final argument to allocate no component state and
-preserve the ordinary path exactly.
+Pass `null` or omit the dye-component argument, and omit the matching areal
+load, to allocate no component state and preserve the ordinary path exactly.
 
 Optical bilinear-samples the visible mobile and adsorbed `T/R` planes, then
 recovers the transported secondary weight as `f0 + Rvisible/Tvisible`. The
@@ -161,8 +183,8 @@ paper scattering spectrum, finite-layer thickness, fluorescence, or camera/
 display color-management calibration. The operator changes RGB only where
 ordinary alpha already exists and copies every alpha byte exactly, so it cannot
 add coverage, an outline, glow or a wider footprint. R1–R12 remain exported for
-archival round-trip; registered R13/R14 checkpoints are runtime-compatible only
-through their exact fingerprints, while new authoring uses the active R15
+archival round-trip; registered R13/R14/R15 checkpoints are runtime-compatible
+only through their exact fingerprints, while new authoring uses the active R16
 model/schema.
 
 For separation research, the Canvas2D renderer exposes the same state as an

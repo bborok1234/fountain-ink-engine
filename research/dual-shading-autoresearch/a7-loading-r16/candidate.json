@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "dual-shading-loading-r16-candidate-v1",
+  "id": "dual-shading-loading-r16-keyboard-dye-areal-load-v1",
+  "hypothesis": "A deterministic keyboard dye areal-load field alone makes broader, wetter, repeated, and crossing contacts retain more two-dye topology without changing R14 transport coefficients.",
+  "method": "keyboard-dye-areal-load-v1"
+}

@@ -138,17 +138,11 @@ test("recorded A7-3 batch covers the exact plan and never claims nine points", a
     && row.predecessor.conclusion === "capacity-free-r14-plateau"));
 });
 
-test("one-candidate A7-3 child evaluation is locked and does not record", async () => {
+test("archived A7-3 batch cannot run against R16 and does not record", async () => {
   const resultsBefore = await readFile(DEFAULT_BATCH_RESULTS_PATH, "utf8");
-  const result = await runBatch({ candidateLimit: 1, record: false });
-  assert.equal(result.plan.plannedCandidateCount, 8);
-  assert.equal(result.plan.evaluatedCandidateCount, 1);
-  assert.equal(result.plan.complete, false);
-  assert.equal(
-    result.candidates[0].candidate.sharedAdsorptionCapacity,
-    EXPECTED_CAPACITIES[0],
+  await assert.rejects(
+    runBatch({ candidateLimit: 1, record: false }),
+    /evaluator lock mismatch|source tree lock mismatch/,
   );
-  assert.equal(result.scalarScore, null);
-  assert.equal(result.automaticNinePointClaim, false);
   assert.equal(await readFile(DEFAULT_BATCH_RESULTS_PATH, "utf8"), resultsBefore);
 });

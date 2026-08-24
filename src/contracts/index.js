@@ -29,3 +29,7 @@ export {
   createStableOutputContract,
   validateStableOutputContract,
 } from "./stable-output-contract.js";
+export {
+  KEYBOARD_DYE_AREAL_LOAD_CONTRACT_VERSION,
+  assertKeyboardDyeArealLoad,
+} from "./keyboard-dye-areal-load.js";

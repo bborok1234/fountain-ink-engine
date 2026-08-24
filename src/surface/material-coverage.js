@@ -8,6 +8,7 @@ import {
 } from "../surface-recipes/index.js";
 import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
 import { assertPigmentComponentRecipeCompatible } from "../pigment-components/index.js";
+import { assertKeyboardDyeArealLoad } from "../contracts/keyboard-dye-areal-load.js";
 
 export const DEFAULT_SURFACE_SEED = 0x13579bdf;
 
@@ -25,6 +26,8 @@ export const DEFAULT_SURFACE_SEED = 0x13579bdf;
  *   pigmentWeight:Float32Array}|null} densityTransport
  * @param {Record<string, unknown>|null} dyeComponentRecipe
  * @param {Record<string, unknown>|null} pigmentComponentRecipe
+ * @param {{contractVersion:string,width:number,height:number,
+ *   data:Float32Array}|null} keyboardDyeArealLoad
  */
 export function createKeyboardSurfaceState(
   deposit,
@@ -34,6 +37,7 @@ export function createKeyboardSurfaceState(
   densityTransport = null,
   dyeComponentRecipe = null,
   pigmentComponentRecipe = null,
+  keyboardDyeArealLoad = null,
 ) {
   assertInkRecipeCompatible(inkRecipe);
   assertSurfaceRecipeCompatible(surfaceRecipe);
@@ -50,6 +54,32 @@ export function createKeyboardSurfaceState(
   if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
     throw new TypeError(
       "Only one transported dye or pigment component may be active per solve.",
+    );
+  }
+  const r16ArealLoadRequired = dyeComponentRecipe !== null
+    && dyeComponentRecipe.componentRecipeSchemaVersion === 14;
+  const validatedKeyboardDyeArealLoad = keyboardDyeArealLoad === null
+    ? null
+    : assertKeyboardDyeArealLoad(keyboardDyeArealLoad);
+  if (r16ArealLoadRequired && validatedKeyboardDyeArealLoad === null) {
+    throw new TypeError(
+      "keyboardDyeArealLoad is required for a schema 14 dye component.",
+    );
+  }
+  if (!r16ArealLoadRequired && validatedKeyboardDyeArealLoad !== null) {
+    throw new TypeError(
+      "keyboardDyeArealLoad is only valid for a schema 14 dye component.",
+    );
+  }
+  if (
+    validatedKeyboardDyeArealLoad !== null
+    && (
+      validatedKeyboardDyeArealLoad.width !== deposit.width
+      || validatedKeyboardDyeArealLoad.height !== deposit.height
+    )
+  ) {
+    throw new TypeError(
+      "keyboardDyeArealLoad dimensions must match the deposit grid.",
     );
   }
   if (
@@ -81,6 +111,9 @@ export function createKeyboardSurfaceState(
     ...(pigmentComponentRecipe === null
       ? {}
       : { pigmentComponentRecipe }),
+    ...(validatedKeyboardDyeArealLoad === null
+      ? {}
+      : { keyboardDyeArealLoad: validatedKeyboardDyeArealLoad }),
   });
   const stepResponse = surfaceRecipe.surfaceRecipeSchemaVersion === 1
     ? surfaceRecipe.axes.verticalUptake

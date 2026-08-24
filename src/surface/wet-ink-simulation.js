@@ -9,6 +9,7 @@ import {
   serializeDyeComponentRecipe,
 } from "../dye-components/index.js";
 import { assertPigmentComponentRecipeCompatible } from "../pigment-components/index.js";
+import { assertKeyboardDyeArealLoad } from "../contracts/keyboard-dye-areal-load.js";
 
 const clamp = (value, minimum = 0, maximum = 1) =>
   Math.min(maximum, Math.max(minimum, value));
@@ -874,6 +875,17 @@ export class WetInkSimulation {
       "pigmentComponentRecipe",
       "options.pigmentComponentRecipe",
     ) ?? null;
+    const keyboardDyeArealLoadValue = readOptionalOwnDataProperty(
+      options,
+      "keyboardDyeArealLoad",
+      "options.keyboardDyeArealLoad",
+    );
+    const keyboardDyeArealLoad = keyboardDyeArealLoadValue === undefined
+      ? null
+      : assertKeyboardDyeArealLoad(
+        keyboardDyeArealLoadValue,
+        "options.keyboardDyeArealLoad",
+      );
     if (dyeComponentRecipe !== null && pigmentComponentRecipe !== null) {
       throw new TypeError(
         "Only one transported dye or pigment component may be active per solve.",
@@ -884,6 +896,29 @@ export class WetInkSimulation {
     }
     if (pigmentComponentRecipe !== null) {
       assertPigmentComponentRecipeCompatible(pigmentComponentRecipe);
+    }
+    const r16ArealLoadRequired = dyeComponentRecipe !== null
+      && dyeComponentRecipe.componentRecipeSchemaVersion === 14;
+    if (r16ArealLoadRequired && keyboardDyeArealLoad === null) {
+      throw new TypeError(
+        "options.keyboardDyeArealLoad is required for a schema 14 dye component.",
+      );
+    }
+    if (!r16ArealLoadRequired && keyboardDyeArealLoad !== null) {
+      throw new TypeError(
+        "options.keyboardDyeArealLoad is only valid for a schema 14 dye component.",
+      );
+    }
+    if (
+      keyboardDyeArealLoad !== null
+      && (
+        keyboardDyeArealLoad.width !== this.width
+        || keyboardDyeArealLoad.height !== this.height
+      )
+    ) {
+      throw new TypeError(
+        "options.keyboardDyeArealLoad dimensions must match the simulation grid.",
+      );
     }
     const materialComponentRecipe = dyeComponentRecipe ?? pigmentComponentRecipe;
     const materialComponentKind = dyeComponentRecipe !== null
@@ -943,6 +978,58 @@ export class WetInkSimulation {
         this.materialComponentFixedResidual = new Float32Array(this.length);
         this.nextMaterialComponentMobileResidual = new Float32Array(this.length);
       }
+    }
+
+    if (keyboardDyeArealLoad !== null) {
+      for (let y = 0; y < this.height; y += 1) {
+        for (let x = 0; x < this.width; x += 1) {
+          const index = y * this.width + x;
+          const arealLoad = keyboardDyeArealLoad.data[index];
+          if (!(arealLoad > 0)) continue;
+          const broad = coordinateNoise(
+            Math.floor(x / 9),
+            Math.floor(y / 8),
+            this.seed ^ options.seed,
+          );
+          const tooth = coordinateNoise(
+            x,
+            y,
+            this.seed ^ options.seed ^ 0x85ebca6b,
+          );
+          const contact = 0.82 + broad * 0.28 + (tooth - 0.5) * 0.12;
+          this.water[index] = clamp(
+            this.water[index] + arealLoad * options.waterLoad * contact,
+            0,
+            1.4,
+          );
+          const previousMobile = this.mobile[index];
+          const nextMobile = clamp(
+            previousMobile + arealLoad * options.pigmentLoad * contact,
+            0,
+            1.8,
+          );
+          this.mobile[index] = nextMobile;
+          if (densityTransport !== null) {
+            const carrier = densityTransport.pigmentWeight[index];
+            const ratio = carrier > 0
+              ? clamp(densityTransport.signedNumerator[index] / carrier, -1, 1)
+              : 0;
+            const nextSigned = this.mobileSignedMass[index]
+              + (nextMobile - previousMobile) * ratio;
+            this.mobileSignedMass[index] = clamp(
+              nextSigned,
+              -nextMobile,
+              nextMobile,
+            );
+          }
+          // Schema 14 is dye-only by validation. Total deposited dye equals
+          // the accepted ordinary base-mass delta; the authored f0 partition
+          // adds exact +0 to the canonical secondary residual plane.
+          this.materialComponentMobile[index] += nextMobile - previousMobile;
+        }
+      }
+      this.activity = 1;
+      return;
     }
 
     for (let y = 0; y < this.height; y += 1) {

@@ -16,6 +16,12 @@
 fountain-ink-engine
 fountain-ink-engine/contracts
 fountain-ink-engine/recipes
+fountain-ink-engine/dye-components
+fountain-ink-engine/sheen-components
+fountain-ink-engine/shimmer-components
+fountain-ink-engine/pigment-components
+fountain-ink-engine/oxidation-components
+fountain-ink-engine/surface-recipes
 fountain-ink-engine/deterministic
 fountain-ink-engine/contact
 fountain-ink-engine/density
@@ -37,6 +43,14 @@ historical Surface revisions remain registered. Keyboard Surface clients may use
 is nullable and retains two separate Float32 planes, `signedNumerator` and
 positive `pigmentWeight`. `createMaterialCoverage` remains the coverage-only
 compatibility entry point and allocates no signed solver state.
+
+The current dual-shading calculation is `edge-dye-study@16` under schema 14.
+Keyboard clients do not construct a second material implementation: the
+Canvas2D renderer uses public `createKeyboardDyeArealLoad` to integrate actual
+glyph Contacts and forwards the validated `keyboard-dye-areal-load-v1` plane
+into Surface. R13–R15 are exact historical checkpoints. R16's 99-case archive
+is contract-pass but visual-falsified at `6.3/10`; preserve the load contract as
+R17 input, but do not claim it closed the perceptual dual-shading gap.
 
 ## Publication boundary
 

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "dual-shading-loading-r16-archive-manifest-v1",
+  "algorithm": "sha256",
+  "evaluatorLockDigest": "156db0d82dd55297d0ce4be42b7bf50ec1b728d2e35578097b7a2f7151a64d01",
+  "engineVersion": "0.45.0-experimental.1",
+  "engineSourceTreeDigest": "f44f6bd04362b6fbca4eb151cf65b357246e2d5059d88a18625e7b089af12c72",
+  "baselineMatrixDigest": "c2f25ad0048176d19fe834b430901e315aebb6079cb2eb80bf929c89e47040ce",
+  "baselineLoadDigest": "02c091bb2c3d7a4164dc2f516b592d3b5dddc99e2895f3c6413754970342478c",
+  "baselineVisualDigest": "654d93fa0c4ba93686ec6f3e2933eddbfb0dc492b6fe7cfee1cafbf3b10c4c60",
+  "resultRowCount": 1,
+  "caseCount": 99,
+  "status": "contract-pass-visual-falsified",
+  "scientificConclusion": "loading-only-falsified",
+  "automaticNinePointClaim": false,
+  "scoreAfter": 6.3,
+  "nextMethod": "ordered-deposit-time-plus-surface-lifetime-gated-pinned-redistribution",
+  "artifacts": {
+    "scripts/dual-shading-autoresearch/a7-loading-r16/fixtures.mjs": "30b1f7667ec50d5d001904d6d9691dfdc7bc7b2273336d1b1c28351376798bce",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/metrics.mjs": "6c220246f0f0e4979953502981ca55bdf27c7e66dcdc0298e138cdc52dc5d0dd",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/evaluator.mjs": "e6ddf06c36c44e419e7d4eded7d934bd7cb5618efe1c8fd49e54563ec79c37b1",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/run.mjs": "c885ef6fcbe589554c26f2d22bb0dba6413309a30801b69a976e66ea3e35036f",
+    "scripts/dual-shading-autoresearch/a7-loading-r16/archive-validator.mjs": "7a1877caddf847c0107b969da644d7682b6192337fb27d5449dad0d46544b558",
+    "research/dual-shading-autoresearch/a7-loading-r16/PROGRAM.md": "e96ddec4f10cfd6370901af4a3eee7c70cc4e319262a0d598af8b3a85bee6bc7",
+    "research/dual-shading-autoresearch/a7-loading-r16/evaluator-lock.json": "e013464eb1d3d9a77ad34bfbee4c5302a674a4b1e93be71d9984b6afa17caadf",
+    "research/dual-shading-autoresearch/a7-loading-r16/candidate.json": "21493a626bafc65c2f745777952400b8af85486682c87527cdfa554fb8e7c49b",
+    "research/dual-shading-autoresearch/a7-loading-r16/results.ndjson": "ffea23b9b7c0ac1dbf569657e1b84245f7f5cbc97c4324e74c22e1a329827bee"
+  }
+}
