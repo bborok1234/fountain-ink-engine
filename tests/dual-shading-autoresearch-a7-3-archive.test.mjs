@@ -22,7 +22,7 @@ test("terminal A7-3 archive seals one baseline plus eight Q hard rejections", as
   assert.equal(report.plateau, true);
   assert.equal(report.automaticNinePointClaim, false);
   assert.equal(report.conclusion, "shared-vacancy-r15-plateau");
-  assert.equal(typeof report.currentRuntimeRejected, "boolean");
+  assert.equal(report.currentRuntimeRejected, true);
 });
 
 test("A7-3 archive manifest byte tampering is rejected before rows are trusted", async () => {

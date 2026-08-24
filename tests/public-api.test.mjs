@@ -25,6 +25,26 @@ test("self-referenced package barrels expose the stable API", () => {
   );
   assert.equal(engine.WetInkSimulation, surface.WetInkSimulation);
   assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R16,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R16,
+  );
+  assert.equal(
+    engine.KEYBOARD_DYE_AREAL_LOAD_CONTRACT_VERSION,
+    "keyboard-dye-areal-load-v1",
+  );
+  assert.equal(
+    engine.assertKeyboardDyeArealLoad,
+    contracts.assertKeyboardDyeArealLoad,
+  );
+  assert.equal(
+    engine.createKeyboardDyeArealLoad,
+    canvas2d.createKeyboardDyeArealLoad,
+  );
+  assert.equal(
+    engine.getKeyboardDyeArealLoadScale,
+    canvas2d.getKeyboardDyeArealLoadScale,
+  );
+  assert.equal(
     engine.EDGE_DYE_COMPONENT_RECIPE_R4,
     dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R4,
   );

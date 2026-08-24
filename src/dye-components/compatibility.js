@@ -19,6 +19,7 @@ import { EDGE_DYE_COMPONENT_RECIPE_R12 } from "./edge-dye-r12.js";
 import { EDGE_DYE_COMPONENT_RECIPE_R13 } from "./edge-dye-r13.js";
 import { EDGE_DYE_COMPONENT_RECIPE_R14 } from "./edge-dye-r14.js";
 import { EDGE_DYE_COMPONENT_RECIPE_R15 } from "./edge-dye-r15.js";
+import { EDGE_DYE_COMPONENT_RECIPE_R16 } from "./edge-dye-r16.js";
 
 const REGISTERED_RECIPES = Object.freeze({
   "edge-dye-study@1": "{\"componentModelVersion\":\"dye-component-js-r1\",\"componentRecipeSchemaVersion\":1,\"id\":\"edge-dye-study\",\"massFraction\":0.32,\"mobilityMultiplier\":1.45,\"retentionMultiplier\":0.62,\"revision\":1}",
@@ -36,21 +37,28 @@ const REGISTERED_RECIPES = Object.freeze({
   "edge-dye-study@13": "{\"baseHighBlue\":158,\"baseHighGreen\":90,\"baseHighRed\":105,\"baseLowBlue\":202,\"baseLowGreen\":156,\"baseLowRed\":136,\"baseMidBlue\":173,\"baseMidGreen\":144,\"baseMidRed\":101,\"baseMix\":0.86,\"componentModelVersion\":\"dye-component-js-r13\",\"componentRecipeSchemaVersion\":12,\"id\":\"edge-dye-study\",\"initialSecondaryFraction\":0.24242424242424243,\"primaryAdsorptionRate\":0.02,\"primaryDesorptionRate\":0.0002,\"primaryDiffusivity\":0.001,\"revision\":13,\"secondaryAdsorptionRate\":0.006,\"secondaryBlue\":104,\"secondaryDesorptionRate\":0.0003,\"secondaryDiffusivity\":0.003,\"secondaryGreen\":145,\"secondaryRed\":15}",
   "edge-dye-study@14": "{\"baseHighBlue\":158,\"baseHighGreen\":90,\"baseHighRed\":105,\"baseLowBlue\":202,\"baseLowGreen\":156,\"baseLowRed\":136,\"baseMidBlue\":173,\"baseMidGreen\":144,\"baseMidRed\":101,\"baseMix\":0.86,\"componentModelVersion\":\"dye-component-js-r13\",\"componentRecipeSchemaVersion\":12,\"id\":\"edge-dye-study\",\"initialSecondaryFraction\":0.24242424242424243,\"primaryAdsorptionRate\":0.06,\"primaryDesorptionRate\":0.000005,\"primaryDiffusivity\":0.00005,\"revision\":14,\"secondaryAdsorptionRate\":0.001,\"secondaryBlue\":104,\"secondaryDesorptionRate\":0.00002,\"secondaryDiffusivity\":0.0008,\"secondaryGreen\":145,\"secondaryRed\":15}",
   "edge-dye-study@15": "{\"baseHighBlue\":158,\"baseHighGreen\":90,\"baseHighRed\":105,\"baseLowBlue\":202,\"baseLowGreen\":156,\"baseLowRed\":136,\"baseMidBlue\":173,\"baseMidGreen\":144,\"baseMidRed\":101,\"baseMix\":0.86,\"componentModelVersion\":\"dye-component-js-r14\",\"componentRecipeSchemaVersion\":13,\"id\":\"edge-dye-study\",\"initialSecondaryFraction\":0.24242424242424243,\"primaryAdsorptionRate\":0.06,\"primaryDesorptionRate\":0.000005,\"primaryDiffusivity\":0.00005,\"revision\":15,\"secondaryAdsorptionRate\":0.001,\"secondaryBlue\":104,\"secondaryDesorptionRate\":0.00002,\"secondaryDiffusivity\":0.0008,\"secondaryGreen\":145,\"secondaryRed\":15,\"sharedAdsorptionCapacity\":0.075}",
+  "edge-dye-study@16": "{\"arealLoadContractVersion\":\"keyboard-dye-areal-load-v1\",\"baseHighBlue\":158,\"baseHighGreen\":90,\"baseHighRed\":105,\"baseLowBlue\":202,\"baseLowGreen\":156,\"baseLowRed\":136,\"baseMidBlue\":173,\"baseMidGreen\":144,\"baseMidRed\":101,\"baseMix\":0.86,\"componentModelVersion\":\"dye-component-js-r15\",\"componentRecipeSchemaVersion\":14,\"id\":\"edge-dye-study\",\"initialSecondaryFraction\":0.24242424242424243,\"primaryAdsorptionRate\":0.06,\"primaryDesorptionRate\":0.000005,\"primaryDiffusivity\":0.00005,\"revision\":16,\"secondaryAdsorptionRate\":0.001,\"secondaryBlue\":104,\"secondaryDesorptionRate\":0.00002,\"secondaryDiffusivity\":0.0008,\"secondaryGreen\":145,\"secondaryRed\":15}",
 });
 
 const keyFor = (recipe) => `${recipe.id}@${recipe.revision}`;
 const REGISTERED_RECIPE_IDS = new Set(
   Object.keys(REGISTERED_RECIPES).map((key) => key.split("@")[0]),
 );
-// The immediately preceding capacity-free runtime remains executable only for
-// the exact, fingerprint-pinned R13 and R14 built-ins. Historical schema 12 is
-// replay evidence, not an authoring surface; new custom authoring uses R15.
+// Prior runtime operators remain executable only for exact fingerprint-pinned
+// built-ins. Historical schemas are replay evidence, not authoring surfaces;
+// current custom authoring uses R16/schema 14.
 const isHistoricalRuntimeModel = (recipe) =>
-  recipe.componentModelVersion === "dye-component-js-r13"
-  && recipe.componentRecipeSchemaVersion === 12;
+  (
+    recipe.componentModelVersion === "dye-component-js-r13"
+    && recipe.componentRecipeSchemaVersion === 12
+  ) || (
+    recipe.componentModelVersion === "dye-component-js-r14"
+    && recipe.componentRecipeSchemaVersion === 13
+  );
 const HISTORICAL_RUNTIME_KEYS = new Set([
   "edge-dye-study@13",
   "edge-dye-study@14",
+  "edge-dye-study@15",
 ]);
 
 if (
@@ -176,6 +184,15 @@ if (
 ) {
   throw new TypeError(
     "built-in dye component edge-dye-study@15 changed without a revision.",
+  );
+}
+
+if (
+  serializeDyeComponentRecipe(EDGE_DYE_COMPONENT_RECIPE_R16)
+    !== REGISTERED_RECIPES["edge-dye-study@16"]
+) {
+  throw new TypeError(
+    "built-in dye component edge-dye-study@16 changed without a revision.",
   );
 }
 

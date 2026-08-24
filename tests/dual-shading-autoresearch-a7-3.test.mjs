@@ -1,69 +1,35 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { performance } from "node:perf_hooks";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import {
   CANDIDATE_SCHEMA_VERSION,
   DEFAULT_CANDIDATE_PATH,
-  DEFAULT_LOCK_PATH,
-  ENGINE_BASELINE_VERSION,
-  MAX_CANDIDATE_MILLISECONDS,
   evaluateCandidateFromFile,
-  formatResultNdjson,
-  formatResultTsv,
-  resultRow,
   stableStringify,
   validateCandidate,
   verifyEvaluatorLock,
 } from "../scripts/dual-shading-autoresearch/a7-3/evaluator.mjs";
 import {
+  DEFAULT_A7_3_RESULT_PATH,
+  validateA7_3Archive,
+} from "../scripts/dual-shading-autoresearch/a7-3/archive-validator.mjs";
+import {
   analyzeSharedVacancyCapacity,
 } from "../scripts/dual-shading-autoresearch/a7-3/capacity-metrics.mjs";
 
-let firstDuration = 0;
-let secondDuration = 0;
-const firstEvaluation = (async () => {
-  const started = performance.now();
-  const summary = await evaluateCandidateFromFile();
-  firstDuration = performance.now() - started;
-  return summary;
-})();
-const secondEvaluation = firstEvaluation.then(async () => {
-  const started = performance.now();
-  const summary = await evaluateCandidateFromFile();
-  secondDuration = performance.now() - started;
-  return summary;
-});
-
-test("A7-3 evaluator runs the locked 45-case Q-only baseline without a nine-point claim", async () => {
-  const summary = await firstEvaluation;
-  assert.equal(summary.candidate.schemaVersion, CANDIDATE_SCHEMA_VERSION);
-  assert.equal(summary.candidate.id, "dual-shading-a7-3-q-075-baseline");
-  assert.equal(summary.candidate.sharedAdsorptionCapacity, 0.075);
-  assert.equal(summary.fixedBaseline.engineVersion, ENGINE_BASELINE_VERSION);
-  assert.equal(summary.fixedBaseline.dyeRecipe, "edge-dye-study@15");
-  assert.equal(summary.fixedBaseline.sharedAdsorptionCapacity, 0.075);
-  assert.equal(summary.evaluatorMatrix.caseCount, 45);
-  assert.equal(summary.evaluatorMatrix.repeatExact, true);
-  assert.equal(summary.automaticNinePointClaim, false);
-  assert.equal(summary.humanReview.requiredForAccepted, true);
-  assert.equal(summary.humanReview.completed, false);
-  assert.equal(summary.pareto.weightedScore, null);
-  assert.equal(summary.predecessor.conclusion, "capacity-free-r14-plateau");
-  assert.equal(summary.capacity.maximumOverflowPeak <= 2e-6, true);
-  assert.match(summary.evaluatorMatrix.matrixDigest, /^[0-9a-f]{64}$/);
-  assert.equal(
-    summary.fixedBaseline.matrixDigest,
-    summary.evaluatorMatrix.matrixDigest,
-  );
-  const ndjson = formatResultNdjson(summary);
-  assert.equal(ndjson.split("\n").length, 2);
-  assert.deepEqual(JSON.parse(ndjson).candidate, summary.candidate);
-  assert.deepEqual(resultRow(summary).capacity, summary.capacity);
-  assert.equal(formatResultTsv(summary, { includeHeader: true })
-    .trimEnd().split("\n").length, 2);
+test("archived A7-3 baseline remains sealed and rejects the R16 runtime", async () => {
+  const report = await validateA7_3Archive();
+  const rows = (await readFile(DEFAULT_A7_3_RESULT_PATH, "utf8"))
+    .split("\n").filter(Boolean).map(JSON.parse);
+  assert.equal(report.currentRuntimeRejected, true);
+  assert.equal(report.resultRowCount, 1);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].candidate.schemaVersion, CANDIDATE_SCHEMA_VERSION);
+  assert.equal(rows[0].candidate.id, "dual-shading-a7-3-q-075-baseline");
+  assert.equal(rows[0].candidate.sharedAdsorptionCapacity, 0.075);
+  assert.equal(rows[0].status, "reject-hard");
+  assert.equal(rows[0].automaticNinePointClaim, false);
+  assert.equal(rows[0].predecessor.conclusion, "capacity-free-r14-plateau");
 });
 
 test("A7-3 candidate schema exposes Q and rejects every retired control", async () => {
@@ -91,36 +57,19 @@ test("A7-3 candidate schema exposes Q and rejects every retired control", async 
   );
 });
 
-test("A7-3 evaluator lock pins R15 and the immutable R14 predecessor", async () => {
-  const lockInfo = await verifyEvaluatorLock();
-  assert.equal(lockInfo.lock.engineVersion, ENGINE_BASELINE_VERSION);
-  assert.equal(lockInfo.lock.fixedBaseline.dyeRecipe, "edge-dye-study@15");
-  assert.equal(lockInfo.lock.fixedBaseline.sharedAdsorptionCapacity, 0.075);
-  assert.equal(
-    lockInfo.lock.predecessor.evaluatorLockDigest,
-    "2cee2e1511347df5627dda778518ebcc67b82b3d13020c1334dea62187adf2e2",
-  );
-
-  const directory = await mkdtemp(join(tmpdir(), "fountain-a7-3-lock-"));
-  const lockPath = join(directory, "lock.json");
-  try {
-    const lock = JSON.parse(await readFile(DEFAULT_LOCK_PATH, "utf8"));
-    lock.predecessor.evaluatorLockDigest = "0".repeat(64);
-    await writeFile(lockPath, `${JSON.stringify(lock)}\n`, "utf8");
-    await assert.rejects(
-      evaluateCandidateFromFile({ lockPath }),
-      /predecessor archive provenance mismatch/,
-    );
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
+test("archived A7-3 live lock cannot run or refresh against R16", async () => {
+  const rejectedRuntime = /evaluator lock mismatch|source tree lock mismatch/;
+  await assert.rejects(verifyEvaluatorLock(), rejectedRuntime);
+  await assert.rejects(evaluateCandidateFromFile(), rejectedRuntime);
 });
 
-test("locked A7-3 evaluation is deterministic and remains inside one budget", async () => {
-  const [first, second] = await Promise.all([firstEvaluation, secondEvaluation]);
+test("terminal A7-3 archive validation is deterministic", async () => {
+  const [first, second] = await Promise.all([
+    validateA7_3Archive(),
+    validateA7_3Archive(),
+  ]);
   assert.equal(stableStringify(first), stableStringify(second));
-  assert.ok(firstDuration < MAX_CANDIDATE_MILLISECONDS);
-  assert.ok(secondDuration < MAX_CANDIDATE_MILLISECONDS);
+  assert.equal(first.currentRuntimeRejected, true);
 });
 
 test("shared-vacancy diagnostics reject overflow and independent negative species", () => {

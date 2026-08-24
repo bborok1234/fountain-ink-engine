@@ -256,6 +256,15 @@ versioned falsified hypothesis rather than proof of perceptual closure. Equal
 independent absolute capacities remain forbidden because they do not preserve
 a neutral unequal mixture.
 
+Schema 14/R16 branches from R14's capacity-free reaction and adds only the
+`keyboard-dye-areal-load-v1` input contract. The Canvas2D adapter box-integrates
+actual glyph Contact alpha into the Surface grid, adds repeated and crossing
+contacts, and scales it with the public effective-flow equation. A fully covered
+M/58 pass is one. Surface validates this plane before deposit and applies it to
+accepted water and dye deltas; no palette, fraction, transport rate, Optical,
+capacity, surface-residence or contact-line operator changes in R16. Registered
+R13–R15 recipes retain their exact historical dispatch and reject this input.
+
 R3 turns only positive R2 enrichment into a diagnostic edge-accumulation
 candidate. The operator also requires visible component mass and weights the
 candidate by local exposure against the base-pigment mass gradient. A fixed
@@ -331,13 +340,13 @@ observes the buffers already used by the accepted render path:
 - `surface.paperDepth`: the nullable solver-grid subsurface pigment and signed
   numerator copied from the r2 depth state. It is `null` for r1 recipes or when
   no depth state was created;
-- `surface.dyeComponent`: nullable current R15 recipe on the shared-water
+- `surface.dyeComponent`: nullable current R16 recipe on the shared-water
   `two-dye-total-residual-v2`
   record. It exposes six solver-grid Float32 planes: total and signed secondary
   residual for each mobile, adsorbed, and depth phase. Explicit zero depth
   planes keep the shape stable on non-depth papers. `T=P+S` and `R=S-f0T`
   reconstruct both species; equal-coefficient neutral fixtures keep every `R`
-  exactly zero, while the R15 built-in can publish both residual signs. The
+  exactly zero, while the R16 built-in can publish both residual signs. The
   component total is the ordinary deposited dye represented as two species,
   not extra mass. Optical bilinear-samples visible mobile+adsorbed `T/R`, does
   not read depth mass, and resolves the secondary share only after

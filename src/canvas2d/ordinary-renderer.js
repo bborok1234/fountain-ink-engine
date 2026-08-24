@@ -43,6 +43,7 @@ import {
 import { resampleContactDensityToSurfaceGrid } from "../surface/density-transport.js";
 import { assertPercent, assertUint32 } from "../contracts/numeric.js";
 import { makeLayer } from "./glyph-mask.js";
+import { createKeyboardDyeArealLoad } from "./keyboard-dye-areal-load.js";
 
 const preparedMaterialStates = new WeakSet();
 
@@ -382,6 +383,21 @@ export function beginOrdinaryInkMaterial({
     fontSize,
     glyphContacts,
   });
+  const keyboardDyeArealLoad = surfaceDeposit !== null
+    && dyeComponentRecipe !== null
+    && dyeComponentRecipe.componentRecipeSchemaVersion === 14
+    ? createKeyboardDyeArealLoad({
+      pixelWidth,
+      pixelHeight,
+      targetWidth: surfaceDeposit.width,
+      targetHeight: surfaceDeposit.height,
+      scale,
+      fontSize,
+      glyphContacts,
+      nibId,
+      flow,
+    })
+    : null;
   const surfaceState = surfaceDeposit === null
     ? null
     : createKeyboardSurfaceState(
@@ -402,6 +418,7 @@ export function beginOrdinaryInkMaterial({
         : null,
       dyeComponentRecipe,
       pigmentComponentRecipe,
+      keyboardDyeArealLoad,
     );
   const fiberEdgeCoverage = createPaperFiberEdge({
     width: pixelWidth,

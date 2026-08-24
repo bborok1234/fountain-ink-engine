@@ -1,5 +1,7 @@
-export const dyeComponentModelVersion = "dye-component-js-r14";
-export const dyeComponentRecipeSchemaVersion = 13;
+import { KEYBOARD_DYE_AREAL_LOAD_CONTRACT_VERSION } from "../contracts/keyboard-dye-areal-load.js";
+
+export const dyeComponentModelVersion = "dye-component-js-r15";
+export const dyeComponentRecipeSchemaVersion = 14;
 export const dyeComponentStateModelVersion =
   "two-dye-total-residual-v2";
 const MINIMUM_NORMAL_FLOAT32 = 2 ** -126;
@@ -22,6 +24,7 @@ export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([
   11,
   12,
   13,
+  14,
 ]);
 
 const RECIPE_KEYS_V1 = Object.freeze([
@@ -183,6 +186,12 @@ const RECIPE_KEYS_V13 = Object.freeze([
   ...RECIPE_KEYS_V12,
   "sharedAdsorptionCapacity",
 ]);
+// Schema 14 branches from capacity-free R14 and adds only an explicit keyboard
+// areal-load contract identity. It deliberately excludes R15's shared Q.
+const RECIPE_KEYS_V14 = Object.freeze([
+  ...RECIPE_KEYS_V12,
+  "arealLoadContractVersion",
+]);
 
 function keysForSchema(schema) {
   return schema === 1
@@ -209,7 +218,9 @@ function keysForSchema(schema) {
                         ? RECIPE_KEYS_V11
                         : schema === 12
                           ? RECIPE_KEYS_V12
-                          : RECIPE_KEYS_V13;
+                          : schema === 13
+                            ? RECIPE_KEYS_V13
+                            : RECIPE_KEYS_V14;
 }
 
 function assertPlainRecord(value, path) {
@@ -302,7 +313,7 @@ export function validateDyeComponentRecipe(recipe) {
       1,
     );
     if (
-      schema === 13
+      schema >= 13
       && recipe.initialSecondaryFraction !== 0
       && recipe.initialSecondaryFraction !== 1
       && (
@@ -316,7 +327,7 @@ export function validateDyeComponentRecipe(recipe) {
       );
     }
   }
-  if (schema === 12 || schema === 13) {
+  if (schema >= 12) {
     for (const key of [
       "primaryDiffusivity",
       "secondaryDiffusivity",
@@ -338,6 +349,15 @@ export function validateDyeComponentRecipe(recipe) {
   ) {
     throw new TypeError(
       "dyeComponentRecipe.sharedAdsorptionCapacity must be a finite normal Float32-representable positive number.",
+    );
+  }
+  if (
+    schema === 14
+    && recipe.arealLoadContractVersion
+      !== KEYBOARD_DYE_AREAL_LOAD_CONTRACT_VERSION
+  ) {
+    throw new TypeError(
+      `dyeComponentRecipe.arealLoadContractVersion must be ${KEYBOARD_DYE_AREAL_LOAD_CONTRACT_VERSION}.`,
     );
   }
   if (schema >= 2 && schema <= 8) {

@@ -396,8 +396,8 @@ versus well-mixed Optical changed 502 pixels with mean channel delta `0.3`,
 maximum `1`, and exact alpha. The browser console had zero warnings or errors. The
 perceptual score remains `6.3/10`.
 
-Package `0.44.0-experimental.1` makes `edge-dye-study@15` the current
-dual-shading recipe. It preserves R14's palette, initial fraction and six rates
+Package `0.44.0-experimental.1` made `edge-dye-study@15` the shared-vacancy
+dual-shading checkpoint. It preserves R14's palette, initial fraction and six rates
 while adding one shared adsorption capacity. R14 remains a fingerprint-pinned
 historical capacity-free checkpoint. Its bounded 27-case start-stop, junction,
 and double-pass matrix across
@@ -450,8 +450,34 @@ hard rejections, zero optical-area fidelity, zero shortlist and no automatic
 nine-point claim. A later runtime must reject or report drift instead of
 silently refreshing this failed experiment.
 
-The current R15 release gate builds 122 modules and 15 public entry points,
-passes all 254 tests, and packs 135 files (176.9 kB packed / 739.0 kB
+Package `0.45.0-experimental.1` makes `edge-dye-study@16` the current
+dual-shading recipe. R16 branches from capacity-free R14 rather than carrying
+the failed R15 Q operator. It adds only schema-14
+`keyboard-dye-areal-load-v1`: the public builder box-integrates actual glyph
+Contact alpha in source order, adds repeated/crossing contacts, and normalizes
+a fully covered M/flow-58 pass to one. The scale uses the public effective-flow
+equation. Palette, initial fraction, six R14 transport rates, state version and
+finite-loading Optical remain unchanged. R13, R14 and R15 still execute only
+their exact registered historical operators.
+
+The areal-load descriptor is a frozen snapshot over an exact native
+`Float32Array`; record and nested-plane Proxies fail before Surface or deposit
+mutation. The public builder rejects more than 76,800 target cells or 16 million
+contact-by-target-cell work. R16 routes accepted load into water and ordinary/
+component dye mass while keeping initial residual `+0` and component-off
+behavior exact.
+
+The locked 99-case R16 study passed every contract and algebra gate but
+falsified the loading-only visual hypothesis. Mean fraction spans were UEF
+`0.04059599`, M `0.03225471`, and B `0.02924466`; B/UEF was `0.72038299`,
+wet/dry B `0.95109625`, wet-minus-dry Optical area delta `-0.01254517`, and
+cross junction/body `0.74366004`. The terminal archive records 328 visual
+failures, score `6.3/10`, and `automaticNinePointClaim=false`. The public load
+contract remains useful input for a different surface-residence operator; it is
+not evidence that visible dual shading improved.
+
+The current R16 release gate builds 125 modules and 15 public entry points,
+passes all 271 tests, and packs 138 files (180.1 kB packed / 756.9 kB
 unpacked) in dry-run mode.
 
 The engine contains no React component, text control, Vite configuration,

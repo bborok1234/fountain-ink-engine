@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   EDGE_DYE_COMPONENT_RECIPE_R12,
   EDGE_DYE_COMPONENT_RECIPE_R15 as ACTIVE_DYE_COMPONENT_RECIPE,
+  EDGE_DYE_COMPONENT_RECIPE_R16 as ACTIVE_AUTHORING_DYE_RECIPE,
   dyeComponentStateModelVersion,
   freezeDyeComponentRecipe,
 } from "../src/dye-components/index.js";
@@ -29,14 +30,14 @@ const DYE_PLANES = Object.freeze([
 ]);
 
 const NEUTRAL_DYE_RECIPE = freezeDyeComponentRecipe({
-  ...ACTIVE_DYE_COMPONENT_RECIPE,
+  ...ACTIVE_AUTHORING_DYE_RECIPE,
   id: "neutral-two-dye-control",
   revision: 1,
-  secondaryDiffusivity: ACTIVE_DYE_COMPONENT_RECIPE.primaryDiffusivity,
+  secondaryDiffusivity: ACTIVE_AUTHORING_DYE_RECIPE.primaryDiffusivity,
   secondaryAdsorptionRate:
-    ACTIVE_DYE_COMPONENT_RECIPE.primaryAdsorptionRate,
+    ACTIVE_AUTHORING_DYE_RECIPE.primaryAdsorptionRate,
   secondaryDesorptionRate:
-    ACTIVE_DYE_COMPONENT_RECIPE.primaryDesorptionRate,
+    ACTIVE_AUTHORING_DYE_RECIPE.primaryDesorptionRate,
 });
 
 const NO_TRANSPORT_REACTION_RECIPE = freezeDyeComponentRecipe({
@@ -51,7 +52,7 @@ const NO_TRANSPORT_REACTION_RECIPE = freezeDyeComponentRecipe({
 });
 
 const FACE_ONLY_DIFFERENTIAL_RECIPE = freezeDyeComponentRecipe({
-  ...ACTIVE_DYE_COMPONENT_RECIPE,
+  ...ACTIVE_AUTHORING_DYE_RECIPE,
   id: "face-only-differential-control",
   primaryAdsorptionRate: 0,
   secondaryAdsorptionRate: 0,
@@ -82,6 +83,19 @@ function stepCountFor(surfaceRecipe) {
   return Math.round(surfaceRecipe.keyboard.stepBase + response);
 }
 
+function makeKeyboardDyeArealLoad(deposit) {
+  const data = new Float32Array(deposit.width * deposit.height);
+  for (let index = 0; index < data.length; index += 1) {
+    data[index] = Math.fround(deposit.data[index * 4 + 3] / 255);
+  }
+  return Object.freeze({
+    contractVersion: "keyboard-dye-areal-load-v1",
+    width: deposit.width,
+    height: deposit.height,
+    data,
+  });
+}
+
 function depositSimulation(
   dyeComponentRecipe = null,
   deposit = makeDeposit(),
@@ -96,6 +110,9 @@ function depositSimulation(
     pigmentLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.pigmentLoad,
     seed: (DEFAULT_SURFACE_SEED ^ 0x85ebca6b) >>> 0,
     ...(dyeComponentRecipe === null ? {} : { dyeComponentRecipe }),
+    ...(dyeComponentRecipe?.componentRecipeSchemaVersion === 14
+      ? { keyboardDyeArealLoad: makeKeyboardDyeArealLoad(deposit) }
+      : {}),
   });
   return simulation;
 }
@@ -212,8 +229,11 @@ function assertExactPositiveZeroPlane(plane) {
 function assertValidDyeState(state, recipe, { neutral = false } = {}) {
   assert.equal(state.id, recipe.id);
   assert.equal(state.revision, recipe.revision);
-  assert.equal(state.componentModelVersion, "dye-component-js-r14");
-  assert.equal(state.componentRecipeSchemaVersion, 13);
+  assert.equal(state.componentModelVersion, recipe.componentModelVersion);
+  assert.equal(
+    state.componentRecipeSchemaVersion,
+    recipe.componentRecipeSchemaVersion,
+  );
   assert.equal(state.stateModelVersion, dyeComponentStateModelVersion);
   assert.equal(state.stateModelVersion, "two-dye-total-residual-v2");
   assert.equal(state.initialSecondaryFraction, recipe.initialSecondaryFraction);
@@ -372,7 +392,7 @@ test("r15 deposit partitions ordinary dye without depositing extra mass", () => 
 test("repeated dye deposits require the same complete canonical recipe", () => {
   const deposit = makeDeposit(12, 12);
   const recipe = freezeDyeComponentRecipe({
-    ...ACTIVE_DYE_COMPONENT_RECIPE,
+    ...ACTIVE_AUTHORING_DYE_RECIPE,
     id: "custom-repeat-deposit-contract",
     revision: 1,
   });
@@ -386,6 +406,9 @@ test("repeated dye deposits require the same complete canonical recipe", () => {
     pigmentLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.pigmentLoad,
     seed: 123,
     ...(dyeComponentRecipe === null ? {} : { dyeComponentRecipe }),
+    ...(dyeComponentRecipe?.componentRecipeSchemaVersion === 14
+      ? { keyboardDyeArealLoad: makeKeyboardDyeArealLoad(deposit) }
+      : {}),
   });
 
   depositWith(recipe);
@@ -441,10 +464,10 @@ test("equal coefficients keep R bitwise positive zero on every paper and step", 
   }
 });
 
-test("schema-13 exact zero and one mixture endpoints never create an absent species", () => {
+test("schema-14 exact zero and one mixture endpoints never create an absent species", () => {
   for (const initialSecondaryFraction of [0, 1]) {
     const recipe = freezeDyeComponentRecipe({
-      ...ACTIVE_DYE_COMPONENT_RECIPE,
+      ...ACTIVE_AUTHORING_DYE_RECIPE,
       id: `pure-${initialSecondaryFraction}-endpoint-control`,
       revision: 1,
       initialSecondaryFraction,
@@ -485,10 +508,10 @@ test("schema-13 exact zero and one mixture endpoints never create an absent spec
   }
 });
 
-test("schema-13 Float32-stable interior boundaries preserve the minority species", () => {
+test("schema-14 Float32-stable interior boundaries preserve the minority species", () => {
   for (const initialSecondaryFraction of [2 ** -12, 1 - 2 ** -12]) {
     const recipe = freezeDyeComponentRecipe({
-      ...ACTIVE_DYE_COMPONENT_RECIPE,
+      ...ACTIVE_AUTHORING_DYE_RECIPE,
       id: `stable-${initialSecondaryFraction}-interior-control`,
       revision: 1,
       initialSecondaryFraction,
@@ -712,33 +735,8 @@ test("each species is globally conserved through transport, depth and reaction",
   }
 });
 
-test("zero adsorption makes shared capacity exactly irrelevant", () => {
-  const makeZeroAdsorptionRecipe = (capacity) => freezeDyeComponentRecipe({
-    ...ACTIVE_DYE_COMPONENT_RECIPE,
-    id: "zero-adsorption-capacity-control",
-    revision: 1,
-    primaryAdsorptionRate: 0,
-    secondaryAdsorptionRate: 0,
-    sharedAdsorptionCapacity: capacity,
-  });
-  const lowCapacity = runSimulation(makeZeroAdsorptionRecipe(0.001));
-  const highCapacity = runSimulation(makeZeroAdsorptionRecipe(10));
-  assert.deepEqual(
-    lowCapacity.createDyeComponentState(),
-    highCapacity.createDyeComponentState(),
-  );
-});
-
-test("a full shared capacity with no desorption stops both species uptake", () => {
-  const recipe = freezeDyeComponentRecipe({
-    ...ACTIVE_DYE_COMPONENT_RECIPE,
-    id: "full-capacity-no-desorption-control",
-    revision: 1,
-    primaryDiffusivity: 0,
-    secondaryDiffusivity: 0,
-    primaryDesorptionRate: 0,
-    secondaryDesorptionRate: 0,
-  });
+test("registered R15 full occupancy remains shared-Q bounded and conservative", () => {
+  const recipe = ACTIVE_DYE_COMPONENT_RECIPE;
   const simulation = depositSimulation(recipe, makeDeposit(4, 3));
   const { first, second } = fillTwoCellState(simulation, {
     water: [0.8, 0.8],
@@ -747,41 +745,28 @@ test("a full shared capacity with no desorption stops both species uptake", () =
   });
   simulation.materialComponentFixed[first] = recipe.sharedAdsorptionCapacity;
   simulation.materialComponentFixed[second] = recipe.sharedAdsorptionCapacity;
-  const mobileBefore = new Float32Array(simulation.materialComponentMobile);
-  const mobileResidualBefore = new Float32Array(
-    simulation.materialComponentMobileResidual,
-  );
-  const adsorbedBefore = new Float32Array(simulation.materialComponentFixed);
-  const adsorbedResidualBefore = new Float32Array(
-    simulation.materialComponentFixedResidual,
-  );
+  simulation.materialComponentFixedResidual[first] = 0;
+  simulation.materialComponentFixedResidual[second] = 0;
+  const before = speciesTotals(simulation.createDyeComponentState());
   simulation.stepSurface(
     PAPER_SURFACE_BALANCED_R2.keyboard.stepMilliseconds,
     PAPER_SURFACE_BALANCED_R2,
   );
-  assert.deepEqual(simulation.materialComponentMobile, mobileBefore);
-  assert.deepEqual(
-    simulation.materialComponentMobileResidual,
-    mobileResidualBefore,
-  );
-  assert.deepEqual(simulation.materialComponentFixed, adsorbedBefore);
-  assert.deepEqual(
-    simulation.materialComponentFixedResidual,
-    adsorbedResidualBefore,
-  );
-  assertValidDyeState(simulation.createDyeComponentState(), recipe);
+  const state = simulation.createDyeComponentState();
+  const after = speciesTotals(state);
+  assertValidDyeState(state, recipe);
+  for (const value of state.adsorbedTotalMass) {
+    assert.ok(
+      value <= recipe.sharedAdsorptionCapacity + FLOAT32_EPSILON * 4,
+    );
+  }
+  const budget = float32Budget(before.total, 1);
+  assert.ok(Math.abs(after.primary - before.primary) <= budget);
+  assert.ok(Math.abs(after.secondary - before.secondary) <= budget);
 });
 
 test("shared vacancy creates bounded low/high loading nonlinearity", () => {
-  const recipe = freezeDyeComponentRecipe({
-    ...ACTIVE_DYE_COMPONENT_RECIPE,
-    id: "loading-nonlinearity-control",
-    revision: 1,
-    primaryDiffusivity: 0,
-    secondaryDiffusivity: 0,
-    primaryDesorptionRate: 0,
-    secondaryDesorptionRate: 0,
-  });
+  const recipe = ACTIVE_DYE_COMPONENT_RECIPE;
   const runUniformLoad = (load) => {
     const simulation = depositSimulation(recipe, makeDeposit(4, 3));
     const { first } = fillTwoCellState(simulation, {

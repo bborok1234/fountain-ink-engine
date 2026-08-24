@@ -24,6 +24,7 @@ import { sampleSurfaceDensityVariation } from "../src/surface/density-transport.
 import {
   EDGE_DYE_COMPONENT_RECIPE_R13 as ACTIVE_DYE_COMPONENT_RECIPE,
   EDGE_DYE_COMPONENT_RECIPE_R14,
+  EDGE_DYE_COMPONENT_RECIPE_R16,
 } from "fountain-ink-engine/dye-components";
 import { SHEEN_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/sheen-components";
 import { SHIMMER_COMPONENT_RECIPE_R1 } from "fountain-ink-engine/shimmer-components";
@@ -340,6 +341,69 @@ test("staged worker boundary is byte-exact with the synchronous renderer", () =>
   );
 });
 
+test("R16 staged boundary is exact and flow changes only Surface load", () => {
+  const { options } = makeOptions(42);
+  const surfaceRecipe = PAPER_SURFACE_BALANCED_R2;
+  const renderAt = (flow) => renderOrdinaryInkMaterial({
+    ...options,
+    flow,
+    surfaceRecipe,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R16,
+  });
+  const dry = renderAt(20);
+  const wet = renderAt(90);
+  assert.deepEqual(
+    dry.stages.contact.rgbaMask.data,
+    wet.stages.contact.rgbaMask.data,
+  );
+  assert.deepEqual(
+    dry.stages.density.accumulatedVariation,
+    wet.stages.density.accumulatedVariation,
+  );
+  assert.deepEqual(
+    dry.stages.density.sampleCount,
+    wet.stages.density.sampleCount,
+  );
+  assert.ok(
+    wet.stages.surface.dyeComponent.totalMass
+      > dry.stages.surface.dyeComponent.totalMass,
+  );
+
+  const canvasInput = prepareOrdinaryInkCanvasInput({
+    mask: options.mask,
+    pixelWidth: options.pixelWidth,
+    pixelHeight: options.pixelHeight,
+    width: options.width,
+    height: options.height,
+    surfaceRecipe,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R16,
+    createLayer: makeCanvas,
+  });
+  const prepared = beginOrdinaryInkMaterial({
+    ...options,
+    ...canvasInput,
+    flow: 90,
+    surfaceRecipe,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R16,
+  });
+  const materialCoverageCandidate = upsampleKeyboardSurfaceCoverage({
+    coverage: prepared.surfaceCoverageGrid,
+    pixelWidth: options.pixelWidth,
+    pixelHeight: options.pixelHeight,
+    createLayer: makeCanvas,
+  });
+  const staged = completeOrdinaryInkMaterial({
+    prepared,
+    materialCoverageCandidate,
+    output: makeImageData(options.pixelWidth, options.pixelHeight),
+  });
+  assert.deepEqual(staged.imageData.data, wet.imageData.data);
+  assert.deepEqual(
+    staged.stages.surface.dyeComponent,
+    wet.stages.surface.dyeComponent,
+  );
+});
+
 test("staged completion rejects a forged prepared state", () => {
   assert.throws(() => completeOrdinaryInkMaterial({
     prepared: {},
@@ -365,6 +429,7 @@ test("staged begin requires a Surface deposit before component allocation", () =
 
   for (const component of [
     { dyeComponentRecipe: ACTIVE_DYE_COMPONENT_RECIPE },
+    { dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R16 },
     { pigmentComponentRecipe: PIGMENT_COMPONENT_RECIPE_R1 },
   ]) {
     assert.throws(
