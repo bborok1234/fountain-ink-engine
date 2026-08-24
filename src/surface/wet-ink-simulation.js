@@ -414,6 +414,231 @@ function resolveLinearMobileAdsorbed(
   };
 }
 
+function reconstructNonnegativeDyeSpecies(total, residual, fraction) {
+  const boundedTotal = Math.max(0, total);
+  const secondary = clamp(
+    fraction * boundedTotal + residual,
+    0,
+    boundedTotal,
+  );
+  return {
+    primary: boundedTotal - secondary,
+    secondary,
+  };
+}
+
+function storeCanonicalDyeSpecies(
+  totalPlane,
+  residualPlane,
+  index,
+  primary,
+  secondary,
+  fraction,
+) {
+  const boundedPrimary = Math.max(0, primary);
+  const boundedSecondary = Math.max(0, secondary);
+  const total = boundedPrimary + boundedSecondary;
+  if (!(total > 0)) {
+    totalPlane[index] = 0;
+    residualPlane[index] = 0;
+    return;
+  }
+  const storedTotal = Math.fround(total);
+  if (
+    (fraction === 0 && boundedSecondary === 0)
+    || (fraction === 1 && boundedPrimary === 0)
+  ) {
+    totalPlane[index] = storedTotal;
+    residualPlane[index] = 0;
+    return;
+  }
+  let storedResidual = Math.fround(
+    boundedSecondary - fraction * storedTotal,
+  );
+  // T and R are stored in separate Float32 planes. Nudge only an endpoint
+  // rounding violation inward so P=(1-f0)T-R and S=f0T+R cannot reconstruct
+  // negative even when one species is almost exhausted.
+  const inward = Math.max(
+    Math.abs(storedTotal) * 2 ** -24,
+    2 ** -149,
+  );
+  if (fraction * storedTotal + storedResidual < 0) {
+    storedResidual = Math.fround(storedResidual + inward);
+  }
+  if ((1 - fraction) * storedTotal - storedResidual < 0) {
+    storedResidual = Math.fround(storedResidual - inward);
+  }
+  totalPlane[index] = storedTotal;
+  residualPlane[index] = storedResidual === 0 ? 0 : storedResidual;
+}
+
+function analyticDesorbedMass(adsorbed, rate, wetness, frame) {
+  if (!(adsorbed > 0) || !(rate > 0) || !(wetness > 0)) return 0;
+  return Math.min(
+    adsorbed,
+    adsorbed * -Math.expm1(-rate * wetness * frame),
+  );
+}
+
+function adsorptionOpportunity(
+  mobile,
+  rate,
+  dyeAffinity,
+  paperTooth,
+  vacancyFraction,
+  frame,
+) {
+  if (!(mobile > 0) || !(rate > 0) || !(vacancyFraction > 0)) return 0;
+  return Math.min(
+    mobile,
+    mobile * -Math.expm1(
+      -rate * dyeAffinity * paperTooth * vacancyFraction * frame,
+    ),
+  );
+}
+
+function reactDyeMobileAdsorbedSharedCapacity(
+  simulation,
+  recipe,
+  frame,
+  dyeAffinity,
+  roughness,
+) {
+  const capacity = recipe.sharedAdsorptionCapacity;
+  const fraction = recipe.initialSecondaryFraction;
+  const exactNeutralRates =
+    recipe.primaryAdsorptionRate === recipe.secondaryAdsorptionRate
+    && recipe.primaryDesorptionRate === recipe.secondaryDesorptionRate
+    && isExactZeroPlane(simulation.nextMaterialComponentMobileResidual)
+    && isExactZeroPlane(simulation.materialComponentFixedResidual);
+
+  for (let y = 1; y < simulation.height - 1; y += 1) {
+    for (let x = 1; x < simulation.width - 1; x += 1) {
+      const index = y * simulation.width + x;
+      const paperTooth = 1 - roughness * 0.28
+        + coordinateNoise(x, y, simulation.seed ^ 0xa511e9b3)
+          * 0.56 * roughness;
+      const wetness = clamp(simulation.nextWater[index], 0, 1);
+
+      // Equal coefficients and an exact neutral input are evolved as one
+      // total species. This avoids two independently rounded species paths and
+      // keeps every canonical residual bitwise +0.
+      if (exactNeutralRates) {
+        const mobile = Math.max(
+          0,
+          simulation.nextMaterialComponentMobile[index],
+        );
+        const adsorbed = Math.max(
+          0,
+          simulation.materialComponentFixed[index],
+        );
+        const desorbed = analyticDesorbedMass(
+          adsorbed,
+          recipe.primaryDesorptionRate,
+          wetness,
+          frame,
+        );
+        const mobileAfterDesorption = mobile + desorbed;
+        const adsorbedAfterDesorption = adsorbed - desorbed;
+        const vacancy = Math.max(
+          0,
+          capacity - adsorbedAfterDesorption,
+        );
+        const opportunity = adsorptionOpportunity(
+          mobileAfterDesorption,
+          recipe.primaryAdsorptionRate,
+          dyeAffinity,
+          paperTooth,
+          vacancy / capacity,
+          frame,
+        );
+        const adsorbedNow = Math.min(opportunity, vacancy);
+        simulation.nextMaterialComponentMobile[index] =
+          mobileAfterDesorption - adsorbedNow;
+        simulation.materialComponentFixed[index] =
+          adsorbedAfterDesorption + adsorbedNow;
+        simulation.nextMaterialComponentMobileResidual[index] = 0;
+        simulation.materialComponentFixedResidual[index] = 0;
+        continue;
+      }
+
+      const mobile = reconstructNonnegativeDyeSpecies(
+        simulation.nextMaterialComponentMobile[index],
+        simulation.nextMaterialComponentMobileResidual[index],
+        fraction,
+      );
+      const adsorbed = reconstructNonnegativeDyeSpecies(
+        simulation.materialComponentFixed[index],
+        simulation.materialComponentFixedResidual[index],
+        fraction,
+      );
+
+      // Desorption is solved analytically before either species sees the one
+      // shared vacancy pool.
+      const primaryDesorbed = analyticDesorbedMass(
+        adsorbed.primary,
+        recipe.primaryDesorptionRate,
+        wetness,
+        frame,
+      );
+      const secondaryDesorbed = analyticDesorbedMass(
+        adsorbed.secondary,
+        recipe.secondaryDesorptionRate,
+        wetness,
+        frame,
+      );
+      const primaryMobile = mobile.primary + primaryDesorbed;
+      const secondaryMobile = mobile.secondary + secondaryDesorbed;
+      const primaryAdsorbed = adsorbed.primary - primaryDesorbed;
+      const secondaryAdsorbed = adsorbed.secondary - secondaryDesorbed;
+      const vacancy = Math.max(
+        0,
+        capacity - primaryAdsorbed - secondaryAdsorbed,
+      );
+      const vacancyFraction = vacancy / capacity;
+      const primaryOpportunity = adsorptionOpportunity(
+        primaryMobile,
+        recipe.primaryAdsorptionRate,
+        dyeAffinity,
+        paperTooth,
+        vacancyFraction,
+        frame,
+      );
+      const secondaryOpportunity = adsorptionOpportunity(
+        secondaryMobile,
+        recipe.secondaryAdsorptionRate,
+        dyeAffinity,
+        paperTooth,
+        vacancyFraction,
+        frame,
+      );
+      const totalOpportunity = primaryOpportunity + secondaryOpportunity;
+      const lambda = totalOpportunity > vacancy && totalOpportunity > 0
+        ? vacancy / totalOpportunity
+        : 1;
+      const primaryAdsorbedNow = primaryOpportunity * lambda;
+      const secondaryAdsorbedNow = secondaryOpportunity * lambda;
+
+      storeCanonicalDyeSpecies(
+        simulation.nextMaterialComponentMobile,
+        simulation.nextMaterialComponentMobileResidual,
+        index,
+        primaryMobile - primaryAdsorbedNow,
+        secondaryMobile - secondaryAdsorbedNow,
+        fraction,
+      );
+      storeCanonicalDyeSpecies(
+        simulation.materialComponentFixed,
+        simulation.materialComponentFixedResidual,
+        index,
+        primaryAdsorbed + primaryAdsorbedNow,
+        secondaryAdsorbed + secondaryAdsorbedNow,
+        fraction,
+      );
+    }
+  }
+}
+
 function reactDyeMobileAdsorbed(
   simulation,
   recipe,
@@ -422,6 +647,16 @@ function reactDyeMobileAdsorbed(
   roughness,
 ) {
   if (simulation.materialComponentKind !== "dye") return;
+  if (recipe.componentRecipeSchemaVersion === 13) {
+    reactDyeMobileAdsorbedSharedCapacity(
+      simulation,
+      recipe,
+      frame,
+      dyeAffinity,
+      roughness,
+    );
+    return;
+  }
   const exactNeutralRates =
     recipe.primaryAdsorptionRate === recipe.secondaryAdsorptionRate
     && recipe.primaryDesorptionRate === recipe.secondaryDesorptionRate
@@ -1202,8 +1437,9 @@ export class WetInkSimulation {
           );
         }
         if (this.materialComponentKind === "dye") {
-          // Face transport already populated the copied mobile plane. A7-2
-          // applies its capacity-free adsorption/desorption after evaporation.
+          // Face transport already populated the copied mobile plane. The
+          // recipe-versioned dye reaction runs once below, after evaporation:
+          // historical R13/R14 stay linear and R15 uses shared capacity.
         } else if (this.materialComponentMobile !== null) {
           const componentMobile = this.materialComponentMobile[index];
           const componentMobility = pigmentMobility

@@ -1,0 +1,33 @@
+{
+  "algorithm": "sha256",
+  "baseRecipeCanonicalDigest": "48a77660e2a1233a494567ad80a94c6af575f129376c150661a692862d353e8c",
+  "baselineMatrixDigest": "4921a7e44e45e4cfbf023db19d163ee542e554e1379beaed49f1ace279ecb44a",
+  "engineSourceTreeDigest": "fd5862639657a4c173d8732bd6ee30c2010cd53a8c34173e7387c2eb3270d04d",
+  "engineVersion": "0.44.0-experimental.1",
+  "evaluatorId": "dual-shading-a7-3-shared-vacancy-v1",
+  "files": {
+    "package-lock.json": "a0e951e72880a5ef447a96de1871a1ae928f9b437e6b9f534dfab2cec140fe15",
+    "package.json": "31e70bfc94627169437e902e559ee3ac467a604c8eb64f3432191b548966cda3",
+    "research/dual-shading-autoresearch/photo-topology-v1.json": "885a10ff3e035b6b06fba32eb0704fee21bd47e0696bf596a860d1beb7787119",
+    "research/dual-shading-autoresearch/r14-archive-manifest.json": "5aab8f0f8c68747d4cfca8ccbbab5b20e9a2b0d8f8b047dc8f323546ee939787",
+    "scripts/dual-shading-autoresearch/a7-3/batch.mjs": "cf71a0ca7b17291fd4f6f5ef7848f7236cfef6c8e4eebf3c9bd55ef087464ed4",
+    "scripts/dual-shading-autoresearch/a7-3/capacity-metrics.mjs": "85f4444d81897e5b8fb14182c7cf643ee187bdac4cdcf1bd27a201ece01a8af2",
+    "scripts/dual-shading-autoresearch/a7-3/evaluator.mjs": "33a31786e2d8eedfaf71af8fd6a2032f3fd72f3330596c64db5cacecbab68e46",
+    "scripts/dual-shading-autoresearch/a7-3/run.mjs": "a27483f7b7e0dab5411aac23e3f56613189e596ab2d05bbfbf5067ac712c3e53",
+    "scripts/dual-shading-autoresearch/archive-validator.mjs": "2295ecede2b17805d3f30e492e1ff952b3527ad1772df026bcd19f8d9fe77985",
+    "scripts/dual-shading-autoresearch/fixtures.mjs": "aefb794a81844e5e5346c713f18fdf85371cb9db2325a9638c9037f3a45edb4e",
+    "scripts/dual-shading-autoresearch/metrics.mjs": "d617c97d7c2b248373791b0afd60415e16f56908093064ee064a4d7cd1ae0496"
+  },
+  "fixedBaseline": {
+    "candidateSchemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+    "dyeRecipe": "edge-dye-study@15",
+    "opticalModel": "three-channel-effective-optical-density-v2",
+    "sharedAdsorptionCapacity": 0.075
+  },
+  "predecessor": {
+    "archiveManifestDigest": "5aab8f0f8c68747d4cfca8ccbbab5b20e9a2b0d8f8b047dc8f323546ee939787",
+    "conclusion": "capacity-free-r14-plateau",
+    "evaluatorLockDigest": "2cee2e1511347df5627dda778518ebcc67b82b3d13020c1334dea62187adf2e2"
+  },
+  "schemaVersion": "dual-shading-a7-3-evaluator-lock-v1"
+}

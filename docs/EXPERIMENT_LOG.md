@@ -2511,3 +2511,60 @@ they are not automatically promoted to timeless pass/fail truth.
   with fixed total `Q=0.075` and free sites
   `max(0,Q-A_primary-A_secondary)`. Independent absolute species capacities,
   gain/palette changes, and renewed R14 rate tuning are excluded.
+
+## E-039-dual-shading-shared-vacancy / A7-3-A1
+
+- Parent: capacity-free R14 two-batch plateau (`48/48 reject-hard`).
+- Package/model/schema/recipe/state: `0.44.0-experimental.1` /
+  `dye-component-js-r14` / `13` / `edge-dye-study@15` /
+  `two-dye-total-residual-v2`.
+- Status: `[!] Engine invariant passed; Q-only perceptual search plateaued`.
+- Hypothesis: one finite pool of fibre adsorption sites can make weakly loaded
+  regions bind the primary dye while wet/high-load regions saturate and let the
+  secondary dye travel, creating broad irregular core/rim/pool separation
+  without a drawn edge or Optical gain.
+- Operator: each cell reconstructs both species, performs analytic desorption,
+  computes `V=max(0,Q-A_primary-A_secondary)`, scales both adsorption
+  opportunities by `V/Q`, then applies one `min(1,V/sum(opportunity))` limiter.
+  The update is local, species-conservative and stores no new public or scratch
+  plane. Equal rates plus neutral input keep canonical residual bitwise `+0`.
+- Contract hardening: schema 13 allows a normal Float32-representable Q and an
+  exact `f0=0/1` or Float32-stable interior fraction only. Extreme endpoint and
+  subnormal-Q regressions fail closed. Registered R13/R14 recipes continue to
+  use their historical capacity-free operator and remain fingerprint-pinned.
+- Evidence preservation: the old R14 evaluator is not refreshed against the
+  new source. An archive manifest validates its logical lock, 13 artifacts,
+  one baseline row and 48 batch rows, while current runtime execution is
+  intentionally rejected. A separate A7-3 lock chains that predecessor to the
+  R15 source and 45-case evaluator.
+- Terminal closure: after the Q batch, an A7-3 archive manifest pins the
+  program, evaluator, runner, batch runner, lock, plan, candidate, one baseline
+  row and all eight batch rows. The validator requires one lock, exact
+  plan-to-row identities and digests, `8/8 reject-hard`, false hard gates,
+  `opticalAreaFidelity=0`, shortlist `0` and no automatic nine-point claim.
+- Search boundary: one Q-only batch, fixed R14 palette/f0/six rates, fixed
+  papers/fixtures/photo annotation/Optical. Candidates were `.01875`, `.0375`,
+  `.05625`, `.075`, `.09375`, `.1125`, `.15`, and `.225`.
+- Exact result: all eight candidates were deterministic, capacity-valid and
+  had overflow `0`; all eight were `reject-hard`, shortlist `0`, with
+  `opticalAreaFidelity=0`. At low Q `.01875`, up to 80.2% of adsorbed mass was
+  near capacity, yet signed fidelity fell to `0.13482633` and optical-delta
+  fidelity to `0.00482646`. Increasing Q trended back toward the capacity-free
+  result; it did not reveal a useful finite-Q basin. The authored `.075`
+  baseline retained broad fraction span `0.01713869`, below thin `0.03933086`.
+- Conclusion: the shared-vacancy hypothesis is physically bounded but does not
+  solve the visual topology and reverses the expected wet/broad response.
+  Perceptual score remains `6.3/10`; no automatic nine-point claim.
+- Lesson and next different method: the matrix changes geometric width while
+  supplying roughly the same per-cell loading, so wider support dilutes the
+  edge/core fraction metric. Before a limited evaporation-front experiment,
+  isolate how nib width, flow and stroke dwell author areal water/dye loading
+  or wet-film residence. Do not add palette gain, an edge-distance mask,
+  independent species capacities, or another R14 rate sweep.
+- Workbench observation: the public R15 recipe is now the displayed current
+  revision with read-only `Q=0.075`. The default Worker returns only capacity,
+  peak occupancy and cells at or above 99%; diagnostics draws
+  `adsorbedTotal/Q` inside the existing Surface card. In the current in-app
+  Browser at B/48 balanced flow 58, peak occupancy was about `57.3%`, the 99%
+  count was `0`, and console warning/error count was `0`. This is an explanatory
+  diagnostic and does not change the `6.3/10` perceptual score.

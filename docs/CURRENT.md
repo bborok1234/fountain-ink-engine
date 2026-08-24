@@ -3,7 +3,7 @@
 > Status: Active experimental library
 > Engine model: `ordinary-js-r13`
 > Ink recipe schema: `6`
-> Dye component model/schema: `dye-component-js-r13 / 12`
+> Dye component model/schema: `dye-component-js-r14 / 13`
 > Surface model/schema: `paper-surface-js-r4 / 3` (absorbent r4), with historical r1/r2/r3 preserved
 > Fixture manifest: `3`
 
@@ -385,9 +385,9 @@ The hard gates pin exact neutral behavior for equal coefficients, algebraic
 equal/opposite face updates, positive donors, no-flux/no-reaction ghost cells,
 dye conservation under water evaporation, both signs of residual, separate
 primary/secondary mass conservation, exact component-off ordinary output, and
-bounded scratch reuse. `npm run verify` passes with 119 built modules, 15 public
-entry points, and all 206 tests. `npm pack --dry-run` passes with 132 files,
-159.6 kB packed and 674.9 kB unpacked.
+bounded scratch reuse. At that R13 checkpoint, `npm run verify` passed with 119
+built modules, 15 public entry points, and all 206 tests; its package dry-run
+contained 132 files, 159.6 kB packed and 674.9 kB unpacked.
 
 The operator separates state but the first calibration does not close the
 visual gap. B/48 on smooth paper measured 1,459 positive and 907 negative
@@ -396,10 +396,11 @@ versus well-mixed Optical changed 502 pixels with mean channel delta `0.3`,
 maximum `1`, and exact alpha. The browser console had zero warnings or errors. The
 perceptual score remains `6.3/10`.
 
-Package `0.43.0-experimental.1` makes `edge-dye-study@14` the current
-calibration without changing the R13 operator, schema, state, palette, or
-initial fraction. R14 changes only the six diffusivity/adsorption/desorption
-rates. A bounded 27-case start-stop, junction, and double-pass matrix across
+Package `0.44.0-experimental.1` makes `edge-dye-study@15` the current
+dual-shading recipe. It preserves R14's palette, initial fraction and six rates
+while adding one shared adsorption capacity. R14 remains a fingerprint-pinned
+historical capacity-free checkpoint. Its bounded 27-case start-stop, junction,
+and double-pass matrix across
 three papers and thin/medium/broad masks pins six-plane determinism,
 finite/non-negative reconstructed species, species/total/residual conservation,
 signed connected porous M/B patches, a secondary outside advantage, and
@@ -431,10 +432,27 @@ Both batches ended `48/48 reject-hard`, shortlist `0`, with
 Extreme primary adsorption `1` produced the best `opticalDeltaFidelity`
 `0.03639156` but still failed hard. Capacity-free R14 is falsified/plateaued.
 
-The next A7-3 attempt tests one literature-motivated shared vacancy at total
-`Q=0.075`, with `max(0,Q-A_primary-A_secondary)` free sites. It does not resume
-gain, palette, or R14 rate tuning. Blinded human comparison with real ink
-photographs remains the only route to 9; the current score is `6.3/10`.
+A7-3 tested that literature-motivated shared vacancy at total `Q=0.075` and a
+locked Q-only bracket from `.01875` through `.225`. All eight candidates kept
+capacity overflow at zero, but all eight were hard rejections with shortlist
+zero and `opticalAreaFidelity=0`. Stronger saturation reduced rather than
+amplified signed separation; the R15 baseline also retained the wrong nib
+ordering (`broad 0.0171 < thin 0.0393` fraction span). Shared vacancy alone is
+therefore falsified/plateaued. The next attempt first isolates nib/wet areal
+loading or finite surface-film residence. It does not resume gain, palette, or
+R14 rate tuning. Blinded human comparison with real ink photographs remains
+the only route to 9; the current score is `6.3/10`.
+
+A separate terminal archive now freezes the A7-3 program, evaluator, lock,
+Q-only plan, candidate, one baseline row and eight batch rows. Its validator
+requires exact plan-to-row identities and digests, one evaluator lock, eight
+hard rejections, zero optical-area fidelity, zero shortlist and no automatic
+nine-point claim. A later runtime must reject or report drift instead of
+silently refreshing this failed experiment.
+
+The current R15 release gate builds 122 modules and 15 public entry points,
+passes all 254 tests, and packs 135 files (176.9 kB packed / 739.0 kB
+unpacked) in dry-run mode.
 
 The engine contains no React component, text control, Vite configuration,
 Sites worker, native code, product data model, font, or reference image.

@@ -55,14 +55,14 @@ material composition without adding a React dependency.
 
 ## Optional dye component state
 
-Package `0.43.0-experimental.1` keeps the A7-2 shared-transport operator as
-`dye-component-js-r13`, recipe schema 12 and state
-`two-dye-total-residual-v2`, while the current calibrated recipe is
-`edge-dye-study@14`:
+Package `0.44.0-experimental.1` keeps the six-plane
+`two-dye-total-residual-v2` state and advances the current shared-transport
+operator to `dye-component-js-r14`, recipe schema 13 and
+`edge-dye-study@15`:
 
 ```js
 import {
-  EDGE_DYE_COMPONENT_RECIPE_R14,
+  EDGE_DYE_COMPONENT_RECIPE_R15,
 } from "fountain-ink-engine/dye-components";
 import {
   createKeyboardSurfaceState,
@@ -74,7 +74,7 @@ const state = createKeyboardSurfaceState(
   surfaceSeed,
   inkRecipe,
   densityTransport,
-  EDGE_DYE_COMPONENT_RECIPE_R14,
+  EDGE_DYE_COMPONENT_RECIPE_R15,
 );
 
 // state.dyeComponent = {
@@ -87,7 +87,7 @@ const state = createKeyboardSurfaceState(
 // }
 ```
 
-R14 preserves R13's operator and R12's non-additive mass model. The component state is a
+R15 preserves R14's non-additive mass model and shared-water transport. The component state is a
 canonical view of the already deposited ordinary total. For each `mobile`,
 `adsorbed`, and `depth` phase it stores two Float32 planes:
 
@@ -117,14 +117,18 @@ is not counted again in diffusion. Each primary/secondary face transfer is
 equal-and-opposite and cannot exceed its donor.
 
 After face transport, both species use the same local depth fraction. Water
-evaporation removes no dye. Interior mobile/adsorbed state then follows an
-analytic, capacity-free linear adsorption/desorption update modulated by paper
-`dyeAffinity`, deterministic paper tooth, and post-evaporation wetness. The
+evaporation removes no dye. For schema 13, interior state desorbs analytically,
+then both species compete through one vacancy
+`max(0,Q-A_primary-A_secondary)` and one shared limiting factor; their combined
+adsorbed mass cannot exceed `sharedAdsorptionCapacity`. Registered R13/R14
+checkpoints retain the historical capacity-free reaction. All reactions are
+modulated by paper `dyeAffinity`, deterministic paper tooth, and
+post-evaporation wetness. The
 ghost ring has no face transport or reaction. Five private Float64 cell
 scratch planes are allocated lazily, cleared and reused each step, and are
 never exposed as public state or retained face-flux output.
 
-Schema 12 adds only `primaryDiffusivity`, `secondaryDiffusivity`,
+Schema 12 added only `primaryDiffusivity`, `secondaryDiffusivity`,
 `primaryAdsorptionRate`, `secondaryAdsorptionRate`,
 `primaryDesorptionRate`, and `secondaryDesorptionRate` to the A7-1 composition
 and palette. The built-in dimensionless pilot values are `.001/.003`,
@@ -132,11 +136,12 @@ and palette. The built-in dimensionless pilot values are `.001/.003`,
 relative timescale ordering of flow, adsorption/evaporation, diffusion, and
 desorption; they are not SI-calibrated constants. R14 changes only those six
 dimensionless rates to `.00005/.0008`, `.06/.001`, and `.000005/.00002`.
-Palette, initial mixture, schema, state, and operator remain pinned. There is
-still no finite capacity, hue/Optical gain, edge mask, or coffee-ring.
+Palette, initial mixture and those six rates remain pinned in R15. Schema 13
+adds only `sharedAdsorptionCapacity=0.075`; there is still no hue/Optical gain,
+edge mask, per-species capacity, or coffee-ring.
 
-The current `npm run verify` gate builds 121 modules and 15 public entry points
-and passes all 223 tests. Package dry-run remains part of the release gate.
+The current `npm run verify` gate builds 122 modules and 15 public entry points
+and passes all 254 tests. Package dry-run remains part of the release gate.
 
 Pass `null` or omit the final argument to allocate no component state and
 preserve the ordinary path exactly.
@@ -156,7 +161,9 @@ paper scattering spectrum, finite-layer thickness, fluorescence, or camera/
 display color-management calibration. The operator changes RGB only where
 ordinary alpha already exists and copies every alpha byte exactly, so it cannot
 add coverage, an outline, glow or a wider footprint. R1–R12 remain exported for
-archival round-trip but are incompatible with the active R13 calculation.
+archival round-trip; registered R13/R14 checkpoints are runtime-compatible only
+through their exact fingerprints, while new authoring uses the active R15
+model/schema.
 
 For separation research, the Canvas2D renderer exposes the same state as an
 opaque paper-backed A7-4 pair when asked with
@@ -224,13 +231,24 @@ best `opticalDeltaFidelity`, `0.03639156`, came from extreme primary adsorption
 `1` and still failed hard gates. Capacity-free R14 is therefore falsified and
 plateaued under this evaluator.
 
-The next A7-3 hypothesis uses one shared adsorption vacancy with total
-`Q=0.075` and free sites `max(0, Q-A_primary-A_secondary)`, motivated by the
-competitive Langmuir treatment in
-[Venditti, Murali, and Darhuber](https://doi.org/10.1021/acs.langmuir.1c01624).
-It does not resume rate, gain, or palette tuning. Equal independent absolute
-capacities remain forbidden. The score stays `6.3/10`; only blinded human
-review against real ink photographs can raise it to 9.
+A7-3 implemented one shared adsorption vacancy with authored `Q=0.075`, then
+ran a locked Q-only bracket from `.01875` to `.225`. All eight candidates kept
+capacity overflow at zero, but all eight were hard rejections with shortlist
+zero and `opticalAreaFidelity=0`. Lower Q made the signed and optical separation
+worse, while the authored baseline still produced a smaller broad-nib fraction
+span (`0.0171`) than thin (`0.0393`). Shared vacancy alone is therefore a
+recorded failed hypothesis, not a visual success. The next attempt first
+isolates nib/wet areal loading or finite surface-film residence. It does not
+resume rate, gain, or palette tuning; equal independent absolute capacities
+remain forbidden. The score stays `6.3/10`; only blinded human review against
+real ink photographs can raise it to 9.
+
+The terminal A7-3 archive separately pins the one baseline row and eight
+ordered Q batch rows together with their program, evaluator, lock, plan, and
+candidate bytes. Its validator requires one lock, exact plan-to-row identities
+and digests, eight hard rejections, zero optical-area fidelity, zero shortlist,
+and no automatic nine-point claim. It is evidence for a closed failed
+hypothesis, not a catalog preset or a visual-success snapshot.
 
 The engine also accepts current-model, current-schema experiment recipes whose
 `id` is not a registered built-in identity. This is the authoring boundary used

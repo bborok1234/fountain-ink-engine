@@ -1,7 +1,13 @@
-export const dyeComponentModelVersion = "dye-component-js-r13";
-export const dyeComponentRecipeSchemaVersion = 12;
+export const dyeComponentModelVersion = "dye-component-js-r14";
+export const dyeComponentRecipeSchemaVersion = 13;
 export const dyeComponentStateModelVersion =
   "two-dye-total-residual-v2";
+const MINIMUM_NORMAL_FLOAT32 = 2 ** -126;
+// T/R uses two Float32 planes. Keeping an interior minority at least 2^-12 of
+// total leaves 2,048 Float32 epsilon steps between it and an absent species,
+// preventing bounded multi-step round trips from manufacturing that minority.
+// Exact 0 and 1 use dedicated pure-species paths and remain valid endpoints.
+const MINIMUM_STABLE_FLOAT32_FRACTION = 2 ** -12;
 export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([
   1,
   2,
@@ -15,6 +21,7 @@ export const SUPPORTED_DYE_COMPONENT_RECIPE_SCHEMA_VERSIONS = Object.freeze([
   10,
   11,
   12,
+  13,
 ]);
 
 const RECIPE_KEYS_V1 = Object.freeze([
@@ -169,6 +176,13 @@ const RECIPE_KEYS_V12 = Object.freeze([
   "primaryDesorptionRate",
   "secondaryDesorptionRate",
 ]);
+// Schema 13 preserves R14's six calibrated rates and adds one cell-local
+// capacity shared by both adsorbed species. It intentionally has no separate
+// capacity per dye and adds no threshold, gain, mask, or optical control.
+const RECIPE_KEYS_V13 = Object.freeze([
+  ...RECIPE_KEYS_V12,
+  "sharedAdsorptionCapacity",
+]);
 
 function keysForSchema(schema) {
   return schema === 1
@@ -193,7 +207,9 @@ function keysForSchema(schema) {
                       ? RECIPE_KEYS_V10
                       : schema === 11
                         ? RECIPE_KEYS_V11
-                        : RECIPE_KEYS_V12;
+                        : schema === 12
+                          ? RECIPE_KEYS_V12
+                          : RECIPE_KEYS_V13;
 }
 
 function assertPlainRecord(value, path) {
@@ -285,8 +301,22 @@ export function validateDyeComponentRecipe(recipe) {
       0,
       1,
     );
+    if (
+      schema === 13
+      && recipe.initialSecondaryFraction !== 0
+      && recipe.initialSecondaryFraction !== 1
+      && (
+        recipe.initialSecondaryFraction < MINIMUM_STABLE_FLOAT32_FRACTION
+        || recipe.initialSecondaryFraction
+          > 1 - MINIMUM_STABLE_FLOAT32_FRACTION
+      )
+    ) {
+      throw new TypeError(
+        "dyeComponentRecipe.initialSecondaryFraction must be exactly 0 or 1, or a Float32-stable interior fraction in 2^-12...1-2^-12.",
+      );
+    }
   }
-  if (schema === 12) {
+  if (schema === 12 || schema === 13) {
     for (const key of [
       "primaryDiffusivity",
       "secondaryDiffusivity",
@@ -297,6 +327,18 @@ export function validateDyeComponentRecipe(recipe) {
     ]) {
       assertNumber(recipe[key], `dyeComponentRecipe.${key}`, 0, 1);
     }
+  }
+  if (
+    schema === 13
+    && (
+      !Number.isFinite(recipe.sharedAdsorptionCapacity)
+      || recipe.sharedAdsorptionCapacity < MINIMUM_NORMAL_FLOAT32
+      || !Number.isFinite(Math.fround(recipe.sharedAdsorptionCapacity))
+    )
+  ) {
+    throw new TypeError(
+      "dyeComponentRecipe.sharedAdsorptionCapacity must be a finite normal Float32-representable positive number.",
+    );
   }
   if (schema >= 2 && schema <= 8) {
     assertNumber(

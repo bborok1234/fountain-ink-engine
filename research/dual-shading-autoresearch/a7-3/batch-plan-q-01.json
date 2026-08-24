@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "dual-shading-a7-3-batch-plan-v1",
+  "id": "dual-shading-a7-3-batch-q-01",
+  "note": "One bounded Q-only bracket around the authored shared-vacancy capacity 0.075. No rate, palette, paper, optical, per-species capacity or gain is mutable.",
+  "candidates": [
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-01875",
+      "hypothesis": "A quarter-baseline shared capacity will test whether strong competition creates coherent local separation before readability collapses.",
+      "note": "Q-only lower stress bound at 0.25 times baseline.",
+      "sharedAdsorptionCapacity": 0.01875
+    },
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-0375",
+      "hypothesis": "A half-baseline shared capacity will test stronger competition while retaining more adsorbed mass than the lower stress bound.",
+      "note": "Q-only probe at 0.50 times baseline.",
+      "sharedAdsorptionCapacity": 0.0375
+    },
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-05625",
+      "hypothesis": "A three-quarter-baseline capacity may increase pool sensitivity without making the whole glyph capacity-limited.",
+      "note": "Q-only probe at 0.75 times baseline.",
+      "sharedAdsorptionCapacity": 0.05625
+    },
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-075",
+      "hypothesis": "The authored total capacity provides the fixed shared-vacancy reference for this bounded batch.",
+      "note": "Q-only baseline at 1.00 times authored capacity.",
+      "sharedAdsorptionCapacity": 0.075
+    },
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-09375",
+      "hypothesis": "A modestly larger shared capacity will test whether the authored baseline saturates too broadly.",
+      "note": "Q-only probe at 1.25 times baseline.",
+      "sharedAdsorptionCapacity": 0.09375
+    },
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-1125",
+      "hypothesis": "A one-and-a-half baseline capacity will test weaker competition while keeping capacity finite.",
+      "note": "Q-only probe at 1.50 times baseline.",
+      "sharedAdsorptionCapacity": 0.1125
+    },
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-15",
+      "hypothesis": "A doubled capacity will test whether separation trends back toward the capacity-free plateau.",
+      "note": "Q-only probe at 2.00 times baseline.",
+      "sharedAdsorptionCapacity": 0.15
+    },
+    {
+      "schemaVersion": "dual-shading-a7-3-shared-vacancy-candidate-v1",
+      "id": "dual-shading-a7-3-q-225",
+      "hypothesis": "A threefold capacity is the bounded upper stress case for detecting a return toward weak competition.",
+      "note": "Q-only upper bound at 3.00 times baseline.",
+      "sharedAdsorptionCapacity": 0.225
+    }
+  ]
+}

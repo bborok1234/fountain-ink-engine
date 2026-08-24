@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "dual-shading-r14-archive-manifest-v1",
+  "algorithm": "sha256",
+  "evaluatorLockDigest": "2cee2e1511347df5627dda778518ebcc67b82b3d13020c1334dea62187adf2e2",
+  "engineVersion": "0.43.0-experimental.1",
+  "engineSourceTreeDigest": "a32c23557b0d470eef6d33764f95f183bb4433f8b8e73db9d0f85aaa0567c38f",
+  "baselineMatrixDigest": "7cf1892f667975658cd536342c4bc9d4b650802a391093fa9cad996a216810d9",
+  "resultRowCount": 1,
+  "batchResultRowCount": 48,
+  "conclusion": "capacity-free-r14-plateau",
+  "artifacts": {
+    "scripts/dual-shading-autoresearch/evaluator.mjs": "08fa5e8f3f655d536de9c9826260959626885ab3aa0b0d7dc089fdb58b446c66",
+    "scripts/dual-shading-autoresearch/fixtures.mjs": "aefb794a81844e5e5346c713f18fdf85371cb9db2325a9638c9037f3a45edb4e",
+    "scripts/dual-shading-autoresearch/metrics.mjs": "d617c97d7c2b248373791b0afd60415e16f56908093064ee064a4d7cd1ae0496",
+    "scripts/dual-shading-autoresearch/run.mjs": "368c68d8ad39d062c932ca90ff16a146a94994ffbff2a2f3a9966b678894dba6",
+    "scripts/dual-shading-autoresearch/batch.mjs": "f74f2ceb2f187e98bfd7d4872b92bc9e0b845e5f97766b57466e0e2f3ae9d777",
+    "research/dual-shading-autoresearch/PROGRAM.md": "0aeac40a61c3eeac212ff539cc405e4a8a0326599c67655f3a1d98e983f5e78f",
+    "research/dual-shading-autoresearch/evaluator-lock.json": "273e8713afd22d86c48fdd364e6dc656502e886ebdf565c98dc207595251f12d",
+    "research/dual-shading-autoresearch/results.ndjson": "aa805b3c584b38113dd4ad53541488b57d5da92359ba11f54ca6b8445d28c6b7",
+    "research/dual-shading-autoresearch/batch-results.ndjson": "1ceb24cbcf5362a7602f38d0584d06888e25013d6da047189b9e55f3e021fea9",
+    "research/dual-shading-autoresearch/batch-plan-r14-01.json": "85f8c501a5ffd62cdb29d1c4222bdd35c75efa290ef6b814a45bd9b7a223a6c6",
+    "research/dual-shading-autoresearch/batch-plan-r14-02.json": "b72dc90a673f9c2ff6520fc08da0c46395f6ed85c09e46af4bae79ecca2d345c",
+    "research/dual-shading-autoresearch/candidate.json": "ed8799254ef97ef585a4f7e0b638322d6a967c8adcf37fd6ce64a708bedc2acb",
+    "research/dual-shading-autoresearch/photo-topology-v1.json": "885a10ff3e035b6b06fba32eb0704fee21bd47e0696bf596a860d1beb7787119"
+  }
+}

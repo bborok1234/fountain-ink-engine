@@ -1,6 +1,6 @@
 {
   "name": "fountain-ink-engine",
-  "version": "0.43.0-experimental.1",
+  "version": "0.44.0-experimental.1",
   "description": "Deterministic, framework-free material engine for digital fountain-pen ink experiments.",
   "keywords": [
     "fountain-pen",
@@ -53,8 +53,9 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "bench:fiber": "node scripts/benchmark-fiber-edge.mjs",
-    "research:dual-shading": "node scripts/dual-shading-autoresearch/run.mjs",
-    "research:dual-shading:batch": "node scripts/dual-shading-autoresearch/batch.mjs",
+    "research:dual-shading": "node scripts/dual-shading-autoresearch/a7-3/run.mjs",
+    "research:dual-shading:batch": "node scripts/dual-shading-autoresearch/a7-3/batch.mjs",
+    "research:dual-shading:r14:verify-archive": "node scripts/dual-shading-autoresearch/archive-validator.mjs",
     "test": "node --test tests/*.test.mjs",
     "verify": "npm run build && npm test",
     "prepack": "npm run verify"

@@ -69,6 +69,10 @@ test("self-referenced package barrels expose the stable API", () => {
     dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R14,
   );
   assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R15,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R15,
+  );
+  assert.equal(
     engine.dyeComponentStateModelVersion,
     dyeComponents.dyeComponentStateModelVersion,
   );
