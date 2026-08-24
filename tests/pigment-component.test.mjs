@@ -7,7 +7,7 @@ import {
   freezePigmentComponentRecipe,
   serializePigmentComponentRecipe,
 } from "fountain-ink-engine/pigment-components";
-import { EDGE_DYE_COMPONENT_RECIPE_R5 } from "fountain-ink-engine/dye-components";
+import { EDGE_DYE_COMPONENT_RECIPE_R13 } from "fountain-ink-engine/dye-components";
 import { ORDINARY_GREEN_RECIPE_R12 } from "fountain-ink-engine/recipes";
 import {
   PAPER_SURFACE_ABSORBENT_R4,
@@ -191,7 +191,7 @@ test("dye and pigment recipes cannot share one transport slot", () => {
     waterLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.waterLoad,
     pigmentLoad: ORDINARY_GREEN_RECIPE_R12.keyboardDeposit.pigmentLoad,
     seed: 1,
-    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R5,
+    dyeComponentRecipe: EDGE_DYE_COMPONENT_RECIPE_R13,
     pigmentComponentRecipe: PIGMENT_COMPONENT_RECIPE_R1,
   }), /Only one/);
   assert.ok(simulation.water.every((value) => value === 0));

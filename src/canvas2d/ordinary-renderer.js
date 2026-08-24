@@ -5,10 +5,15 @@ import {
 import { assertDensityFieldInputs } from "../density/ordinary-density.js";
 import {
   compositeDyeEdgeOptical,
+  compositeDyeFiniteLoadingTransportedOptical,
+  compositeDyeFiniteLoadingWellMixedControlOptical,
+  compositeDyeWellMixedControlOptical,
   compositeOrdinaryOptical,
   compositeOxidationOptical,
   compositeSheenOptical,
   compositeShimmerOptical,
+  FINITE_LOADING_DYE_OPTICAL_OUTPUT_METADATA,
+  WARM_WHITE_PAPER_OPTICAL_PROFILE_R1,
 } from "../optical/index.js";
 import { assertInkRecipeCompatible } from "../recipes/compatibility.js";
 import { assertDyeComponentRecipeCompatible } from "../dye-components/index.js";
@@ -40,6 +45,30 @@ import { assertPercent, assertUint32 } from "../contracts/numeric.js";
 import { makeLayer } from "./glyph-mask.js";
 
 const preparedMaterialStates = new WeakSet();
+
+export const DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1 =
+  "dye-optical-comparison-well-mixed-vs-transported-v1";
+export const DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1 =
+  "dye-optical-comparison-finite-loading-well-mixed-vs-transported-v1";
+
+function assertDyeOpticalComparisonRequest(value, dyeActive) {
+  if (value === null) return null;
+  if (
+    value !== DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1
+    && value
+      !== DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1
+  ) {
+    throw new TypeError(
+      "dyeOpticalComparison must be null or a supported comparison id.",
+    );
+  }
+  if (!dyeActive) {
+    throw new TypeError(
+      "dyeOpticalComparison requires an active dyeComponentRecipe.",
+    );
+  }
+  return value;
+}
 
 function assertSurfaceSeed(surfaceSeed) {
   return assertUint32(surfaceSeed, "surfaceSeed");
@@ -295,6 +324,14 @@ export function beginOrdinaryInkMaterial({
       "Only one transported dye or pigment component may be active per solve.",
     );
   }
+  if (
+    surfaceDeposit === null
+    && (dyeComponentRecipe !== null || pigmentComponentRecipe !== null)
+  ) {
+    throw new TypeError(
+      "surfaceDeposit is required for a transported dye or pigment component.",
+    );
+  }
   if (oxidationComponentRecipe !== null) {
     assertOxidationComponentRecipeCompatible(oxidationComponentRecipe);
   } else if (oxidationObservation !== null) {
@@ -411,6 +448,7 @@ export function completeOrdinaryInkMaterial({
   prepared,
   materialCoverageCandidate = null,
   output,
+  dyeOpticalComparison = null,
 }) {
   if (!preparedMaterialStates.has(prepared)) {
     throw new TypeError(
@@ -443,6 +481,13 @@ export function completeOrdinaryInkMaterial({
     surfaceRecipe,
     recipe,
   } = prepared;
+  const dyeActive = dyeComponent !== null && dyeComponentRecipe !== null;
+  const comparisonId = assertDyeOpticalComparisonRequest(
+    dyeOpticalComparison,
+    dyeActive,
+  );
+  const finiteLoadingDyeOptical = comparisonId
+    === DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1;
   const resolvedCoverage = resolveKeyboardSurfaceCoverage({
     width: pixelWidth,
     height: pixelHeight,
@@ -471,7 +516,6 @@ export function completeOrdinaryInkMaterial({
     recipe,
     output,
   });
-  const dyeActive = dyeComponent !== null && dyeComponentRecipe !== null;
   const pigmentActive = pigmentComponent !== null
     && pigmentComponentRecipe !== null;
   const oxidationActive = oxidationComponentRecipe !== null
@@ -494,15 +538,59 @@ export function completeOrdinaryInkMaterial({
     height: pixelHeight,
     data: ordinaryResult.data,
   };
+  const wellMixedStructuralRgba = comparisonId === null
+    ? null
+    : {
+      width: pixelWidth,
+      height: pixelHeight,
+      data: new Uint8ClampedArray(ordinaryResult.data),
+    };
   if (dyeActive) {
-    compositeDyeEdgeOptical({
-      pixelWidth,
-      pixelHeight,
-      baseRgba: baseCompositeRgba,
-      dyeComponent,
-      dyeComponentRecipe,
-      output: structuralRgba,
-    });
+    if (finiteLoadingDyeOptical) {
+      compositeDyeFiniteLoadingWellMixedControlOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: baseCompositeRgba,
+        concentration: normalizedConcentration,
+        dyeComponent,
+        dyeComponentRecipe,
+        paperOpticalProfile: WARM_WHITE_PAPER_OPTICAL_PROFILE_R1,
+        output: wellMixedStructuralRgba,
+      });
+      compositeDyeFiniteLoadingTransportedOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: baseCompositeRgba,
+        concentration: normalizedConcentration,
+        dyeComponent,
+        dyeComponentRecipe,
+        paperOpticalProfile: WARM_WHITE_PAPER_OPTICAL_PROFILE_R1,
+        output: structuralRgba,
+      });
+    } else if (wellMixedStructuralRgba !== null) {
+      compositeDyeWellMixedControlOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: baseCompositeRgba,
+        concentration: normalizedConcentration,
+        dyeComponent,
+        dyeComponentRecipe,
+        paperDiffuseReflectance: surfaceRecipe.axes.paperReflectance,
+        output: wellMixedStructuralRgba,
+      });
+    }
+    if (!finiteLoadingDyeOptical) {
+      compositeDyeEdgeOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: baseCompositeRgba,
+        concentration: normalizedConcentration,
+        dyeComponent,
+        dyeComponentRecipe,
+        paperDiffuseReflectance: surfaceRecipe.axes.paperReflectance,
+        output: structuralRgba,
+      });
+    }
   }
   if (oxidationActive) {
     compositeOxidationOptical({
@@ -514,6 +602,17 @@ export function completeOrdinaryInkMaterial({
       oxidationComponentRecipe,
       output: structuralRgba,
     });
+    if (wellMixedStructuralRgba !== null) {
+      compositeOxidationOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: wellMixedStructuralRgba,
+        concentration: normalizedConcentration,
+        oxidationState,
+        oxidationComponentRecipe,
+        output: wellMixedStructuralRgba,
+      });
+    }
   }
   const sheenFilm = sheenActive
     ? createSheenSurfaceFilm({
@@ -535,6 +634,17 @@ export function completeOrdinaryInkMaterial({
       sheenObservation,
       output: structuralRgba,
     });
+    if (wellMixedStructuralRgba !== null) {
+      compositeSheenOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: wellMixedStructuralRgba,
+        sheenFilm,
+        sheenComponentRecipe,
+        sheenObservation,
+        output: wellMixedStructuralRgba,
+      });
+    }
   }
   const shimmerParticles = shimmerActive
     ? createShimmerParticleState({
@@ -557,6 +667,17 @@ export function completeOrdinaryInkMaterial({
       shimmerObservation,
       output: structuralRgba,
     });
+    if (wellMixedStructuralRgba !== null) {
+      compositeShimmerOptical({
+        pixelWidth,
+        pixelHeight,
+        baseRgba: wellMixedStructuralRgba,
+        shimmerParticles,
+        shimmerComponentRecipe,
+        shimmerObservation,
+        output: wellMixedStructuralRgba,
+      });
+    }
   }
   const result = ordinaryResult;
   const stages = makeDiagnosticStages({
@@ -577,7 +698,7 @@ export function completeOrdinaryInkMaterial({
     baseCompositeRgba,
     compositeRgba: result,
   });
-  return {
+  const material = {
     stages,
     imageData: stages.optical.compositeRgba,
     densityField: stages.density.accumulatedVariation,
@@ -593,6 +714,21 @@ export function completeOrdinaryInkMaterial({
     sheenFilm: stages.surface.sheenFilm,
     shimmerParticles: stages.surface.shimmerParticles,
     fiberEdgeCoverage: stages.surface.fiberEdgeCoverage,
+  };
+  if (comparisonId === null) return material;
+  return {
+    ...material,
+    dyeOpticalComparison: Object.freeze({
+      id: comparisonId,
+      wellMixedRgba: Object.freeze(wellMixedStructuralRgba),
+      transportedRgba: material.imageData,
+      ...(finiteLoadingDyeOptical
+        ? {
+          outputMetadata: FINITE_LOADING_DYE_OPTICAL_OUTPUT_METADATA,
+          paperOpticalProfile: WARM_WHITE_PAPER_OPTICAL_PROFILE_R1,
+        }
+        : {}),
+    }),
   };
 }
 
@@ -630,6 +766,7 @@ export function renderOrdinaryInkMaterial({
   shimmerComponentRecipe = null,
   shimmerObservation = null,
   shimmerSeed = null,
+  dyeOpticalComparison = null,
   createLayer = makeLayer,
 }) {
   assertInkRecipeCompatible(recipe);
@@ -647,6 +784,10 @@ export function renderOrdinaryInkMaterial({
       "Only one transported dye or pigment component may be active per solve.",
     );
   }
+  assertDyeOpticalComparisonRequest(
+    dyeOpticalComparison,
+    dyeComponentRecipe !== null,
+  );
   if (oxidationComponentRecipe !== null) {
     assertOxidationComponentRecipeCompatible(oxidationComponentRecipe);
     readOxidationObservation(oxidationObservation);
@@ -732,5 +873,6 @@ export function renderOrdinaryInkMaterial({
     prepared,
     materialCoverageCandidate,
     output: outputContext.createImageData(pixelWidth, pixelHeight),
+    dyeOpticalComparison,
   });
 }

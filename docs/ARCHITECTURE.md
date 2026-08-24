@@ -201,6 +201,56 @@ remain unsupported rather than inventing enrichment. This diagnostic is
 independent from Density's normalized concentration and is not an Optical
 color or edge mask.
 
+A7-0 adds an observation-only, same-state counterfactual. The public
+`compositeDyeWellMixedControlOptical` samples the same visible `P` and `S`
+planes as the transported operator but evaluates `P0=(1-f0)T` and `S0=f0T`,
+where `T=P+S`; A7-0's R11 state derived `f0` from
+`massFraction/(1+massFraction)`. The Canvas2D adapter can
+opt in with the versioned
+`DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1` request. It performs no
+second Contact, Density, or Surface solve and returns the comparison as a
+top-level observation, not a new `stages` field. Default stage shape, final
+RGBA, and stable signatures remain unchanged.
+
+A7-1 replaced the additive R11 state with the R12 neutral two-dye
+canonical basis. For each `mobile`, `adsorbed`, and `depth` phase, Surface owns
+a total plane `T=P+S` and a signed secondary residual `R=S-f0T`, with
+`P=(1-f0)T-R` and `S=f0T+R`. The recipe now authors
+`initialSecondaryFraction=f0` directly. Deposit records the actual ordinary
+mass delta as `T` instead of creating extra secondary mass, and every local
+phase transfer applies the same fraction to `T` and `R`. There is no lateral
+species transport in A7-1; neutral deposition has exact `R=0`, so transported
+and well-mixed Optical are byte-identical. Schema 11 removes the A6 mobility,
+retention, paper-affinity, retardation, and mass-fraction controls. R12 makes no
+finite-capacity, color-separation, or perceptual-improvement claim.
+The A7-0 comparison API remains the observation boundary: on R13 it samples
+the same visible `T/R`, resolves transported `f=f0+R/T`, and resolves the
+control as `f=f0`, without a second material solve.
+
+A7-2/R13 derives one conservative right/down face flux from the previous water
+state and applies that same `q` to both species through donor-limited upwind
+advection. Face accumulation is equal-and-opposite in reconstructed P/S space;
+each species has its own donor limiter. Species dispersion uses harmonic
+wetness and separately authored aqueous diffusivity, while fibre anisotropy is
+owned only by the shared water flux. Both species then share depth transfer;
+evaporation removes only water. An analytic, capacity-free linear mobile/
+adsorbed reaction is modulated by paper affinity, deterministic tooth, and
+post-evaporation wetness. Ghost cells receive neither face transfer nor
+reaction. Five lazy private Float64 cell accumulators are cleared and reused
+per step rather than retaining a public face plane.
+
+Schema 12 adds only primary/secondary diffusivity and linear adsorption/
+desorption rates. Its built-in values are dimensionless pilot mappings, not SI
+constants; they preserve the published ordering of flow, adsorption/
+evaporation, diffusion, and desorption timescales. There is no capacity,
+Optical gain, edge mask, or coffee-ring. This separation of shared moisture
+flow from per-colorant mobile/fibre/adsorbed state follows the governing
+structure reported by
+[Venditti, Murali, and Darhuber (Langmuir 2021)](https://doi.org/10.1021/acs.langmuir.1c01624).
+Finite capacity remains conditional: a later attempt must choose one
+composition-scaled capacity or one shared-vacancy model because equal
+independent absolute capacities do not preserve a neutral unequal mixture.
+
 R3 turns only positive R2 enrichment into a diagnostic edge-accumulation
 candidate. The operator also requires visible component mass and weights the
 candidate by local exposure against the base-pigment mass gradient. A fixed
@@ -276,10 +326,19 @@ observes the buffers already used by the accepted render path:
 - `surface.paperDepth`: the nullable solver-grid subsurface pigment and signed
   numerator copied from the r2 depth state. It is `null` for r1 recipes or when
   no depth state was created;
-- `surface.dyeComponent`: nullable mobile/fixed/subsurface mass for one
-  explicitly enabled dye component, plus visible fraction, signed fraction
-  delta, bounded edge-accumulation seeds and the r5 `colorZone`. The state remains a
-  Surface diagnostic even when an Optical component consumes it;
+- `surface.dyeComponent`: nullable current R14 recipe on the R13
+  `two-dye-total-residual-v2`
+  record. It exposes six solver-grid Float32 planes: total and signed secondary
+  residual for each mobile, adsorbed, and depth phase. Explicit zero depth
+  planes keep the shape stable on non-depth papers. `T=P+S` and `R=S-f0T`
+  reconstruct both species; equal-coefficient neutral fixtures keep every `R`
+  exactly zero, while the R14 built-in can publish both residual signs. The
+  component total is the ordinary deposited dye represented as two species,
+  not extra mass. Optical bilinear-samples visible mobile+adsorbed `T/R`, does
+  not read depth mass, and resolves the secondary share only after
+  interpolation. The old R1–R12 state shapes remain archival rather than
+  aliases on the active result. The state remains Surface-owned even when
+  Optical consumes it;
 - `surface.sheenFilm`: nullable full-resolution Float32 high-concentration film
   derived before Optical; it is absent when the sheen component is disabled;
 - `surface.shimmerParticles`: nullable bounded particle record with five
@@ -292,9 +351,31 @@ observes the buffers already used by the accepted render path:
   sheen, shimmer, pigment or oxidation component is active, for direct diagnostic comparison
   with the final;
 - `optical.compositeRgba`: the final ordinary RGBA composite, optionally with
-  the r5 second-dye RGB, explicit-age oxidation RGB, view-dependent sheen RGB
+  the r13 total/residual-derived Kubelka–Munk second-dye RGB, explicit-age oxidation RGB, view-dependent sheen RGB
   and/or bounded shimmer RGB
   mixed inside existing alpha.
+
+Without a finite-loading comparison request, `optical.compositeRgba` remains
+the historical straight-alpha presentation layer. Because that dye operator
+already conditions RGB on the selected paper reflectance, it must not be
+described as a substrate-independent physical ink layer or an opaque
+paper-resolved reflectance. The A7-0 `wellMixedRgba` follows the same legacy
+contract solely to make a controlled comparison without changing default
+output.
+
+A7-4 adds the separate opt-in Canvas request
+`DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1`. It reads
+the same visible mobile+adsorbed `T/R` state, excludes depth, and returns both
+views as warm-white paper-backed opaque sRGB. Its metadata names
+`three-channel-effective-optical-density-v2`, fixed
+`referenceVisibleMass=0.14`, and explicitly records `spectral:false` and
+`scattering:false`. The value is calibrated to Workbench engine-unit peaks
+`0.134` at M/28 balanced and `0.179` at B/48 balanced; v1's value `1` was too
+faint. This is Beer-inspired three-channel effective optical density, not
+spectral Beer-Lambert or Kubelka-Munk scattering. The transported opaque result
+becomes `imageData`/`optical.compositeRgba` only for that explicit request. It
+is an alternative presentation of one Surface solve, not a second material
+calculation.
 
 The older `imageData`, `densityField`, `densitySamples`, and `materialCoverage`
 return fields remain same-reference aliases; `surfaceDensityTransport` is the

@@ -32,6 +32,46 @@ test("self-referenced package barrels expose the stable API", () => {
     engine.EDGE_DYE_COMPONENT_RECIPE_R5,
     dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R5,
   );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R6,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R6,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R7,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R7,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R8,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R8,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R9,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R9,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R10,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R10,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R11,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R11,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R12,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R12,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R13,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R13,
+  );
+  assert.equal(
+    engine.EDGE_DYE_COMPONENT_RECIPE_R14,
+    dyeComponents.EDGE_DYE_COMPONENT_RECIPE_R14,
+  );
+  assert.equal(
+    engine.dyeComponentStateModelVersion,
+    dyeComponents.dyeComponentStateModelVersion,
+  );
   assert.equal(engine.hashString, deterministic.hashString);
   assert.equal(engine.compositeOrdinaryInk, optical.compositeOrdinaryInk);
   assert.equal(
@@ -51,6 +91,22 @@ test("self-referenced package barrels expose the stable API", () => {
   assert.equal(
     engine.compositeDyeEdgeOptical,
     optical.compositeDyeEdgeOptical,
+  );
+  assert.equal(
+    engine.compositeDyeWellMixedControlOptical,
+    optical.compositeDyeWellMixedControlOptical,
+  );
+  assert.equal(
+    engine.compositeDyeFiniteLoadingTransportedOptical,
+    optical.compositeDyeFiniteLoadingTransportedOptical,
+  );
+  assert.equal(
+    engine.compositeDyeFiniteLoadingWellMixedControlOptical,
+    optical.compositeDyeFiniteLoadingWellMixedControlOptical,
+  );
+  assert.equal(
+    engine.DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
+    canvas2d.DYE_OPTICAL_COMPARISON_FINITE_LOADING_WELL_MIXED_VS_TRANSPORTED_V1,
   );
   assert.equal(
     engine.compositeSheenOptical,
@@ -119,6 +175,14 @@ test("self-referenced package barrels expose the stable API", () => {
   assert.equal(
     engine.createOrdinaryStageSignatures,
     canvas2d.createOrdinaryStageSignatures,
+  );
+  assert.equal(
+    engine.DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
+    canvas2d.DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
+  );
+  assert.equal(
+    engine.DYE_OPTICAL_COMPARISON_WELL_MIXED_VS_TRANSPORTED_V1,
+    "dye-optical-comparison-well-mixed-vs-transported-v1",
   );
   assert.equal(engine.makeGlyphMask, canvas2d.makeGlyphMask);
   assert.equal(

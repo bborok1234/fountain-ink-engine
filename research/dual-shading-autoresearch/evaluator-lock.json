@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "dual-shading-evaluator-lock-v2",
+  "algorithm": "sha256",
+  "files": {
+    "package-lock.json": "f70232d719ff08c80913ba17eac15bc07d0005d18fa8abc5ce95b050a0b72cbb",
+    "package.json": "b32fabbb9a7c0746aeccde43f2196b8e01562e94b3aea1dc427a150881356939",
+    "research/dual-shading-autoresearch/photo-topology-v1.json": "885a10ff3e035b6b06fba32eb0704fee21bd47e0696bf596a860d1beb7787119",
+    "scripts/dual-shading-autoresearch/evaluator.mjs": "08fa5e8f3f655d536de9c9826260959626885ab3aa0b0d7dc089fdb58b446c66",
+    "scripts/dual-shading-autoresearch/fixtures.mjs": "aefb794a81844e5e5346c713f18fdf85371cb9db2325a9638c9037f3a45edb4e",
+    "scripts/dual-shading-autoresearch/metrics.mjs": "d617c97d7c2b248373791b0afd60415e16f56908093064ee064a4d7cd1ae0496"
+  },
+  "engineSourceTreeDigest": "a32c23557b0d470eef6d33764f95f183bb4433f8b8e73db9d0f85aaa0567c38f",
+  "baselineMatrixDigest": "7cf1892f667975658cd536342c4bc9d4b650802a391093fa9cad996a216810d9"
+}

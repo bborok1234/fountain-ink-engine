@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "dual-shading-photo-topology-v1",
+  "reviewedAt": "2026-08-24",
+  "purpose": "A fixed topology annotation for automated rejection. It records approximate visual ranges from reference photographs; it is not a colorimetric measurement set and cannot award a nine-point perceptual result.",
+  "effectDefinition": {
+    "baseAreaRange": [0.65, 0.95],
+    "secondaryAppearance": "broad irregular connected patches or bands at pools, crossings, wetter letters and some broken edges",
+    "forbiddenProxy": "a constant outline, global recolor, checkerboard, blur, glow or isolated pixel noise",
+    "nibExpectation": "medium and broad wet marks usually expose more separation than thin marks",
+    "paperExpectation": "paper changes location and color balance, not only a global gain"
+  },
+  "photoFamilies": [
+    {
+      "id": "sailor-manyo-ayame",
+      "normalWritingSecondaryAreaEstimate": [0.05, 0.2],
+      "wetBroadSecondaryAreaEstimate": [0.15, 0.35],
+      "relativeStrength": 4
+    },
+    {
+      "id": "sailor-manyo-hinoki",
+      "normalWritingSecondaryAreaEstimate": [0.05, 0.2],
+      "wetBroadSecondaryAreaEstimate": [0.2, 0.45],
+      "relativeStrength": 4
+    },
+    {
+      "id": "sailor-manyo-haha",
+      "normalWritingSecondaryAreaEstimate": [0, 0.08],
+      "wetBroadSecondaryAreaEstimate": [0.05, 0.25],
+      "relativeStrength": 2
+    },
+    {
+      "id": "sailor-manyo-koke",
+      "normalWritingSecondaryAreaEstimate": [0, 0.05],
+      "wetBroadSecondaryAreaEstimate": [0.05, 0.2],
+      "relativeStrength": 1
+    }
+  ],
+  "sources": [
+    {
+      "kind": "manufacturer",
+      "title": "Sailor Manyo ink series",
+      "url": "https://en.sailor.co.jp/product/13-2009/"
+    },
+    {
+      "kind": "photo-review",
+      "title": "Sailor Manyo Ayame Ink Review",
+      "url": "https://www.gouletpens.com/blogs/fountain-pen-blog/sailor-manyo-ayame-ink-review"
+    },
+    {
+      "kind": "macro-photo",
+      "title": "Ayame writing macro",
+      "url": "https://images.squarespace-cdn.com/content/v1/638367b05ddb8e3232ffb349/0a73f97b-949a-4213-99f2-652b7c4649d9/image-asset.jpeg"
+    },
+    {
+      "kind": "photo-review",
+      "title": "Sailor Manyo Hinoki Ink Review",
+      "url": "https://www.gouletpens.com/blogs/fountain-pen-blog/sailor-manyo-hinoki-ink-review"
+    },
+    {
+      "kind": "writing-photo",
+      "title": "Hinoki EF and MF writing",
+      "url": "https://storage.ghost.io/c/7e/22/7e223c87-282a-44af-a0cc-50a23d71b039/content/images/2025/04/2025-04-02-06.jpg"
+    },
+    {
+      "kind": "paper-comparison",
+      "title": "Newest Sailor Manyo inks on papers",
+      "url": "https://www.wellappointeddesk.com/2022/07/ink-review-newest-sailor-manyo/"
+    },
+    {
+      "kind": "photo-review",
+      "title": "Sailor Haha",
+      "url": "https://mountainofink.com/blog/sailor-haha"
+    },
+    {
+      "kind": "photo-review",
+      "title": "Sailor Manyo Koke and Summer Rain",
+      "url": "https://www.penaddict.com/blog/2024/5/2/sailor-manyo-koke-amp-pro-gear-slim-summer-rain-review"
+    },
+    {
+      "kind": "macro-photo",
+      "title": "Koke writing macro",
+      "url": "https://images.squarespace-cdn.com/content/v1/5005c8fc84ae929b37214ebd/a03c2ab4-2117-4896-954c-d2de3ab2bad1/writing%2Bzoom.jpg"
+    }
+  ],
+  "evaluatorTargets": {
+    "requiredShapes": ["constant", "start-stop", "loop", "cross", "double-pass"],
+    "requiredWidths": ["medium", "broad"],
+    "requiredPapers": ["balanced", "absorbent"],
+    "fractionDeltaMinimum": 0.005,
+    "visibleMassAbsoluteMinimum": 0.00000001,
+    "visibleMassRelativeMinimum": 0.001,
+    "foregroundContrastMinimum": 8,
+    "changedChannelMinimum": 2,
+    "strongChangedChannelMinimum": 8,
+    "hardGates": {
+      "nonnegativeTolerance": 0.0000002,
+      "conservationRelativeMaximum": 0.00005,
+      "residualRelativeMaximum": 0.00005,
+      "signedPatchMinimumPixels": 8,
+      "globalRecolorAreaMaximum": 0.72,
+      "interiorShareMinimum": 0.1,
+      "interiorShareMaximum": 0.9,
+      "speckleShareMaximum": 0.2,
+      "readabilityContrastRatioMinimum": 0.82,
+      "readabilityRetentionRatioMinimum": 0.9,
+      "opticalChangedAreaMinimum": 0.015,
+      "opticalChangedAreaMaximum": 0.5,
+      "opticalMeanChannelDeltaMinimum": 0.35,
+      "opticalPatchMinimumPixels": 8,
+      "opticalPatchShareMinimum": 0.05,
+      "opticalInteriorShareMinimum": 0.08,
+      "opticalInteriorShareMaximum": 0.92,
+      "paperResponseRatioMinimum": 1.08,
+      "nibBroadToThinRatioMinimum": 0.9
+    },
+    "paretoTargets": {
+      "signedFractionSpanSaturation": 0.12,
+      "opticalChangedAreaSaturation": 0.2,
+      "opticalMeanChannelDeltaSaturation": 8,
+      "paperResponseRatioSaturation": 2,
+      "nibBroadToThinRatioSaturation": 1.2
+    }
+  }
+}
